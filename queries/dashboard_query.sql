@@ -55,7 +55,7 @@ SELECT
   target_dois.doi as source_doi,
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
-  enriched_doi_table.academic_observatory.crossref.container_title,
+  ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
 
   ------ DOI TABLE: CROSSREF TYPE
   enriched_doi_table.academic_observatory.crossref.type as crossref_type,
@@ -189,7 +189,18 @@ SELECT
   END as license_GROUP,
 
   ------ DOI TABLE: HAS CROSSREF CLINICAL TRIAL NUMBER (TRN)
-  enriched_doi_table.academic_observatory.crossref.clinical_trial_number as crossref_trn,
+  (SELECT array_agg(clinical_trial_number)[offset(0)]
+     FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
+     AS crossref_trn_clinical_trial_number,
+
+  (SELECT array_agg(registry)[offset(0)]
+     FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
+     AS crossref_trn_registry,
+
+  (SELECT array_agg(type)[offset(0)]
+     FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
+     AS crossref_trn_type,
+
   CASE
     WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN TRUE
     ELSE FALSE
