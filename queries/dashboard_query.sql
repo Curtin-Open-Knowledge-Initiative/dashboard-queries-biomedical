@@ -1,5 +1,6 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
+-- montreal_neuro_ver1f_2023_06_13
 -------------------------------------------
 
 -----------------------------------------------------------------------
@@ -24,11 +25,10 @@ enriched_doi_table AS (
     ) as first_green_oa_date
 
 ------ TABLES
-  FROM `academic-observatory.observatory.doi20230325` as academic_observatory
+  FROM `academic-observatory.observatory.doi20230604` as academic_observatory
     LEFT JOIN `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
     ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
----    Usually the following, but need to temporarily use the backup version wile the workflows are being run: LEFT JOIN `academic-observatory.our_research.unpaywall_snapshot20210702` as unpaywall
-    LEFT JOIN `academic-observatory.unpaywall_backup_may_2023.unpaywall` as unpaywall
+    LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
     ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     -- LEFT JOIN pubmed ON academic-observatory.doi = pubmed.doi
 ),
