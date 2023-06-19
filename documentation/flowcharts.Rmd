@@ -1,0 +1,275 @@
+---
+title "Exploring Flowcharts using DiagrammeR - v 0.b"
+author: "Rebecca Handcock"
+date: "2023-05-07"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE}
+#------------------------------------------------|
+# Set BigQuery files
+# This would ideally be done programatically, but for now is hard-coded
+#------------------------------------------------|
+
+# Academic Observatory - this is the version of the Academic Observatory
+AcademicObservatory_data <- "academic-observatory.observatory.doi20230604"
+AcademicObservatory_var1 <- "doi"
+
+# target_dois - this is the list of dois of interest in the project
+TargetDois_data <- "university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
+TargetDois_var1 <- "doi"
+
+# contributed - this is the extra data that is not in the Academic Observatory
+Contributed_data <- "university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
+Contributed_var1 <- "doi"
+
+# Output dashboard data - this is the output from the SQL
+Dashboard_data <- "university-of-ottawa.montreal_neuro_latest.dashboard_data_latest"
+Dashboard_var1 <- "doi"
+Dashboard_var2 <- "source_doi"
+
+```
+
+```{r warning=FALSE, include=FALSE}
+#------------------------------------------------|
+# setup packages
+#------------------------------------------------|
+
+# Github: https://github.com/rich-iannone/DiagrammeR
+# Functions: https://rich-iannone.github.io/DiagrammeR/reference/index.html
+
+# DiagrammeR is a package within htmlwidgets for R. It is used to generate graphs using graphviz and mermaid library.
+#install.packages("DiagrammeR")
+library(DiagrammeR)
+
+# rsvg: Renders vector-based svg images into images
+library(rsvg)
+
+# Connect to Bigquery
+library(bigrquery)
+library(DBI)
+
+# helpful libraries
+library(stringr)
+library(dplyr)
+library(purrr)
+
+```
+
+
+```{r message=TRUE, warning=TRUE}
+#------------------------------------------------|
+# FUNCTION F_bigquery_sql_count_distinct 
+#------------------------------------------------|
+
+F_bigquery_sql_count_distinct <- function(F_table, F_variable){
+  
+  # Set up query generics
+  # SELECT COUNT(DISTINCT published_year) AS count_dist_x FROM `university-of-ottawa.montreal_neuro_latest.dashboard_data_latest`
+  sql_prefix <- "SELECT COUNT(DISTINCT "
+  sql_middle <- ") FROM `"
+  sql_end <- "`"
+
+  sql <- paste(sql_prefix, F_variable, sql_middle,  F_table, sql_end, sep = "")
+
+  # send the SQL to bigquery
+  F_count <- dbGetQuery(con, sql)
+  return(F_count)
+  }
+```
+
+
+```{r message=TRUE, warning=TRUE}
+#------------------------------------------------|
+# FUNCTION export grViz graph to an image file
+#------------------------------------------------|
+
+F_export_grViz_graph2image <- function(graph2plot){
+  # 1. Process the graph
+  tmp = DiagrammeR::grViz(graph2plot)
+
+  # 2. Convert to SVG, then save as png
+  tmp = DiagrammeRsvg::export_svg(tmp)
+  tmp = charToRaw(tmp) # flatten
+  filename <- paste(deparse(substitute(graph2plot)), ".png", sep = "")
+  print(filename)
+  rsvg::rsvg_png(tmp, filename) # saved graph as png in current working directory
+  }
+```
+
+
+```{r}
+#------------------------------------------------|
+# Connect to BigQuery database
+#------------------------------------------------|
+
+# --- To query BigQuery data with R and bigrquery, you first need to set up a connection to a data set using this syntax:
+con <- dbConnect(
+  bigquery(),
+  project = "university-of-ottawa",
+  dataset = "montreal_neuro_latest",
+  billing = "university-of-ottawa"
+)
+
+# Now run a simple query to prompt authenticating your Google account
+
+dbListTables(con)
+
+```
+
+
+```{r}
+#------------------------------------------------|
+# Fetch information about BigQuery datasets
+#------------------------------------------------|
+
+# target_dois - this is the list of dois of interest in the project
+TargetDois_table <- str_split(TargetDois_data, "\\.")[[1]][3]
+TargetDois_count1 <- F_bigquery_sql_count_distinct(TargetDois_data, TargetDois_var1)
+TargetDois_count1 <- TargetDois_count1$f0_
+print(paste("TARGET DOIs:",TargetDois_table, "has", TargetDois_count1,"distinct values for",TargetDois_var1))
+
+# contributed - this is the extra data that is not in the Academic Observatory
+Contributed_table <- str_split(Contributed_data, "\\.")[[1]][3]
+Contributed_count1 <- F_bigquery_sql_count_distinct(Contributed_data, Contributed_var1)
+Contributed_count1 <- Contributed_count1$f0_
+print(paste("CONTRIBUTED:", Contributed_table, "has", Contributed_count1,"distinct values for",Contributed_var1))
+
+# Output dashboard data - this is the output from the SQL
+Dashboard_table <- str_split(Dashboard_data, "\\.")[[1]][3]
+Dashboard_count1 <- F_bigquery_sql_count_distinct(Dashboard_data, Dashboard_var1)
+Dashboard_count1 <- Dashboard_count1$f0_
+print(paste("DASHBOARD:",Dashboard_table, "has", Dashboard_count1,
+            "distinct values for",Dashboard_var1))
+Dashboard_count2 <- F_bigquery_sql_count_distinct(Dashboard_data, Dashboard_var2)
+Dashboard_count2 <- Dashboard_count2$f0_
+print(paste("DASHBOARD:",Dashboard_table, "has", Dashboard_count2,
+            "distinct values for",Dashboard_var2))
+
+# Academic Observatory - this is the version of the Academic Observatory
+AcademicObservatory_table <- str_split(AcademicObservatory_data, "\\.")[[1]][3]
+AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(AcademicObservatory_data, AcademicObservatory_var1)
+AcademicObservatory_count1 <- AcademicObservatory_count1$f0_
+print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has", 
+            AcademicObservatory_count1,"distinct values for",AcademicObservatory_var1))
+```
+
+
+
+```{r warning=FALSE, r fig.show='hide'}
+#------------------------------------------------|
+# Main
+#------------------------------------------------|
+
+graph_biomedical_main <- "digraph {
+  # --- Set default attibutes
+  layout = dot
+  node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
+      style='filled,rounded', fillcolor=transparent,
+      fontname = Helvetica, fontsize=10]
+  edge [color=black, arrowhead=normal, arrowsize=0.7, 
+      fontname = Helvetica, fontsize=10]
+
+  # ---------------------------------------------------------
+  # ACADEMIC OBSERVATORY
+  # ---------------------------------------------------------
+  # ------ SHAPES & LABELS - Academic Observatory
+  DATA_AcademicObservatory[label = 'Academic \\nObservatory \\n@@1',fillcolor='#ff671c']
+
+  DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FAF0E6']
+  DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FAF0E6']
+  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor='#FAF0E6']
+  DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FAF0E6']
+  
+  DATA_Unpaywall[label='Unpaywall',fillcolor='#FAF0E6']
+  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor='#FAF0E6']
+  DATA_OpenCit[label='Open \\nCitations',fillcolor='#FAF0E6']
+
+  # ------ LINKS - Academic Observatory
+  DATA_CrossrefMeta   -> DATA_AcademicObservatory
+  DATA_CrossrefFunder -> DATA_AcademicObservatory 
+  DATA_CrossrefEvents -> DATA_AcademicObservatory
+  DATA_OpenAlex       -> DATA_AcademicObservatory
+  DATA_Unpaywall      -> DATA_AcademicObservatory
+  DATA_ROR            -> DATA_AcademicObservatory
+  DATA_OpenCit        -> DATA_AcademicObservatory
+
+  # ---------------------------------------------------------
+  # CONTRIBUTED DATA 
+  # ---------------------------------------------------------
+  # ------ SHAPES & LABELS - Contributed data
+  DATA_Contributed[label = 'DOIs from The Neuro \\nOddPub Screening \\n@@2', 
+      shape=rectangle, fillcolor='#2cccd3']
+  
+  # ---------------------------------------------------------
+  # PROCESS #1 - Enrich AO with contributed data and subset with 
+  #              list of DOIs from contributed
+  # ---------------------------------------------------------
+  # ------ PROCESS #1 - SHAPES & LABELS
+  PROCESS1_Combined_AO_and_Contributed[label = 'Enrich A0 with Contributed', 
+      shape=rectangle, style='filled, dashed', fillcolor=transparent]
+  
+  INTERMEDIATE_enriched_AO[label = 'enriched_doi_table = \\nAcademic Observatory enriched with Contributed data']
+
+  # ------ PROCESS #1 - Combined AO and Contributed data 
+  rank=same {DATA_Contributed, DATA_AcademicObservatory}
+  DATA_AcademicObservatory -> PROCESS1_Combined_AO_and_Contributed[label = ' @@3 DOIs']
+
+  DATA_Contributed -> PROCESS1_Combined_AO_and_Contributed 
+  PROCESS1_Combined_AO_and_Contributed -> INTERMEDIATE_enriched_AO
+  
+  
+  # ---------------------------------------------------------
+  # PROCESS #2 - Use DOIs from contributed data to subset AO data 
+  # ---------------------------------------------------------
+  # ------ PROCESS #1 - SHAPES & LABELS
+  PROCESS2_Subset_AO_by_DOIs[label = 'Subset \\nAcademic Observatory \\nby the DOIs', 
+      shape=rectangle, style='filled, dashed', fillcolor=transparent]
+  
+  INTERMEDIATE_target_dois[label = 'target_dois = \\nCombined data \\nfor DOIs of interest']
+
+  # ------ PROCESS #2 - Combined AO and Contributed data 
+  INTERMEDIATE_enriched_AO -> PROCESS2_Subset_AO_by_DOIs 
+  PROCESS2_Subset_AO_by_DOIs -> INTERMEDIATE_target_dois
+
+  }    
+     # ------ Add footnotes 
+     [1]:AcademicObservatory_table
+     [2]:'20230217'
+     [2]:AcademicObservatory_count1
+   "
+   
+# Plot to graph to the screen / HTML
+DiagrammeR::grViz(graph_biomedical_main)
+
+# Export the graph as a PNG image file
+F_export_grViz_graph2image(graph_biomedical_main)
+#library(DiagrammeRsvg) #https://cran.r-project.org/web/packages/DiagrammeRsvg/index.html
+#grViz(graph_biomedical_main) %>%
+#    export_svg %>% charToRaw %>% rsvg_pdf("graph_biomedical_main")
+
+
+```
+
+
+```{r}
+
+graph_test <- "digraph {
+  graph[layout = dot, rankdir = LR]
+  
+  a [label = 'Test label @@1']
+  b [label = '@@2']
+  c
+  
+  a -> b -> c 
+  }
+    # ------ Add footnotes 
+    [1]:'Hello!'
+    [2]: Dashboard_count1
+  "
+
+F_export_grViz_graph2image(graph_test)
+```
+
+
+
