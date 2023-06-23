@@ -1,42 +1,72 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
--- montreal_neuro_ver1f_2023_06_13
+-- montreal_neuro_ver1f_2023_06_22
 -------------------------------------------
+WITH
+-----------------------------------------------------------------------
+-- 0. Temporary un-nest PUBMED to get its doi field (PubmedData.ArticleIdList.ArticleId.value) to the top level
+--    so that it can be joined to the Academic Observatory
+--    This is only needed until PubMed is joned into the DOI table
+--    The doi field in PubMed is a deeply nested field, so it is easier to do 
+--    this seperately rather than in the main table section
+-----------------------------------------------------------------------
+
+pubmed_extraction AS (
+SELECT
+  #PUBMED DOI FIELD: PubmedData.ArticleIdList.ArticleId.value
+  p1.value as pubmed_doi,
+  #MEDLINE DATA BANK NAME: MedlineCitation.Article.DataBankList.DataBank.DataBankName
+  STRING_AGG(p2.DataBankName,";") as pubmed_DataBankNames_concat,
+  #MEDLINE DATA BANK IDS: #MedlineCitation.Article.DataBankList.DataBank.AccessionNumberList.AccessionNumber
+  STRING_AGG(ARRAY_to_string(p2.AccessionNumberList.AccessionNumber, ";"),";") as pubmed_AccessionNumbers_concat,
+  #PUBMED ABSTRACT: MedlineCitation.Article.Abstract.AbstractText
+  ANY_VALUE(MedlineCitation.Article.Abstract.AbstractText) as pubmed_Abstract
+FROM
+  `academic-observatory.pubmed.articles_full_test` , 
+  UNNEST(PubmedData.ArticleIdList.ArticleId) AS p1 ,
+  UNNEST(MedlineCitation.Article.DataBankList.DataBank) AS p2
+  where p1.IdType = 'doi' # There are multiple IDs in the field
+  group by p1.value
+  ),
 
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
-WITH
+#WITH
 
 enriched_doi_table AS (
   SELECT
     academic_observatory,
     contributed,
     unpaywall,
+    pubmed,
     CASE -- This could be done below but it makes the query below more readable to do it here
       WHEN academic_observatory.crossref.published_month > 12 THEN null
       ELSE DATE(academic_observatory.crossref.published_year, academic_observatory.crossref.published_month, 1)
-    END as cr_published_date,
+      END as cr_published_date,
     (
       SELECT g.oa_date -- This needs to be done up here so it is available below but raises general questions about intermediate processing and where it should be done in the query structure
       FROM UNNEST(unpaywall.oa_locations) as g
       WHERE g.host_type="repository"
       ORDER BY g.oa_date ASC LIMIT 1
-    ) as first_green_oa_date
+      ) as first_green_oa_date
 
------- TABLES
+------ TABLES.
   FROM `academic-observatory.observatory.doi20230604` as academic_observatory
+    # Contributed data is any extra data that is not in the Academic Observatory
     LEFT JOIN `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
     ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
+    # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
     ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
-    -- LEFT JOIN pubmed ON academic-observatory.doi = pubmed.doi
+    # PubMed is only included here as the required fields are not yet in the Academic Observatory
+    LEFT JOIN pubmed_extraction as pubmed
+    ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
 ),
-
 -------------------------------------------
 -- 2. PREPARE DOI SUBSET
 -------------------------------------------
-
+# target DOIs is the DOI subset of interest. Used to subset the Academic Observatory
 target_dois AS (
   SELECT DISTINCT(doi)
   FROM
@@ -270,7 +300,120 @@ SELECT
   CASE
     WHEN enriched_doi_table.contributed.is_open_code THEN "Links to open code (via ODDPUB)"
     ELSE "No links to open code found"
-  END AS has_open_code_oddpub_PRETTY
+  END AS has_open_code_oddpub_PRETTY,
+
+  ------ ABSTRACTS from multiple sources
+  enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
+  pubmed.pubmed_Abstract AS abstract_pubmed,
+
+  ------ URLs for FULL TEXT
+#  enriched_doi_table.academic_observatory.crossref.link.URL AS crossref_fulltext_URL,
+ #  STRING_AGG(ARRAY_to_string(p2.AccessionNumberList.AccessionNumber, ";"),";") as pubmed_AccessionNumbers,
+
+ # STRING_AGG(ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.link, ";"),";") AS crossref_fulltext_URL,
+
+  ------ PubMed - Clinical Trial Registrys
+  pubmed.pubmed_DataBankNames_concat,
+
+  CASE
+    WHEN 'ANZCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'ChiCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'CRiS' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'ClinicalTrials.gov' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'CTRI' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'DRKS' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'EudraCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'IRCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'ISRCTN' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'JapicCTI' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'JMACCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'JPRN' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'NTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PACTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'ReBec' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'REPEC' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'RPCEC' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'SLCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'TCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UMIN-CTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UMIN CTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    ELSE FALSE
+  END as has_pubmed_ClinTrialReg,
+
+  IF('ANZCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ANZCTR,
+  IF('ChiCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ChiCTR,
+  IF('CRiS' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_CRiS,
+  IF('ClinicalTrials.gov' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_ClinicalTrialsGov,
+  IF('CTRI' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_CTRI,
+  IF('DRKS' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_DRKS,
+  IF('EudraCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_EudraCT,
+  IF('IRCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_IRCT,
+  IF('ISRCTN' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ISRCTN,
+  IF('JapicCTI' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JapicCTI,
+  IF('JMACCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JMACCT,
+  IF('JPRN' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JPRN,
+  IF('NTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_NTR,
+  IF('PACTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_PACTR,
+  IF('ReBec' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ReBec,
+  IF('REPEC' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_REPEC,
+  IF('RPCEC' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_RPCEC,
+  IF('SLCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_SLCTR,
+  IF('TCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_TCTR,
+  IF(('UMIN-CTR' IN (pubmed.pubmed_DataBankNames_concat)) OR ('UMIN CTR' IN (pubmed.pubmed_DataBankNames_concat)), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_UMINCTR,
+
+  ------ PubMed Databank names
+  CASE
+    WHEN 'BioProject' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'dbGaP' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'dbSNP' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'dbVar' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'Dryad' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'figshare' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'GDB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'GENBANK' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'GEO' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'OMIM' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'Protein' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PDB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PIR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PubChem-BioAssay' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PubChem-Compound' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'PubChem-Substance' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'RefSeq' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'SRA' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'SWISSPROT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UniMES' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UniParc' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UniProtKB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    WHEN 'UniRef' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
+    ELSE FALSE
+  END as has_pubmed_DataBank,
+
+IF('BioProject' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_BioProject,
+IF('dbGaP' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbGaP,
+IF('dbSNP' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbSNP,
+IF('dbVar' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbVar,
+IF('Dryad' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_Dryad,
+IF('figshare' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_figshare,
+IF('GDB' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GDB,
+IF('GENBANK' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GENBANK,
+IF('GEO' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GEO,
+IF('OMIM' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_OMIM,
+IF('PIR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PIR,
+IF('PubChem-BioAssay' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_BioAssay,
+IF('PubChem-Compound' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Compound,
+IF('PubChem-Substance' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Substance,
+IF('RefSeq' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_RefSeq,
+IF('SRA' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_SRA,
+IF('SWISSPROT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_SWISSPROT,
+IF('UniMES' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniMES,
+IF('UniParc' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniParc,
+IF('UniProtKB' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniProtKB,
+IF('UniRef' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniRef,
+IF(('Protein' IN (pubmed.pubmed_DataBankNames_concat)) OR ('PDB' IN (pubmed.pubmed_DataBankNames_concat)), TRUE, FALSE) AS has_pubmed_DataBank_Protein,
+
+  ------ PubMed fields of interest - Accession Numbers
+  pubmed.pubmed_AccessionNumbers_concat,
 
 -------------------------------------------
 -- 4. JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
