@@ -1,6 +1,6 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
--- montreal_neuro_ver1f_2023_06_22
+-- montreal_neuro_ver1f_2023_06_25
 -------------------------------------------
 WITH
 -----------------------------------------------------------------------
@@ -312,108 +312,101 @@ SELECT
 
  # STRING_AGG(ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.link, ";"),";") AS crossref_fulltext_URL,
 
-  ------ PubMed - Clinical Trial Registrys
+  ------ PubMed - Clinical Trial Registry, Data Banks, and Accession Numbers
+  pubmed.pubmed_AccessionNumbers_concat,
   pubmed.pubmed_DataBankNames_concat,
 
+  ------ PubMed - Clinical Trial Registry - details
+  IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
+  'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
+  TRUE, FALSE) AS has_pubmed_ClinTrialReg,
+
+  IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
+  'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
+  "Found in a PubMed Clinical Trial Registry", "Not found in a PubMed Clinical Trial Registry") 
+  AS has_pubmed_ClinTrialReg_PRETTY,
+
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%ANZCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ANZCTR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%ChiCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ChiCTR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%CRiS%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_CRiS,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%ClinicalTrials.gov%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ClinicalTrialsGov,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%CTRI%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTRI,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%DRKS%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_DRKS,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%EudraCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_EudraCT,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%IRCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_IRCT,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%ISRCTN%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ISRCTN,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%JapicCTI%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JapicCTI,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%JMACCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JMACCT,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%JPRN%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JPRN,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%NTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_NTR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%PACTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_PACTR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%ReBec%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ReBec,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%REPEC%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_REPEC,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%RPCEC%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_RPCEC,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%SLCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_SLCTR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%TCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_TCTR,
+  IF((pubmed.pubmed_DataBankNames_concat LIKE '%UMIN-CTR%') OR (pubmed.pubmed_DataBankNames_concat LIKE '%UMIN CTR%'), TRUE, FALSE) AS has_pubmed_ClinTrialReg_UMINCTR,
+
+  ------ PubMed Databank names - details
+
+  IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
+  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
+  TRUE, FALSE) AS has_pubmed_DataBank,
+
+    IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
+  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
+  "Found in a PubMed Databank", "Not found in a PubMed Databank") 
+  AS has_pubmed_DataBank_PRETTY,
+
   CASE
-    WHEN 'ANZCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'ChiCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'CRiS' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'ClinicalTrials.gov' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'CTRI' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'DRKS' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'EudraCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'IRCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'ISRCTN' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'JapicCTI' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'JMACCT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'JPRN' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'NTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PACTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'ReBec' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'REPEC' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'RPCEC' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'SLCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'TCTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UMIN-CTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UMIN CTR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    ELSE FALSE
-  END as has_pubmed_ClinTrialReg,
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%BioProject%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbGaP%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbSNP%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbVar%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%Dryad%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%figshare%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GDB%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GENBANK%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GEO%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%OMIM%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PIR%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-BioAssay%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-Compound%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-Substance%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%RefSeq%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%SRA%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%SWISSPROT%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniMES%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniParc%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniProtKB%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniRef%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%Protein%') THEN TRUE
+    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PDB%') THEN TRUE
+  ELSE FALSE
+  END as has_pubmed_DataBank_OLD,
 
-  IF('ANZCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ANZCTR,
-  IF('ChiCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ChiCTR,
-  IF('CRiS' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_CRiS,
-  IF('ClinicalTrials.gov' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_ClinicalTrialsGov,
-  IF('CTRI' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_CTRI,
-  IF('DRKS' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_DRKS,
-  IF('EudraCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_EudraCT,
-  IF('IRCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_IRCT,
-  IF('ISRCTN' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ISRCTN,
-  IF('JapicCTI' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JapicCTI,
-  IF('JMACCT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JMACCT,
-  IF('JPRN' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_JPRN,
-  IF('NTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_NTR,
-  IF('PACTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_PACTR,
-  IF('ReBec' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_ReBec,
-  IF('REPEC' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_REPEC,
-  IF('RPCEC' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_RPCEC,
-  IF('SLCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_SLCTR,
-  IF('TCTR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_ClinTrialReg_TCTR,
-  IF(('UMIN-CTR' IN (pubmed.pubmed_DataBankNames_concat)) OR ('UMIN CTR' IN (pubmed.pubmed_DataBankNames_concat)), TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTN_UMINCTR,
-
-  ------ PubMed Databank names
-  CASE
-    WHEN 'BioProject' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'dbGaP' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'dbSNP' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'dbVar' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'Dryad' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'figshare' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'GDB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'GENBANK' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'GEO' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'OMIM' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'Protein' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PDB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PIR' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PubChem-BioAssay' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PubChem-Compound' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'PubChem-Substance' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'RefSeq' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'SRA' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'SWISSPROT' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UniMES' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UniParc' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UniProtKB' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    WHEN 'UniRef' IN (pubmed.pubmed_DataBankNames_concat) THEN TRUE
-    ELSE FALSE
-  END as has_pubmed_DataBank,
-
-IF('BioProject' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_BioProject,
-IF('dbGaP' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbGaP,
-IF('dbSNP' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbSNP,
-IF('dbVar' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_dbVar,
-IF('Dryad' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_Dryad,
-IF('figshare' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_figshare,
-IF('GDB' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GDB,
-IF('GENBANK' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GENBANK,
-IF('GEO' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_GEO,
-IF('OMIM' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_OMIM,
-IF('PIR' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PIR,
-IF('PubChem-BioAssay' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_BioAssay,
-IF('PubChem-Compound' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Compound,
-IF('PubChem-Substance' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Substance,
-IF('RefSeq' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_RefSeq,
-IF('SRA' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_SRA,
-IF('SWISSPROT' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_SWISSPROT,
-IF('UniMES' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniMES,
-IF('UniParc' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniParc,
-IF('UniProtKB' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniProtKB,
-IF('UniRef' IN (pubmed.pubmed_DataBankNames_concat), TRUE, FALSE) AS has_pubmed_DataBank_UniRef,
-IF(('Protein' IN (pubmed.pubmed_DataBankNames_concat)) OR ('PDB' IN (pubmed.pubmed_DataBankNames_concat)), TRUE, FALSE) AS has_pubmed_DataBank_Protein,
-
-  ------ PubMed fields of interest - Accession Numbers
-  pubmed.pubmed_AccessionNumbers_concat,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%BioProject%', TRUE, FALSE) AS has_pubmed_DataBank_BioProject,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%dbGaP%', TRUE, FALSE) AS has_pubmed_DataBank_dbGaP,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%dbSNP%', TRUE, FALSE) AS has_pubmed_DataBank_dbSNP,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%dbVar%', TRUE, FALSE) AS has_pubmed_DataBank_dbVar,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%Dryad%', TRUE, FALSE) AS has_pubmed_DataBank_Dryad,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%figshare%', TRUE, FALSE) AS has_pubmed_DataBank_figshare,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%GDB%', TRUE, FALSE) AS has_pubmed_DataBank_GDB,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%GENBANK%', TRUE, FALSE) AS has_pubmed_DataBank_GENBANK,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%GEO%',TRUE, FALSE) AS has_pubmed_DataBank_GEO,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%OMIM%', TRUE, FALSE) AS has_pubmed_DataBank_OMIM,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%PIR%', TRUE, FALSE) AS has_pubmed_DataBank_PIR,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%PubChem-BioAssay%', TRUE, FALSE) AS has_pubmed_DataBank_PubChem_BioAssay,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%PubChem-Compound%', TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Compound,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%PubChem-Substance%', TRUE, FALSE) AS has_pubmed_DataBank_PubChem_Substance,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%RefSeq%', TRUE, FALSE) AS has_pubmed_DataBank_RefSeq,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%SRA%', TRUE, FALSE) AS has_pubmed_DataBank_SRA,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%SWISSPROT%', TRUE, FALSE) AS has_pubmed_DataBank_SWISSPROT,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniMES%', TRUE, FALSE) AS has_pubmed_DataBank_UniMES,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniParc%', TRUE, FALSE) AS has_pubmed_DataBank_UniParc,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniProtKB%', TRUE, FALSE) AS has_pubmed_DataBank_UniProtKB,
+  IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniRef%', TRUE, FALSE) AS has_pubmed_DataBank_UniRef,
+  IF((pubmed.pubmed_DataBankNames_concat LIKE '%Protein%') OR (pubmed.pubmed_DataBankNames_concat LIKE '%PDB%'), TRUE, FALSE) AS has_pubmed_DataBank_Protein_PDB,
 
 -------------------------------------------
 -- 4. JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
