@@ -313,8 +313,7 @@ SELECT
 
   ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
   pubmed.pubmed_AccessionNumbers_concat,
-  pubmed.pubmed_DataBankNames_concat AS pubmed_DataBankNames_concat1,
-  IFNULL(pubmed.pubmed_DataBankNames_concat, pubmed.pubmed_DataBankNames_concat) as pubmed_DataBankNames_concat2,
+  pubmed.pubmed_DataBankNames_concat,
 
   ------ PUBMED TABLE: Clinical Trial Registry - details
   IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
