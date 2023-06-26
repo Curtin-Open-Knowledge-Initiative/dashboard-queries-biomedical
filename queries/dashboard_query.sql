@@ -50,7 +50,7 @@ enriched_doi_table AS (
       WHERE g.host_type="repository"
       ORDER BY g.oa_date ASC LIMIT 1
       ) as first_green_oa_date
-
+  
 ------ TABLES.
   FROM `academic-observatory.observatory.doi20230618` as academic_observatory
     # Contributed data is any extra data that is not in the Academic Observatory
@@ -307,7 +307,8 @@ SELECT
   pubmed.pubmed_Abstract AS abstract_pubmed,
 
   ------ URLs for FULL TEXT
-  ARRAY_CONCAT(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL,
+  #ARRAY_CONCAT(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL,
+  (SELECT array_agg(URL)[offset(0)] FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_first,
   ARRAY_LENGTH(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL_count,
 
   ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
