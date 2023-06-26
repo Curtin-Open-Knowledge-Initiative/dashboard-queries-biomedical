@@ -1,6 +1,6 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
--- montreal_neuro_ver1f_2023_06_25
+-- montreal_neuro_ver1f_2023_06_26
 -------------------------------------------
 WITH
 -----------------------------------------------------------------------
@@ -52,7 +52,7 @@ enriched_doi_table AS (
       ) as first_green_oa_date
 
 ------ TABLES.
-  FROM `academic-observatory.observatory.doi20230604` as academic_observatory
+  FROM `academic-observatory.observatory.doi20230618` as academic_observatory
     # Contributed data is any extra data that is not in the Academic Observatory
     LEFT JOIN `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
     ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
@@ -302,21 +302,19 @@ SELECT
     ELSE "No links to open code found"
   END AS has_open_code_oddpub_PRETTY,
 
-  ------ ABSTRACTS from multiple sources
+  ------ ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   pubmed.pubmed_Abstract AS abstract_pubmed,
 
   ------ URLs for FULL TEXT
-#  enriched_doi_table.academic_observatory.crossref.link.URL AS crossref_fulltext_URL,
- #  STRING_AGG(ARRAY_to_string(p2.AccessionNumberList.AccessionNumber, ";"),";") as pubmed_AccessionNumbers,
+  ARRAY_CONCAT(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL,
+  ARRAY_LENGTH(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL_count,
 
- # STRING_AGG(ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.link, ";"),";") AS crossref_fulltext_URL,
-
-  ------ PubMed - Clinical Trial Registry, Data Banks, and Accession Numbers
+  ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
   pubmed.pubmed_AccessionNumbers_concat,
   pubmed.pubmed_DataBankNames_concat,
 
-  ------ PubMed - Clinical Trial Registry - details
+  ------ PUBMED TABLE: Clinical Trial Registry - details
   IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
   'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
   TRUE, FALSE) AS has_pubmed_ClinTrialReg,
@@ -347,7 +345,17 @@ SELECT
   IF(pubmed.pubmed_DataBankNames_concat LIKE '%TCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_TCTR,
   IF((pubmed.pubmed_DataBankNames_concat LIKE '%UMIN-CTR%') OR (pubmed.pubmed_DataBankNames_concat LIKE '%UMIN CTR%'), TRUE, FALSE) AS has_pubmed_ClinTrialReg_UMINCTR,
 
-  ------ PubMed Databank names - details
+  ------ PUBMED TABLE: ABSTRACT HAS ID from a Clinical Trial Registry
+  # NOTE, THERE ARE OTHER IDS TO SEARCH ON
+  REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as has_pubmed_ClinTrialReg_ID,
+  CASE
+    WHEN REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') THEN "Has PubMed Clinical Trial Registry ID"
+    ELSE "No PubMed Clinical Trial Registry ID found"
+  END as has_pubmed_ClinTrialReg_ID_PRETTY,
+
+  REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
+
+  ------ PUBMED TABLE: Databank names - details
 
   IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
   'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
@@ -357,33 +365,6 @@ SELECT
   'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
   "Found in a PubMed Databank", "Not found in a PubMed Databank") 
   AS has_pubmed_DataBank_PRETTY,
-
-  CASE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%BioProject%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbGaP%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbSNP%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%dbVar%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%Dryad%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%figshare%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GDB%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GENBANK%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%GEO%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%OMIM%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PIR%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-BioAssay%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-Compound%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PubChem-Substance%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%RefSeq%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%SRA%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%SWISSPROT%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniMES%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniParc%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniProtKB%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%UniRef%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%Protein%') THEN TRUE
-    WHEN pubmed.pubmed_DataBankNames_concat LIKE ('%PDB%') THEN TRUE
-  ELSE FALSE
-  END as has_pubmed_DataBank_OLD,
 
   IF(pubmed.pubmed_DataBankNames_concat LIKE '%BioProject%', TRUE, FALSE) AS has_pubmed_DataBank_BioProject,
   IF(pubmed.pubmed_DataBankNames_concat LIKE '%dbGaP%', TRUE, FALSE) AS has_pubmed_DataBank_dbGaP,
