@@ -1,7 +1,8 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
--- montreal_neuro_ver1f_2023_06_26
 -------------------------------------------
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1g_2023_06_27';
+
 WITH
 -----------------------------------------------------------------------
 -- 0. Temporary un-nest PUBMED to get its doi field (PubmedData.ArticleIdList.ArticleId.value) to the top level
@@ -307,10 +308,8 @@ SELECT
   pubmed.pubmed_Abstract AS abstract_pubmed,
 
   ------ URLs for FULL TEXT
-  #ARRAY_CONCAT(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL,
-  (SELECT array_agg(URL)[offset(0)] FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_first,
-  ARRAY_LENGTH(ARRAY(SELECT URL FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link))) AS crossref_fulltext_URL_count,
-
+  (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
+ 
   ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
   pubmed.pubmed_AccessionNumbers_concat,
   pubmed.pubmed_DataBankNames_concat,
@@ -389,6 +388,8 @@ SELECT
   IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniRef%', TRUE, FALSE) AS has_open_data_pubmed_UniRef,
   IF((pubmed.pubmed_DataBankNames_concat LIKE '%Protein%') OR (pubmed.pubmed_DataBankNames_concat LIKE '%PDB%'), TRUE, FALSE) AS has_open_data_pubmed_Protein_PDB,
 
+   ------ UTILITY - add a variable for the script version
+  var_SQL_script_name,
 -------------------------------------------
 -- 4. JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
 ------------------------------------------
@@ -398,4 +399,3 @@ SELECT
    on LOWER(target_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
- 
