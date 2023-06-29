@@ -1,7 +1,7 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1g_2023_06_27';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1g_2023_06_28';
 
 WITH
 -----------------------------------------------------------------------
