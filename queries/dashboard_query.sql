@@ -1,9 +1,8 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1g_2023_06_29';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1g_2023_07_03';
 
-WITH
 -----------------------------------------------------------------------
 -- 0. Temporary un-nest PUBMED to get its doi field (PubmedData.ArticleIdList.ArticleId.value) to the top level
 --    so that it can be joined to the Academic Observatory
@@ -12,29 +11,36 @@ WITH
 --    this seperately rather than in the main table section
 -----------------------------------------------------------------------
 
+/*
 pubmed_extraction AS (
 SELECT
-  #PUBMED DOI FIELD: PubmedData.ArticleIdList.ArticleId.value
-  p1.value as pubmed_doi,
-  #MEDLINE DATA BANK NAME: MedlineCitation.Article.DataBankList.DataBank.DataBankName
-  STRING_AGG(p2.DataBankName,";") as pubmed_DataBankNames_concat,
-  #MEDLINE DATA BANK IDS: #MedlineCitation.Article.DataBankList.DataBank.AccessionNumberList.AccessionNumber
-  STRING_AGG(ARRAY_to_string(p2.AccessionNumberList.AccessionNumber, ";"),";") as pubmed_AccessionNumbers_concat,
-  #PUBMED ABSTRACT: MedlineCitation.Article.Abstract.AbstractText
-  ANY_VALUE(MedlineCitation.Article.Abstract.AbstractText) as pubmed_Abstract
+   #PUBMED DOI FIELD: PubmedData.ArticleIdList.ArticleId.value
+   p1.value as pubmed_doi,
+   #MEDLINE DATA BANK NAME: MedlineCitation.Article.DataBankList.DataBank.DataBankName
+   STRING_AGG(p2.DataBankName,";") as pubmed_DataBankNames_concat,
+   #MEDLINE DATA BANK IDS: #MedlineCitation.Article.DataBankList.DataBank.AccessionNumberList.AccessionNumber
+   STRING_AGG(ARRAY_to_string(p2.AccessionNumberList.AccessionNumber, ";"),";") as pubmed_AccessionNumbers_concat,
+   #PUBMED ABSTRACT: MedlineCitation.Article.Abstract.AbstractText
+   ANY_VALUE(MedlineCitation.Article.Abstract.AbstractText) as pubmed_Abstract,
+
+      ARRAY_AGG (STRUCT(
+      p2.DataBankName AS databank_name,
+      ARRAY(select p3) AS databank_id
+      )) AS pubmed_databanks
+
 FROM
   `academic-observatory.pubmed.articles_full_test` , 
-  UNNEST(PubmedData.ArticleIdList.ArticleId) AS p1 ,
-  UNNEST(MedlineCitation.Article.DataBankList.DataBank) AS p2
-  where p1.IdType = 'doi' # There are multiple IDs in the field
-  group by p1.value
-  ),
-
+  UNNEST(PubmedData.ArticleIdList.ArticleId) AS p1,
+  UNNEST(MedlineCitation.Article.DataBankList.DataBank) AS p2,
+  UNNEST(ARRAY_CONCAT(p2.AccessionNumberList.AccessionNumber)) AS p3
+  where p1.IdType = 'doi' # There are multiple ID types in the field 
+  group by pubmed_doi
+),
+*/
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
-#WITH
-
+WITH
 enriched_doi_table AS (
   SELECT
     academic_observatory,
@@ -56,13 +62,13 @@ enriched_doi_table AS (
   FROM `academic-observatory.observatory.doi20230618` as academic_observatory
     # Contributed data is any extra data that is not in the Academic Observatory
     LEFT JOIN `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
-    ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
+      ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
-    ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
+      ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # PubMed is only included here as the required fields are not yet in the Academic Observatory
-    LEFT JOIN pubmed_extraction as pubmed
-    ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
+    LEFT JOIN `university-of-ottawa.montreal_neuro_data_processed.pubmed_extract` as pubmed
+      ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
 ),
 -------------------------------------------
 -- 2. PREPARE DOI SUBSET
@@ -311,10 +317,12 @@ SELECT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
  
   ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
-  pubmed.pubmed_AccessionNumbers_concat,
-  pubmed.pubmed_DataBankNames_concat,
+  #pubmed.pubmed_AccessionNumbers_concat,
+  #pubmed.pubmed_DataBankNames_concat,
+  pubmed.pubmed_DataBankList,
 
   ------ PUBMED TABLE: Clinical Trial Registry - details
+  /*
   IF(REGEXP_CONTAINS(pubmed.pubmed_DataBankNames_concat, 
   'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
   TRUE, FALSE) AS has_pubmed_ClinTrialReg,
@@ -388,6 +396,7 @@ SELECT
   IF(pubmed.pubmed_DataBankNames_concat LIKE '%UniRef%', TRUE, FALSE) AS has_open_data_pubmed_UniRef,
   IF((pubmed.pubmed_DataBankNames_concat LIKE '%Protein%') OR (pubmed.pubmed_DataBankNames_concat LIKE '%PDB%'), TRUE, FALSE) AS has_open_data_pubmed_Protein_PDB,
 
+*/
    ------ UTILITY - add a variable for the script version
   var_SQL_script_name,
 -------------------------------------------
