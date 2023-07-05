@@ -1,7 +1,7 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_07_04';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_07_05';
 
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
@@ -281,13 +281,9 @@ SELECT
   ------ URLs for FULL TEXT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
  
-  ------ PUBMED TABLE: Clinical Trial Registry, Data Banks, and Accession Numbers
-  (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBankNames_concat,
- # (SELECT STRING_AGG(id, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_AccessionNumbers_concat,
-  #pubmed.pubmed_DataBankNames_concat,
- # pubmed.pubmed_DataBankList,
-  #pubmed.pubmed_DataBankList.name,
-  #pubmed.pubmed_DataBankList.id,
+  ------ PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers
+  (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_names,
+  (SELECT STRING_AGG(id, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_ids,
 
   ------ PUBMED TABLE: Clinical Trial Registry - details
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
@@ -349,7 +345,7 @@ SELECT
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbSNP%', TRUE, FALSE) AS has_open_data_pubmed_dbSNP,
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbVar%', TRUE, FALSE) AS has_open_data_pubmed_dbVar,
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Dryad%', TRUE, FALSE) AS has_open_data_pubmed_Dryad,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%figshare%', TRUE, FALSE) AS has_open_data_pubmed_figshare,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%figshare%',TRUE, FALSE) AS has_open_data_pubmed_figshare,
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GDB%', TRUE, FALSE) AS has_open_data_pubmed_GDB,
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GENBANK%', TRUE, FALSE) AS has_open_data_pubmed_GENBANK,
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GEO%',TRUE, FALSE) AS has_open_data_pubmed_GEO,
