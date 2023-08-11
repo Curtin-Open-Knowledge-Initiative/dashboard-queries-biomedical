@@ -1,8 +1,7 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_07_05';
-
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_07_25';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -17,23 +16,23 @@ enriched_doi_table AS (
       WHEN academic_observatory.crossref.published_month > 12 THEN null
       ELSE DATE(academic_observatory.crossref.published_year, academic_observatory.crossref.published_month, 1)
       END as cr_published_date,
-    (
-      SELECT g.oa_date -- This needs to be done up here so it is available below but raises general questions about intermediate processing and where it should be done in the query structure
+    
+    (SELECT g.oa_date -- This needs to be done up here so it is available below but raises general questions about intermediate processing and where it should be done in the query structure
       FROM UNNEST(unpaywall.oa_locations) as g
       WHERE g.host_type="repository"
       ORDER BY g.oa_date ASC LIMIT 1
       ) as first_green_oa_date
   
------- TABLES.
+  ------ TABLES.
   FROM `academic-observatory.observatory.doi20230618` as academic_observatory
     # Contributed data is any extra data that is not in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
+    LEFT JOIN `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
       ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # PubMed is only included here as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.montreal_neuro_data_processed.pubmed_extract` as pubmed
+    LEFT JOIN `university-of-ottawa.neuro_data_processed.pubmed_extract` as pubmed
       ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
 ),
 -------------------------------------------
@@ -43,7 +42,7 @@ enriched_doi_table AS (
 target_dois AS (
   SELECT DISTINCT(doi)
   FROM
-    `university-of-ottawa.montreal_neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long`
+    `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long`
     -- {{doi_table}} WHERE "http://ror.org/XXXXX" in (SELECT identifier FROM UNNEST(affiliations.institutions))
     -- {{doi_table}} WHERE "10.XXXXX" in (SELECT identifier FROM UNNEST(affiliations.funders))
 )
@@ -52,14 +51,14 @@ target_dois AS (
 -- 3. EXTRACT AND TIDY FIELDS OF INTEREST
 -------------------------------------------
 SELECT
-  ------ DOI TABLE: Misc METADATA
+  ------ 3.1 DOI TABLE: Misc METADATA
   enriched_doi_table.academic_observatory.doi,
   target_dois.doi as source_doi,
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
 
-  ------ DOI TABLE: CROSSREF TYPE
+  ------ 3.2 DOI TABLE: CROSSREF TYPE
   enriched_doi_table.academic_observatory.crossref.type as crossref_type,
   CASE
     WHEN enriched_doi_table.academic_observatory.crossref.type = "journal-article" THEN "Journal articles"
@@ -71,7 +70,7 @@ SELECT
     ELSE null
   END as crossref_type_PRETTY,
 
-  ------ DOI TABLE: OPEN ACCESS
+  ------ 3.3 DOI TABLE: OPEN ACCESS
   enriched_doi_table.academic_observatory.coki.oa_coki,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa_coki.publisher_only THEN "Publisher Open"
@@ -92,7 +91,7 @@ SELECT
     ELSE "Closed"
   END as oa_coki_open_PRETTY,
   
-  ------ DOI TABLE: MADE AVAILABLE DATE / EMBARGO
+  ------ 3.4 DOI TABLE: MADE AVAILABLE DATE / EMBARGO
   first_green_oa_date,
   cr_published_date,
   DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) as embargo,
@@ -119,7 +118,7 @@ SELECT
    ELSE 99
   END as embargo_GRAPHORDER,
 
-  ------ DOI TABLE: PLAN-S COMPLIANT
+  ------ 3.5 DOI TABLE: PLAN-S COMPLIANT
   CASE
     WHEN NOT academic_observatory.coki.oa_coki.open THEN FALSE
     WHEN unpaywall.best_oa_location.license != "cc-by" THEN FALSE
@@ -136,7 +135,7 @@ SELECT
     ELSE "Not PlanS Compliant"
   END as plans_compliant_PRETTY,
 
-  ------ DOI TABLE: LICENSE
+  ------ 3.6 DOI TABLE: LICENSE
   unpaywall.best_oa_location.license as license,
 
   CASE
@@ -190,11 +189,7 @@ SELECT
     ELSE "No licence info" 
   END as license_GROUP,
 
-  ------ DOI TABLE: HAS CROSSREF CLINICAL TRIAL NUMBER (TRN)
-  (SELECT array_agg(clinical_trial_number)[offset(0)]
-     FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
-     AS crossref_trn_clinical_trial_number,
-
+  ------ 3.7 DOI TABLE: CLINICAL TRIAL NUMBER (TRN) - CROSSREF
   (SELECT array_agg(registry)[offset(0)]
      FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
      AS crossref_trn_registry,
@@ -203,25 +198,31 @@ SELECT
      FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
      AS crossref_trn_type,
 
+  (SELECT array_agg(clinical_trial_number)[offset(0)]
+     FROM UNNEST(enriched_doi_table.academic_observatory.crossref.clinical_trial_number))
+     AS crossref_trn_clinical_trial_number,
+
   CASE
     WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN TRUE
     ELSE FALSE
   END as has_crossref_trn,
+  
   CASE
     WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN "TRN found in Crossref metadata"
     ELSE "No TRN in Crossref metadata"
   END as has_crossref_trn_PRETTY,
 
-  ------ DOI TABLE: ABSTRACT HAS CLINICAL TRIAL NUMBER (TRN)
+  ------ 3.8 DOI TABLE: CLINICAL TRIAL NUMBER (TRN) - ABSTRACT
+  REGEXP_EXTRACT_ALL(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns,
+
   REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as has_clinical_trial_gov_trn,
+  
   CASE
     WHEN REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') THEN "Has clinical trial number"
     ELSE "No trial number found"
   END as has_clinical_trial_gov_trn_PRETTY,
 
-  REGEXP_EXTRACT_ALL(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns,
-
-  ------ DOI TABLE: PUBLISHER ORCID
+  ------ 3.9 DOI TABLE: PUBLISHER ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -231,7 +232,8 @@ SELECT
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN "Has publisher ORCID"
     ELSE "Does not have publisher ORCID"
   END AS has_publisher_orcid_PRETTY,
-
+  
+  ------ 3.10 DOI TABLE: AUTHOR ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.authors) as authors where authors.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -242,7 +244,7 @@ SELECT
     ELSE "Not in any ORCID record"
   END AS in_orcid_record_PRETTY,
 
-  ------ DOI TABLE: CROSSREF FUNDER RECORD
+  ------ 3.11 DOI TABLE: CROSSREF FUNDER RECORD
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.funders) as funders where funders.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -253,120 +255,119 @@ SELECT
     ELSE "No funder acknowledgement"
   END AS has_cr_funder_record_PRETTY,
 
-  ------ CONTRIBUTED TABLE: PREPRINT
+  ------ 3.12 CONTRIBUTED TABLE: PREPRINT
   enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint as has_preprint,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint THEN "Has a preprint"
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
-  ------ CONTRIBUTED TABLE: OPEN DATA
+  ------ 3.13 CONTRIBUTED TABLE: OPEN DATA
   enriched_doi_table.contributed.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
     WHEN enriched_doi_table.contributed.is_open_data THEN "Links to open data (via ODDPUB)"
     ELSE "No links to open data found"
   END AS has_open_data_oddpub_PRETTY,
 
-  ------ CONTRIBUTED TABLE: OPEN CODE
+  ------ 3.14 CONTRIBUTED TABLE: OPEN CODE
   enriched_doi_table.contributed.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
   CASE
     WHEN enriched_doi_table.contributed.is_open_code THEN "Links to open code (via ODDPUB)"
     ELSE "No links to open code found"
   END AS has_open_code_oddpub_PRETTY,
 
-  ------ ABSTRACTS from any sources
+  ------ 3.15 ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   pubmed.pubmed_Abstract AS abstract_pubmed,
 
-  ------ URLs for FULL TEXT
+  ------ 3.16 URLs for FULL TEXT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
  
-  ------ PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers
-  (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_names,
-  (SELECT STRING_AGG(id, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_ids,
+  ------ 3.17 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
+  (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_names_CONCAT,
+  (SELECT STRING_AGG(id, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) AS pubmed_DataBank_ids_CONCAT,
 
-  ------ PUBMED TABLE: Clinical Trial Registry - details
+  ------ 3.18 PUBMED TABLE: Clinical Trial Registry - details
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
   'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
-  TRUE, FALSE) AS has_pubmed_ClinTrialReg,
+  TRUE, FALSE) AS pubmed_has_ClinTrialReg,
 
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
   'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
-  "Found in a PubMed Clinical Trial Registry", "Not found in a PubMed Clinical Trial Registry") 
-  AS has_pubmed_ClinTrialReg_PRETTY,
+  "Found in a Clinical Trial Registry (via PubMed)", "Not found in a Clinical Trial Registry (via PubMed)") 
+  AS pubmed_has_ClinTrialReg_PRETTY,
 
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ANZCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ANZCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ChiCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ChiCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CRiS%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_CRiS,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ClinicalTrials.gov%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ClinicalTrialsGov,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CTRI%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_CTRI,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%DRKS%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_DRKS,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%EudraCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_EudraCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%IRCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_IRCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ISRCTN%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ISRCTN,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JapicCTI%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JapicCTI,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JMACCT%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JMACCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JPRN%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_JPRN,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%NTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_NTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PACTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_PACTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ReBec%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_ReBec,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%REPEC%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_REPEC,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RPCEC%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_RPCEC,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SLCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_SLCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%TCTR%', TRUE, FALSE) AS has_pubmed_ClinTrialReg_TCTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ANZCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ANZCTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ChiCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ChiCTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CRiS%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_CRiS,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ClinicalTrials.gov%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ClinicalTrialsGov,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CTRI%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_CTRI,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%DRKS%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_DRKS,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%EudraCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_EudraCT,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%IRCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_IRCT,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ISRCTN%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ISRCTN,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JapicCTI%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JapicCTI,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JMACCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JMACCT,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JPRN%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JPRN,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%NTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_NTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PACTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_PACTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ReBec%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ReBec,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%REPEC%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_REPEC,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RPCEC%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_RPCEC,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SLCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_SLCTR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%TCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_TCTR,
   IF((
     (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) 
     LIKE '%UMIN-CTR%') OR (
       (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) 
-      LIKE '%UMIN CTR%'), TRUE, FALSE) AS has_pubmed_ClinTrialReg_UMINCTR,
+      LIKE '%UMIN CTR%'), TRUE, FALSE) AS pubmed_has_ClinTrialReg_UMINCTR,
 
-  ------ PUBMED TABLE: ABSTRACT HAS ID from a Clinical Trial Registry
+  ------ 3.19 PUBMED TABLE: ABSTRACT HAS ID from a Clinical Trial Registry
   # NOTE, THERE ARE OTHER IDS TO SEARCH ON
- # REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as has_pubmed_ClinTrialReg_ID,
+ # REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as pubmed_has_ClinTrialReg_ID,
  # CASE
  #   WHEN REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') THEN "Has PubMed Clinical Trial Registry ID"
  #   ELSE "No PubMed Clinical Trial Registry ID found"
- # END as has_pubmed_ClinTrialReg_ID_PRETTY,
+ # END as pubmed_has_ClinTrialReg_ID_PRETTY,
  # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
 
-  ------ PUBMED TABLE: Databank names - details
+  ------ 3.20 PUBMED TABLE: Databank names - details
+  IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
+  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
+  TRUE, FALSE) AS pubmed_has_open_data,
 
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
   'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
-  TRUE, FALSE) AS has_open_data_pubmed,
+  "Found in a Databank (via Pubmed)", "Not found in a Databank (via Pubmed)") 
+  AS pubmed_has_open_data_PRETTY,
 
-  IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
-  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
-  "Found in a PubMed Databank", "Not found in a PubMed Databank") 
-  AS has_open_data_pubmed_PRETTY,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%BioProject%', TRUE, FALSE) AS pubmed_has_open_data_BioProject,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbGaP%', TRUE, FALSE) AS pubmed_has_open_data_dbGaP,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbSNP%', TRUE, FALSE) AS pubmed_has_open_data_dbSNP,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbVar%', TRUE, FALSE) AS pubmed_has_open_data_dbVar,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Dryad%', TRUE, FALSE) AS pubmed_has_open_data_Dryad,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%figshare%',TRUE, FALSE) AS pubmed_has_open_data_figshare,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GDB%', TRUE, FALSE) AS pubmed_has_open_data_GDB,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GENBANK%', TRUE, FALSE) AS pubmed_has_open_data_GENBANK,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GEO%',TRUE, FALSE) AS pubmed_has_open_data_GEO,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%OMIM%', TRUE, FALSE) AS pubmed_has_open_data_OMIM,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PIR%', TRUE, FALSE) AS pubmed_has_open_data_PIR,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-BioAssay%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_BioAssay,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Compound%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_Compound,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Substance%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_Substance,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RefSeq%', TRUE, FALSE) AS pubmed_has_open_data_RefSeq,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SRA%', TRUE, FALSE) AS pubmed_has_open_data_SRA,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SWISSPROT%', TRUE, FALSE) AS pubmed_has_open_data_SWISSPROT,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniMES%', TRUE, FALSE) AS pubmed_has_open_data_UniMES,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniParc%', TRUE, FALSE) AS pubmed_has_open_data_UniParc,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniProtKB%', TRUE, FALSE) AS pubmed_has_open_data_UniProtKB,
+  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniRef%', TRUE, FALSE) AS pubmed_has_open_data_UniRef,
+  IF(((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Protein%') OR ((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PDB%'), TRUE, FALSE) AS pubmed_has_open_data_Protein_PDB,
 
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%BioProject%', TRUE, FALSE) AS has_open_data_pubmed_BioProject,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbGaP%', TRUE, FALSE) AS has_open_data_pubmed_dbGaP,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbSNP%', TRUE, FALSE) AS has_open_data_pubmed_dbSNP,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbVar%', TRUE, FALSE) AS has_open_data_pubmed_dbVar,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Dryad%', TRUE, FALSE) AS has_open_data_pubmed_Dryad,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%figshare%',TRUE, FALSE) AS has_open_data_pubmed_figshare,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GDB%', TRUE, FALSE) AS has_open_data_pubmed_GDB,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GENBANK%', TRUE, FALSE) AS has_open_data_pubmed_GENBANK,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GEO%',TRUE, FALSE) AS has_open_data_pubmed_GEO,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%OMIM%', TRUE, FALSE) AS has_open_data_pubmed_OMIM,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PIR%', TRUE, FALSE) AS has_open_data_pubmed_PIR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-BioAssay%', TRUE, FALSE) AS has_open_data_pubmed_PubChem_BioAssay,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Compound%', TRUE, FALSE) AS has_open_data_pubmed_PubChem_Compound,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Substance%', TRUE, FALSE) AS has_open_data_pubmed_PubChem_Substance,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RefSeq%', TRUE, FALSE) AS has_open_data_pubmed_RefSeq,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SRA%', TRUE, FALSE) AS has_open_data_pubmed_SRA,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SWISSPROT%', TRUE, FALSE) AS has_open_data_pubmed_SWISSPROT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniMES%', TRUE, FALSE) AS has_open_data_pubmed_UniMES,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniParc%', TRUE, FALSE) AS has_open_data_pubmed_UniParc,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniProtKB%', TRUE, FALSE) AS has_open_data_pubmed_UniProtKB,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniRef%', TRUE, FALSE) AS has_open_data_pubmed_UniRef,
-  IF(((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Protein%') OR ((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PDB%'), TRUE, FALSE) AS has_open_data_pubmed_Protein_PDB,
-
------- UTILITY - add a variable for the script version
+------ 3.21 UTILITY - add a variable for the script version
   var_SQL_script_name,
 -------------------------------------------
--- 4. JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
+-- 4: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
 ------------------------------------------
  FROM
    target_dois
