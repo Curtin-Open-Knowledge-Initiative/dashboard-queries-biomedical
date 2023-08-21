@@ -1,7 +1,7 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_07_25';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_08_16b';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -208,8 +208,8 @@ SELECT
   END as clintrial_crossref_id_found,
   
   CASE
-    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN "TRN found in Crossref metadata"
-    ELSE "No TRN in Crossref metadata"
+    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN "Clinical trial number found in Crossref Metadata"
+    ELSE "No clinical trial number in Crossref Metadata"
   END as clintrial_crossref_id_found_PRETTY,
 
   ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
@@ -218,9 +218,9 @@ SELECT
   REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as clintrial_crossref_id_fromabstract_found,
   
   CASE
-    WHEN REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') THEN "Has clinical trial number"
-    ELSE "No trial number found"
-  END as clintrial_crossref_id_fromabstract_found,
+    WHEN REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') THEN "Clinical trial number found in Crossref Metadata abstracts"
+    ELSE "No clinical trial number in Crossref Metadata abstracts"
+  END as clintrial_crossref_id_fromabstract_found_PRETTY,
 
   ------ 3.9 DOI TABLE: PUBLISHER ORCID
   CASE
@@ -294,7 +294,7 @@ SELECT
 
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
   'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
-  "Found in a Clinical Trial Registry (via PubMed)", "Not found in a Clinical Trial Registry (via PubMed)") 
+  "Clinical trial number found in Pubmed", "No linical trial number found in Pubmed") 
   AS clintrial_pubmed_id_found_PRETTY,
 
   IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ANZCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ANZCTR,
@@ -331,9 +331,9 @@ SELECT
  # END as pubmed_has_ClinTrialReg_ID_PRETTY,
  # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
 
-"Placeholder-TRN" AS clintrial_crossref_id_fromabstract,
-TRUE AS clintrial_crossref_id_fromabstract_found,
-"Plaeholder - Has clinical trial number from Pubmed abstract" AS clintrial_crossref_id_fromabstract_found_pretty,
+"Placeholder-TRN" AS clintrial_pubmed_id_fromabstract,
+TRUE AS clintrial_pubmed_id_fromabstract_found,
+"Placeholder - Clinical trial number found in Pubmed abstracts" AS clintrial_pubmed_id_fromabstract_found_pretty,
 
   ------ 3.20 PUBMED TABLE: Databank names - details
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
