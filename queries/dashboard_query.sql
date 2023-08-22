@@ -1,7 +1,7 @@
 -------------------------------------------
 -- Montreal Neuro - Dashboard query
 -------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_08_16b';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1h_2023_08_21';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -297,31 +297,6 @@ SELECT
   "Clinical trial number found in Pubmed", "No linical trial number found in Pubmed") 
   AS clintrial_pubmed_id_found_PRETTY,
 
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ANZCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ANZCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ChiCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ChiCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CRiS%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_CRiS,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ClinicalTrials.gov%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ClinicalTrialsGov,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%CTRI%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_CTRI,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%DRKS%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_DRKS,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%EudraCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_EudraCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%IRCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_IRCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ISRCTN%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ISRCTN,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JapicCTI%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JapicCTI,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JMACCT%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JMACCT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%JPRN%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_JPRN,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%NTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_NTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PACTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_PACTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%ReBec%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_ReBec,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%REPEC%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_REPEC,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RPCEC%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_RPCEC,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SLCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_SLCTR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%TCTR%', TRUE, FALSE) AS pubmed_has_ClinTrialReg_TCTR,
-  IF((
-    (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) 
-    LIKE '%UMIN-CTR%') OR (
-      (SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) 
-      LIKE '%UMIN CTR%'), TRUE, FALSE) AS pubmed_has_ClinTrialReg_UMINCTR,
-
   ------ 3.19 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
   # NOTE, THERE ARE OTHER IDS TO SEARCH ON
  # REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as pubmed_has_ClinTrialReg_ID,
@@ -332,8 +307,8 @@ SELECT
  # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
 
 "Placeholder-TRN" AS clintrial_pubmed_id_fromabstract,
-TRUE AS clintrial_pubmed_id_fromabstract_found,
-"Placeholder - Clinical trial number found in Pubmed abstracts" AS clintrial_pubmed_id_fromabstract_found_pretty,
+FALSE AS clintrial_pubmed_id_fromabstract_found,
+"Placeholder - Clinical trial number not found in Pubmed abstracts" AS clintrial_pubmed_id_fromabstract_found_pretty,
 
   ------ 3.20 PUBMED TABLE: Databank names - details
   IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
@@ -344,29 +319,6 @@ TRUE AS clintrial_pubmed_id_fromabstract_found,
   'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
   "Found in a Databank (via Pubmed)", "Not found in a Databank (via Pubmed)") 
   AS pubmed_has_open_data_PRETTY,
-
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%BioProject%', TRUE, FALSE) AS pubmed_has_open_data_BioProject,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbGaP%', TRUE, FALSE) AS pubmed_has_open_data_dbGaP,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbSNP%', TRUE, FALSE) AS pubmed_has_open_data_dbSNP,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%dbVar%', TRUE, FALSE) AS pubmed_has_open_data_dbVar,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Dryad%', TRUE, FALSE) AS pubmed_has_open_data_Dryad,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%figshare%',TRUE, FALSE) AS pubmed_has_open_data_figshare,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GDB%', TRUE, FALSE) AS pubmed_has_open_data_GDB,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GENBANK%', TRUE, FALSE) AS pubmed_has_open_data_GENBANK,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%GEO%',TRUE, FALSE) AS pubmed_has_open_data_GEO,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%OMIM%', TRUE, FALSE) AS pubmed_has_open_data_OMIM,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PIR%', TRUE, FALSE) AS pubmed_has_open_data_PIR,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-BioAssay%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_BioAssay,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Compound%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_Compound,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PubChem-Substance%', TRUE, FALSE) AS pubmed_has_open_data_PubChem_Substance,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%RefSeq%', TRUE, FALSE) AS pubmed_has_open_data_RefSeq,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SRA%', TRUE, FALSE) AS pubmed_has_open_data_SRA,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%SWISSPROT%', TRUE, FALSE) AS pubmed_has_open_data_SWISSPROT,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniMES%', TRUE, FALSE) AS pubmed_has_open_data_UniMES,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniParc%', TRUE, FALSE) AS pubmed_has_open_data_UniParc,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniProtKB%', TRUE, FALSE) AS pubmed_has_open_data_UniProtKB,
-  IF((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%UniRef%', TRUE, FALSE) AS pubmed_has_open_data_UniRef,
-  IF(((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%Protein%') OR ((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)) LIKE '%PDB%'), TRUE, FALSE) AS pubmed_has_open_data_Protein_PDB,
 
 ------ 3.21 UTILITY - add a variable for the script version
   var_SQL_script_name,
