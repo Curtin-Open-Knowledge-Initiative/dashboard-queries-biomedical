@@ -22,6 +22,8 @@ AS (
 
 # == SELECT ======================================
 SELECT
+
+# ==== Metric name on dashboard: # Trials
 custom_cast_string(nct_id) as nct_id,
 CASE
   WHEN nct_id IS NULL THEN FALSE
@@ -31,6 +33,22 @@ CASE
   WHEN nct_id IS NULL THEN "No Trial-ID"
   ELSE "Has Trial-ID"
   END as nct_id_found_PRETTY,
+
+# ==== Metric name on dashboard: # Prospective registrations 
+# has_summary_results IS A TEMPORARY CALC UNTIL THE VARIABLE is_prospective IS ADDED
+custom_cast_boolean(has_summary_results) as is_prospective,
+CASE
+  WHEN custom_cast_boolean(has_summary_results) IS TRUE THEN "Registered before enrollment started"
+  ELSE "Registered after enrollment started"
+  END as is_prospective_PRETTY,
+  
+# ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
+# is_multicentric IS A TEMPORARY CALC UNTIL THE VARIABLE is_summary_results_1y IS ADDED
+custom_cast_boolean(is_multicentric) as is_summary_results_1y,
+CASE
+  WHEN custom_cast_boolean(is_multicentric) IS TRUE THEN "Summary results reported within 1 year of trial completion"
+  ELSE "Summary results not reported within 1 year of trial completion"
+  END as is_summary_results_1y_PRETTY,
 
 custom_cast_date(last_update_submitted_date) as last_update_submitted_date,
 custom_cast_date(registration_date) as registration_date,
