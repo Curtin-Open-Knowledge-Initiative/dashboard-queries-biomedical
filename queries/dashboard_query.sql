@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_19';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_20';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -21,7 +21,7 @@ enriched_doi_table AS (
       FROM UNNEST(unpaywall.oa_locations) as g
       WHERE g.host_type="repository"
       ORDER BY g.oa_date ASC LIMIT 1
-      ) as first_green_oa_date
+      ) as first_green_oa_date # END OF CREATION OF enriched_doi_table
   
   ------ TABLES.
   FROM `academic-observatory.observatory.doi20230618` as academic_observatory
@@ -34,7 +34,7 @@ enriched_doi_table AS (
     # PubMed is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `university-of-ottawa.neuro_data_processed.pubmed_extract` as pubmed
       ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
-), # END OF CREATION OF enriched_doi_table
+), # END OF 1. SELECT enriched_doi_table
 
 -----------------------------------------------------------------------
 -- 2. PREPARE DOI SUBSET
@@ -46,7 +46,7 @@ target_dois AS (
     `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long`
     -- {{doi_table}} WHERE "http://ror.org/XXXXX" in (SELECT identifier FROM UNNEST(affiliations.institutions))
     -- {{doi_table}} WHERE "10.XXXXX" in (SELECT identifier FROM UNNEST(affiliations.funders))
-), # END OF CREATION OF target_dois
+), # END OF 2. SELECT target_dois
 
 -----------------------------------------------------------------------
 -- 3. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -205,22 +205,27 @@ main_select AS (
      AS clintrial_crossref_id,
 
   CASE
-    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN TRUE
+    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 
+    THEN TRUE
     ELSE FALSE
   END as clintrial_crossref_id_found,
   
   CASE
-    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0 THEN "Trial-ID found in Crossref Metadata"
+    WHEN ARRAY_LENGTH(enriched_doi_table.academic_observatory.crossref.clinical_trial_number) > 0
+    THEN "Trial-ID found in Crossref Metadata"
     ELSE "No Trial-ID in Crossref Metadata"
   END as clintrial_crossref_id_found_PRETTY,
 
   ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
-  REGEXP_EXTRACT_ALL(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as clintrial_crossref_id_fromabstract,
+  REGEXP_EXTRACT_ALL(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') AS 
+    clintrial_crossref_id_fromabstract,
 
-  REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') as clintrial_crossref_id_fromabstract_found,
+  REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') AS 
+    clintrial_crossref_id_fromabstract_found,
   
   CASE
-    WHEN REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}') THEN "Trial-ID found in Crossref Metadata abstracts"
+    WHEN REGEXP_CONTAINS(UPPER(enriched_doi_table.academic_observatory.crossref.abstract), r'NCT0\\d{7}')
+    THEN "Trial-ID found in Crossref Metadata abstracts"
     ELSE "No Trial-ID in Crossref Metadata abstracts"
   END as clintrial_crossref_id_fromabstract_found_PRETTY,
 
@@ -323,7 +328,7 @@ FALSE AS clintrial_pubmed_id_fromabstract_found,
   AS pubmed_has_open_data_PRETTY,
 
 -----------------------------------------------------------------------
--- 4: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
+-- 3.21: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
 -----------------------------------------------------------------------
  FROM
    target_dois
@@ -332,14 +337,14 @@ FALSE AS clintrial_pubmed_id_fromabstract_found,
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
 
- ) # END OF CREATION OF main_select
+ ) # END OF 3. SELECT main_select
  
  -----------------------------------------------------------------------
--- 5: Calc additional variables that require the previous steps
+-- 4: Calc additional variables that require the previous steps
 -----------------------------------------------------------------------
  SELECT
  main_select.*,
-   ------ 3.22 Clinical Trial - combine Trial-IDs from datasets
+   ------ 4.22 Clinical Trial - combine Trial-IDs from datasets
     REPLACE(
       CONCAT(
         COALESCE(clintrial_crossref_id,""), " ",
@@ -352,15 +357,17 @@ FALSE AS clintrial_pubmed_id_fromabstract_found,
        COALESCE(clintrial_pubmed_id_fromabstract,""), " "
        ),'  ',' ') AS clintrial_CONCAT_ALL,
 
-  ------ 3.23 UTILITY - add a variable for the script version
-  var_SQL_script_name,
+  ------ 4.23 Match DOIs to the list of TrialIDs provided for The Neuro
+
   p1.doi_found as found_in_trial_dataset,
     CASE
-    WHEN p1.doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in publication"
-    ELSE "Trial dataset Trial-IDs referenced in publication"
-  END as found_in_trial_dataset_PRETTY
+      WHEN p1.doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in publication"
+      ELSE "Trial dataset Trial-IDs referenced in publication"
+      END as found_in_trial_dataset_PRETTY,
+  
+  ----- 4.24 UTILITY - add a variable for the script version
+  var_SQL_script_name
+  
   FROM main_select
- 
-LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
-ON main_select.doi = p1.doi
-
+  LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
+  ON main_select.doi = p1.doi
