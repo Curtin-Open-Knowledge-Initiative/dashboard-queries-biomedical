@@ -3,7 +3,7 @@
 -- extract Crossref and Pubmed data and make a combined list of
 -- Clinical trials
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_22';
+DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_22b';
 
 -----------------------------------------------------------------------
 -- 1. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -115,7 +115,7 @@ GROUP by doi
 ), # END. SELECT table_2
 
 -----------------------------------------------------------------------
--- 3: process_pubmed_registries - Getting the CLINICAL TRIALS
+-- 3: process_pubmed_registries - Getting the CLINICAL TRIAL Registries
 -----------------------------------------------------------------------
 table_3 AS (
 SELECT
@@ -128,57 +128,64 @@ GROUP by doi
 ), # END. SELECT table_3
 
 -----------------------------------------------------------------------
--- 4: process_pubmed_registries - Combining Databanks and registries
+-- 4: process_pubmed_registries - Linking Databanks to main query
 -----------------------------------------------------------------------
 table_4 AS (
 SELECT
-  table_2.doi,
-  table_2.PUBMED_opendata_fromfield_names,
-  table_2.PUBMED_opendata_fromfield_ids,
+  main_select.*,
+  table2_joined.PUBMED_opendata_fromfield_names,
+  table2_joined.PUBMED_opendata_fromfield_ids,
+FROM main_select
+LEFT JOIN table_2 as table2_joined
+  ON LOWER(main_select.doi) = LOWER(table2_joined.doi)
+), # END. SELECT table_4
+
+-----------------------------------------------------------------------
+-- 5: process_pubmed_registries - Linking CLINICAL TRIAL Registries to main query
+-----------------------------------------------------------------------
+table_5 AS (
+SELECT
+  table_4.*,
   table3_joined.PUBMED_clintrial_fromfield_names,
   table3_joined.PUBMED_clintrial_fromfield_ids
-FROM table_2
+FROM table_4
 LEFT JOIN table_3 as table3_joined
-  ON LOWER(table_2.doi) = LOWER(table3_joined.doi)
-) # END. SELECT table_4
+  ON LOWER(table_4.doi) = LOWER(table3_joined.doi)
+) # END. SELECT table_5
 
 -----------------------------------------------------------------------
--- 5: combine trial IDs and registies for BOTH Crossref and Pubmed
+-- 6: combine trial IDs and registies for BOTH Crossref and Pubmed
 -----------------------------------------------------------------------
-  SELECT
-  main_select.* EXCEPT (pubmed_DataBankList_RAW),  
+SELECT
+  * EXCEPT (pubmed_DataBankList_RAW),  
 
-  COALESCE(CROSSREF_fromfield_trialid,"") AS test_1,
-  COALESCE(table_4_joined.PUBMED_clintrial_fromfield_ids,"") AS test_2,
-  COALESCE(PUBMED_fromabstract_trialid,"") AS test_3,
-  ------ 5.1 Clinical Trial - combine Trial-IDs from all sources
+  ------ 6.1 Clinical Trial - combine Trial-IDs from all sources
     TRIM(REPLACE(
         CONCAT(COALESCE(CROSSREF_fromfield_trialid,""), " ",
         # The following complex statement is to capture missing (?) values that returns "0 rows" isntead of null
         TRIM(COALESCE((SELECT CONCAT(p1) FROM UNNEST(CROSSREF_fromabstract_trialid) AS p1) ,'')),
-        COALESCE(table_4_joined.PUBMED_clintrial_fromfield_ids,""), " ", 
+        COALESCE(PUBMED_clintrial_fromfield_ids,""), " ", 
         COALESCE(PUBMED_fromabstract_trialid,""), " "
        ),'  ',' ')) AS ANYSOURCE_trialids,
   
-  ------ 5.2 Determine if ANY Clinical Trial is found from ANY source
+  ------ 6.2 Determine if ANY Clinical Trial is found from ANY source
    IF (CROSSREF_fromfield_trialid_found 
     OR CROSSREF_fromabstract_trialid_found
     OR PUBMED_fromfield_trialid_found
     OR PUBMED_fromabstract_trialid_found, 
     TRUE, FALSE) AS ANYSOURCE_trialid_found,
 
-   ------ 5.3 Databanks - combine DATABANK IDs from all sources
+   ------ 6.3 Databanks - combine DATABANK IDs from all sources
     TRIM(REPLACE(
       CONCAT(
         COALESCE(PUBMED_opendata_fromfield_names,""), " ", 
         COALESCE(UPPER(PUBMED_opendata_fromfield_ids),""), " "
        ),'  ',' ')) AS ANYSOURCE_opendata_ids,
   
-   ----- 5.4 UTILITY - add a variable for the script version
+   ----- 6.4 UTILITY - add a variable for the script version
   var_SQL_script_name
 
-  FROM main_select
-  LEFT JOIN table_4 as table_4_joined
-  ON LOWER(main_select.doi) = LOWER(table_4_joined.doi)
-# END SELECT table_5
+  FROM table_5
+
+# END SELECT #6 Final
 
