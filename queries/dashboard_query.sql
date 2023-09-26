@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_22';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_22b';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -192,28 +192,27 @@ main_select AS (
   END as license_GROUP,
 
   ------ 3.7 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
-  clintrial_extract.clintrial_crossref_registry,
-  clintrial_extract.clintrial_crossref_type,
-  clintrial_extract.clintrial_crossref_id,
---- CHECK THIS IS STILL NULL AND PRETTY IS CORRECT ****************************************
-  clintrial_extract.clintrial_crossref_id_found,
+  clintrial_extract.CROSSREF_registry,
+  clintrial_extract.CROSSREF_type,
+  clintrial_extract.CROSSREF_id_fromfield,
+  clintrial_extract.CROSSREF_id_fromfield_found,
   
   CASE
-    WHEN clintrial_extract.clintrial_crossref_id_found
+    WHEN clintrial_extract.CROSSREF_id_fromfield_found
     THEN "Trial-ID found in Crossref Metadata"
     ELSE "No Trial-ID in Crossref Metadata"
-  END as clintrial_crossref_id_found_PRETTY,
+  END as CROSSREF_id_fromfield_found_PRETTY,
 
   ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
-  clintrial_extract.clintrial_crossref_id_fromabstract,
-  clintrial_extract.clintrial_crossref_id_fromabstract_found,
+  clintrial_extract.CROSSREF_id_fromabstract,
+  clintrial_extract.CROSSREF_id_fromabstract_found,
   
   --- CHECK THIS IS STILL NULL AND PRETTY IS CORRECT ****************************************
   CASE
-    WHEN clintrial_extract.clintrial_crossref_id_fromabstract_found
+    WHEN clintrial_extract.CROSSREF_id_fromabstract_found
     THEN "Trial-ID found in Crossref Metadata abstracts"
     ELSE "No Trial-ID in Crossref Metadata abstracts"
-  END as clintrial_crossref_id_fromabstract_found_PRETTY,
+  END as CROSSREF_id_fromabstract_found_PRETTY,
 
   ------ 3.9 DOI TABLE: PUBLISHER ORCID
   CASE
@@ -277,17 +276,17 @@ main_select AS (
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
  
   ------ 3.17 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
-  clintrial_extract.clintrial_pubmed_registry_CONCAT,
-  clintrial_extract.clintrial_pubmed_id_CONCAT,
+  clintrial_extract.PUBMED_registry_CONCAT,
+  clintrial_extract.PUBMED_id_CONCAT,
 
   ------ 3.18 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields
-  clintrial_extract.clintrial_pubmed_id_found,
+  clintrial_extract.PUBMED_id_found,
 
   CASE
-    WHEN clintrial_extract.clintrial_pubmed_id_found
+    WHEN clintrial_extract.PUBMED_id_found
     THEN "Trial-ID found in Pubmed"
     ELSE "No Trial-ID number found in Pubmed"
-    END as clintrial_pubmed_id_found_PRETTY,
+    END as PUBMED_id_found_PRETTY,
 
   ------ 3.19 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
   # NOTE, THERE ARE OTHER IDS TO SEARCH ON
@@ -298,14 +297,14 @@ main_select AS (
  # END as pubmed_has_ClinTrialReg_ID_PRETTY,
  # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
 
-  clintrial_extract.clintrial_pubmed_id_fromabstract,
-  clintrial_extract.clintrial_pubmed_id_fromabstract_found,
+  clintrial_extract.PUBMED_id_fromabstract,
+  clintrial_extract.PUBMED_id_fromabstract_found,
 
   CASE
-    WHEN clintrial_extract.clintrial_pubmed_id_fromabstract_found
+    WHEN clintrial_extract.PUBMED_id_fromabstract_found
     THEN "Placeholder - Trial-ID  found in Pubmed abstract"
     ELSE "Placeholder - Trial-ID Not found in Pubmed abstract"
-    END as clintrial_pubmed_id_found_PRETTY,
+    END as PUBMED_id_fromabstract_found_PRETTY,
 
   ------ 3.20 PUBMED TABLE: Databank names - details
   clintrial_extract.pubmed_has_open_data,
