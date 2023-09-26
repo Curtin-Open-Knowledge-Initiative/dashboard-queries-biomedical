@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Trial Data query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_20b_trialdata';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_22_trialdata';
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
