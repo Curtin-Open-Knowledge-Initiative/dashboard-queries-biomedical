@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_22b';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_26a';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -32,7 +32,7 @@ enriched_doi_table AS (
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_22` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_26e` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF 1. SELECT enriched_doi_table
 
@@ -191,29 +191,6 @@ main_select AS (
     ELSE "No licence info" 
   END as license_GROUP,
 
-  ------ 3.7 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
-  clintrial_extract.CROSSREF_registry,
-  clintrial_extract.CROSSREF_type,
-  clintrial_extract.CROSSREF_id_fromfield,
-  clintrial_extract.CROSSREF_id_fromfield_found,
-  
-  CASE
-    WHEN clintrial_extract.CROSSREF_id_fromfield_found
-    THEN "Trial-ID found in Crossref Metadata"
-    ELSE "No Trial-ID in Crossref Metadata"
-  END as CROSSREF_id_fromfield_found_PRETTY,
-
-  ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
-  clintrial_extract.CROSSREF_id_fromabstract,
-  clintrial_extract.CROSSREF_id_fromabstract_found,
-  
-  --- CHECK THIS IS STILL NULL AND PRETTY IS CORRECT ****************************************
-  CASE
-    WHEN clintrial_extract.CROSSREF_id_fromabstract_found
-    THEN "Trial-ID found in Crossref Metadata abstracts"
-    ELSE "No Trial-ID in Crossref Metadata abstracts"
-  END as CROSSREF_id_fromabstract_found_PRETTY,
-
   ------ 3.9 DOI TABLE: PUBLISHER ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
@@ -274,46 +251,47 @@ main_select AS (
 
   ------ 3.16 URLs for FULL TEXT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
- 
+   
   ------ 3.17 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
-  clintrial_extract.PUBMED_registry_CONCAT,
-  clintrial_extract.PUBMED_id_CONCAT,
+  clintrial_extract.PUBMED_DataBankList_names_CONCAT,
+  clintrial_extract.PUBMED_DataBankList_ids_CONCAT,
 
-  ------ 3.18 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields
-  clintrial_extract.PUBMED_id_found,
+   ------ 3.7 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
+  clintrial_extract.CROSSREF_clintrial_fromfield_registry,
+  clintrial_extract.CROSSREF_clintrial_fromfield_type,
+  clintrial_extract.CROSSREF_clintrial_fromfield_ids,
+  clintrial_extract.CROSSREF_clintrial_fromfield_found,
 
-  CASE
-    WHEN clintrial_extract.PUBMED_id_found
-    THEN "Trial-ID found in Pubmed"
-    ELSE "No Trial-ID number found in Pubmed"
-    END as PUBMED_id_found_PRETTY,
+  ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
+  clintrial_extract.CROSSREF_clintrial_fromabstract_ids,
+  clintrial_extract.CROSSREF_clintrial_fromabstract_found,
+
+  ------ 3.18 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields		
+  clintrial_extract.PUBMED_clintrial_fromfield_names,			
+  clintrial_extract.PUBMED_clintrial_fromfield_ids,		
+  clintrial_extract.PUBMED_clintrial_fromfield_found,
 
   ------ 3.19 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
-  # NOTE, THERE ARE OTHER IDS TO SEARCH ON
- # REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as pubmed_has_ClinTrialReg_ID,
- # CASE
- #   WHEN REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') THEN "Has PubMed Clinical Trial Registry ID"
- #   ELSE "No PubMed Clinical Trial Registry ID found"
- # END as pubmed_has_ClinTrialReg_ID_PRETTY,
- # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
+  clintrial_extract.PUBMED_clintrial_fromabstract_ids,	
+  clintrial_extract.PUBMED_clintrial_fromabstract_found,
 
-  clintrial_extract.PUBMED_id_fromabstract,
-  clintrial_extract.PUBMED_id_fromabstract_found,
-
+  ------ 3.XX CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL sources
+  clintrial_extract.ANYSOURCE_clintrials,
+  clintrial_extract.ANYSOURCE_clintrial_found,
   CASE
-    WHEN clintrial_extract.PUBMED_id_fromabstract_found
-    THEN "Placeholder - Trial-ID  found in Pubmed abstract"
-    ELSE "Placeholder - Trial-ID Not found in Pubmed abstract"
-    END as PUBMED_id_fromabstract_found_PRETTY,
+    WHEN clintrial_extract.ANYSOURCE_clintrial_found
+    THEN "Trial dataset Trial-IDs referenced in publication"
+    ELSE "No reference of Trial dataset Trial-IDs in publication"
+    END as ANYSOURCE_clintrial_found_PRETTY,
 
   ------ 3.20 PUBMED TABLE: Databank names - details
-  clintrial_extract.pubmed_has_open_data,
+  clintrial_extract.PUBMED_opendata_fromfield_found,
 
   CASE
-    WHEN clintrial_extract.pubmed_has_open_data
+    WHEN clintrial_extract.PUBMED_opendata_fromfield_found
     THEN "Databank-ID found in Pubmed"
     ELSE "No Databank-ID number found in Pubmed"
-    END as pubmed_has_open_data_PRETTY,
+    END as PUBMED_opendata_fromfield_found_PRETTY,
 
 -----------------------------------------------------------------------
 -- 3.21: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
@@ -327,25 +305,9 @@ main_select AS (
 
  ) # END OF 3. SELECT main_select
  
- -----------------------------------------------------------------------
 -- 4: Calc additional variables that require the previous steps
 -----------------------------------------------------------------------
- SELECT
- main_select.*,
-   ------ 4.22 Clinical Trial - combine Trial-IDs from datasets
-   clintrial_extract.clintrial_and_databank_ALL_ids,
-
-  ------ 4.23 Match DOIs to the list of TrialIDs provided for The Neuro
-
-  p1.doi_found as found_in_trial_dataset,
-    CASE
-      WHEN p1.doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in publication"
-      ELSE "Trial dataset Trial-IDs referenced in publication"
-      END as found_in_trial_dataset_PRETTY,
-  
-  ----- 4.24 UTILITY - add a variable for the script version
-  var_SQL_script_name
-  
-  FROM main_select
-  LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
-  ON main_select.doi = p1.doi
+select
+*
+from
+main_select
