@@ -3,7 +3,7 @@
 -- extract Crossref and Pubmed data and make a combined list of
 -- Clinical trials
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_27';
+DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_28';
 
 -----------------------------------------------------------------------
 -- 0. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -175,4 +175,3 @@ SELECT
   
   # END.main SELECT
 -----------------------------------------------------------------------
-
