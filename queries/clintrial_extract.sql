@@ -3,7 +3,7 @@
 -- extract Crossref and Pubmed data and make a combined list of
 -- Clinical trials
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_26a';
+DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_27';
 
 -----------------------------------------------------------------------
 -- 0. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -28,8 +28,8 @@ WITH main_select AS (
      AS CROSSREF_clintrial_fromfield_ids,
 
   CASE
-    WHEN ARRAY_LENGTH(academic_observatory.crossref.clinical_trial_number) > 0 
-    THEN TRUE
+    WHEN academic_observatory.crossref.clinical_trial_number IS NULL THEN FALSE
+    WHEN ARRAY_LENGTH(academic_observatory.crossref.clinical_trial_number) > 0 THEN TRUE
     ELSE FALSE
   END as CROSSREF_clintrial_fromfield_found,
   
@@ -55,31 +55,8 @@ WITH main_select AS (
   TRIM((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList))) AS PUBMED_DataBankList_names_CONCAT,
   TRIM((SELECT STRING_AGG(id, " ") FROM UNNEST(pubmed.pubmed_DataBankList))) AS PUBMED_DataBankList_ids_CONCAT,
 
-  ------ 0.6 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields
-  --- *****************************************************
-  ------- This field is overloaded, requiring special processing!
-  #IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
- # 'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR'),
- # TRUE, FALSE) AS PUBMED_clintrial_fromfield_found,
-  
-  ------ 0.7 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
-  # NOTE, THERE ARE OTHER IDS TO SEARCH ON
-  # REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as pubmed_has_ClinTrialReg_ID,
-  # CASE
-  #   WHEN REGEXP_CONTAINS(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') THEN "Has PubMed Clinical Trial Registry ID"
-  #   ELSE "No PubMed Clinical Trial Registry ID found"
-  # END as pubmed_has_ClinTrialReg_ID_PRETTY,
-  # REGEXP_EXTRACT_ALL(UPPER(pubmed.pubmed_Abstract), r'NCT0\\d{7}') as clinical_trial_gov_trns2,
-
   "" AS PUBMED_clintrial_fromabstract_ids,
   FALSE AS PUBMED_clintrial_fromabstract_found,
-
-  ------ 0.8 PUBMED TABLE: Databank names - details
-    --- *****************************************************
-#IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
-#  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
-#  TRUE, FALSE) AS PUBMED_fromfield_opendata_found
-
  -----------------------------------------------------------------------
  FROM
     ------ Crossref from Academic Observatory.
@@ -87,7 +64,7 @@ WITH main_select AS (
     # PubMed is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `university-of-ottawa.neuro_data_processed.pubmed_extract` as pubmed
       ON LOWER(academic_observatory.doi) = LOWER(pubmed_doi)
-      WHERE academic_observatory.crossref.published_year > 2010
+      WHERE academic_observatory.crossref.published_year > 2000
 
  ), # END OF 0. SELECT main_select
 
@@ -126,10 +103,11 @@ SELECT
   table_2_joined.PUBMED_clintrial_fromfield_names,
   table_2_joined.PUBMED_clintrial_fromfield_ids,
   CASE
-    WHEN LENGTH(table_2_joined.PUBMED_clintrial_fromfield_ids) > 0 
-    THEN TRUE
+    WHEN table_2_joined.PUBMED_clintrial_fromfield_ids IS NULL THEN FALSE
+    WHEN LENGTH(table_2_joined.PUBMED_clintrial_fromfield_ids) > 0 THEN TRUE
     ELSE FALSE
   END AS PUBMED_clintrial_fromfield_found
+
 FROM main_select
   FULL JOIN table_2 as table_2_joined
   ON LOWER(main_select.doi) = LOWER(table_2_joined.doi)
@@ -149,14 +127,14 @@ table_4 AS (
         COALESCE(PUBMED_clintrial_fromfield_ids,""), " ", 
         COALESCE(PUBMED_clintrial_fromabstract_ids,""), " "
        ),'  ',' ')) AS ANYSOURCE_clintrials,
-  
+
   ------ 4.2 Determine if ANY Clinical Trial is found from ANY source
    IF (CROSSREF_clintrial_fromfield_found 
     OR CROSSREF_clintrial_fromabstract_found
     OR PUBMED_clintrial_fromfield_found
     OR PUBMED_clintrial_fromabstract_found, 
     TRUE, FALSE) AS ANYSOURCE_clintrial_found
-
+  
   FROM table_3
   ), # END SELECT table 4
 
@@ -171,26 +149,20 @@ SELECT
 FROM table_1
 WHERE REGEXP_CONTAINS(PUBMED_DataBankList_names,'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein')
 
-#IF(REGEXP_CONTAINS((SELECT STRING_AGG(name, " ") FROM UNNEST(pubmed.pubmed_DataBankList)), 
-#  'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein'),
-#  TRUE, FALSE) AS PUBMED_fromfield_opendata_found
-
-
 GROUP by doi
 ) # END. SELECT table_5
 
 -----------------------------------------------------------------------
 -- 6: Link Pubmed Databanks to main query
 -----------------------------------------------------------------------
-/*
 SELECT
   ----- 6.1 Link Pubmed Databanks to main query
   table_4.*,
   table5_joined.PUBMED_opendata_fromfield_names,
   table5_joined.PUBMED_opendata_fromfield_ids,
   CASE
-    WHEN LENGTH(table5_joined.PUBMED_opendata_fromfield_ids) > 0 OR LENGTH(table5_joined.PUBMED_opendata_fromfield_names) > 0 
-    THEN TRUE
+    WHEN table5_joined.PUBMED_opendata_fromfield_ids IS NULL THEN FALSE
+    WHEN LENGTH(table5_joined.PUBMED_opendata_fromfield_ids) > 0 OR LENGTH(table5_joined.PUBMED_opendata_fromfield_names) > 0 THEN TRUE
     ELSE FALSE
   END AS PUBMED_opendata_fromfield_found,
 
@@ -200,10 +172,6 @@ SELECT
   FROM table_4
   FULL JOIN table_5 as table5_joined
   ON LOWER(table_4.doi) = LOWER(table5_joined.doi)
-   # END.main SELECT
-
-*/
-   SELECT
-   *
-   FROM
-   table_5
+  
+  # END.main SELECT
+-----------------------------------------------------------------------
