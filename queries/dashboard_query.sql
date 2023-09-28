@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_26a';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_27';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -32,7 +32,7 @@ enriched_doi_table AS (
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_26e` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_27` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF 1. SELECT enriched_doi_table
 
@@ -191,7 +191,7 @@ main_select AS (
     ELSE "No licence info" 
   END as license_GROUP,
 
-  ------ 3.9 DOI TABLE: PUBLISHER ORCID
+  ------ 3.7 DOI TABLE: PUBLISHER ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -202,7 +202,7 @@ main_select AS (
     ELSE "Does not have publisher ORCID"
   END AS has_publisher_orcid_PRETTY,
   
-  ------ 3.10 DOI TABLE: AUTHOR ORCID
+  ------ 3.8 DOI TABLE: AUTHOR ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.authors) as authors where authors.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -213,7 +213,7 @@ main_select AS (
     ELSE "Not in any ORCID record"
   END AS in_orcid_record_PRETTY,
 
-  ------ 3.11 DOI TABLE: CROSSREF FUNDER RECORD
+  ------ 3.9 DOI TABLE: CROSSREF FUNDER RECORD
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.funders) as funders where funders.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -224,45 +224,45 @@ main_select AS (
     ELSE "No funder acknowledgement"
   END AS has_cr_funder_record_PRETTY,
 
-  ------ 3.12 CONTRIBUTED TABLE: PREPRINT
+  ------ 3.10 CONTRIBUTED TABLE: PREPRINT
   enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint as has_preprint,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint THEN "Has a preprint"
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
-  ------ 3.13 CONTRIBUTED TABLE: OPEN DATA
+  ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
   enriched_doi_table.contributed.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
     WHEN enriched_doi_table.contributed.is_open_data THEN "Links to open data (via ODDPUB)"
     ELSE "No links to open data found"
   END AS has_open_data_oddpub_PRETTY,
 
-  ------ 3.14 CONTRIBUTED TABLE: OPEN CODE
+  ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
   enriched_doi_table.contributed.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
   CASE
     WHEN enriched_doi_table.contributed.is_open_code THEN "Links to open code (via ODDPUB)"
     ELSE "No links to open code found"
   END AS has_open_code_oddpub_PRETTY,
 
-  ------ 3.15 ABSTRACTS from any sources
+  ------ 3.13 URLs for FULL TEXT
+  (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
+  
+  ------ 3.14 ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   clintrial_extract.abstract_pubmed,
 
-  ------ 3.16 URLs for FULL TEXT
-  (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
-   
-  ------ 3.17 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
+  ------ 3.15 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
   clintrial_extract.PUBMED_DataBankList_names_CONCAT,
   clintrial_extract.PUBMED_DataBankList_ids_CONCAT,
 
-   ------ 3.7 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
+   ------ 3.16 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
   clintrial_extract.CROSSREF_clintrial_fromfield_registry,
   clintrial_extract.CROSSREF_clintrial_fromfield_type,
   clintrial_extract.CROSSREF_clintrial_fromfield_ids,
   clintrial_extract.CROSSREF_clintrial_fromfield_found,
 
-  ------ 3.8 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
+  ------ 3.17 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
   clintrial_extract.CROSSREF_clintrial_fromabstract_ids,
   clintrial_extract.CROSSREF_clintrial_fromabstract_found,
 
@@ -275,13 +275,13 @@ main_select AS (
   clintrial_extract.PUBMED_clintrial_fromabstract_ids,	
   clintrial_extract.PUBMED_clintrial_fromabstract_found,
 
-  ------ 3.XX CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL sources
+  ------ 3.20 CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL sources
   clintrial_extract.ANYSOURCE_clintrials,
   clintrial_extract.ANYSOURCE_clintrial_found,
   CASE
     WHEN clintrial_extract.ANYSOURCE_clintrial_found
-    THEN "Trial dataset Trial-IDs referenced in publication"
-    ELSE "No reference of Trial dataset Trial-IDs in publication"
+    THEN "Trial-ID found in any publication in Pubmed or Crossref"
+    ELSE "No Trial-ID found in any publication in Pubmed or Crossref"
     END as ANYSOURCE_clintrial_found_PRETTY,
 
   ------ 3.20 PUBMED TABLE: Databank names - details
@@ -294,7 +294,7 @@ main_select AS (
     END as PUBMED_opendata_fromfield_found_PRETTY,
 
 -----------------------------------------------------------------------
--- 3.21: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
+-- 3.22: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
 -----------------------------------------------------------------------
  FROM
    target_dois
@@ -304,10 +304,23 @@ main_select AS (
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
 
  ) # END OF 3. SELECT main_select
- 
+
+-----------------------------------------------------------------------
 -- 4: Calc additional variables that require the previous steps
 -----------------------------------------------------------------------
-select
-*
-from
-main_select
+ SELECT
+  main_select.*,
+  ------ 4.1 Match DOIs from The Neuro's publications
+  ------     to the list of TrialIDs provided for The Neuro
+  p1.doi_found as found_in_trial_dataset,
+    CASE
+      WHEN p1.doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in publication"
+      ELSE "Trial dataset Trial-IDs referenced in publication"
+      END as found_in_trial_dataset_PRETTY,
+  
+  ----- 4.2 UTILITY - add a variable for the script version
+  var_SQL_script_name
+  
+  FROM main_select
+  LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
+  ON main_select.doi = p1.doi
