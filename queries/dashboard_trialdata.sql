@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Trial Data query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_28_trialdata';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_28b_trialdata';
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
@@ -111,7 +111,7 @@ d_clintrial_extract AS (
 SELECT 
   trials_data.*,
   #d_pubs_extract_flat.PUBS_doi,
-  CONCAT(d_pubs_extract_flat.PUBS_doi, ' ') AS PUBS_doi_CONCAT,
+  TRIM(CONCAT(d_pubs_extract_flat.PUBS_doi, ' ')) AS PUBS_doi_CONCAT,
 
  CASE
     WHEN d_pubs_extract_flat.PUBS_doi IS NOT NULL
@@ -175,3 +175,6 @@ SELECT
   ON d_clintrial_extract.nct_id = d_anysource_extract_flat.ANYSOURCE_clintrials_unnested
   
   # END OF 6. SELECT d_clintrial_extract_AND_trial_data
+
+
+ 
