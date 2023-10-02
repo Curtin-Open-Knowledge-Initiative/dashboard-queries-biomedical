@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_27';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_28a';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -284,7 +284,7 @@ main_select AS (
     ELSE "No Trial-ID found in any publication in Pubmed or Crossref"
     END as ANYSOURCE_clintrial_found_PRETTY,
 
-  ------ 3.20 PUBMED TABLE: Databank names - details
+  ------ 3.21 PUBMED TABLE: Databank names - details
   clintrial_extract.PUBMED_opendata_fromfield_found,
 
   CASE
@@ -312,10 +312,11 @@ main_select AS (
   main_select.*,
   ------ 4.1 Match DOIs from The Neuro's publications
   ------     to the list of TrialIDs provided for The Neuro
-  p1.doi_found as found_in_trial_dataset,
+  p1.PUBS_doi_CONCAT,
+  p1.PUBS_doi_found as found_in_trial_dataset,
     CASE
-      WHEN p1.doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in publication"
-      ELSE "Trial dataset Trial-IDs referenced in publication"
+      WHEN p1.PUBS_doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in The Neuro's publications"
+      ELSE "Trial dataset Trial-IDs referenced in The Neuro's publications"
       END as found_in_trial_dataset_PRETTY,
   
   ----- 4.2 UTILITY - add a variable for the script version
@@ -323,4 +324,4 @@ main_select AS (
   
   FROM main_select
   LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
-  ON main_select.doi = p1.doi
+  ON '%main_select.doi%' LIKE '%p1.PUBS_doi_CONCAT'
