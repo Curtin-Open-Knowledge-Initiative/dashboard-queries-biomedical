@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Data extract of the academic Observatory to 
--- extract Crossref and Pubmed data and make a combined list of
--- Clinical trials
+-- Montreal Neuro - Run this 1st
+--- Data extract of the academic Observatory to extract Crossref and 
+-- Pubmed data and make a combined list of Clinical trials
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_09_28';
+DECLARE var_SQL_script_name STRING DEFAULT 'clintrial_extract_ver1l_2023_10_02';
 
 -----------------------------------------------------------------------
 -- 0. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -126,7 +126,7 @@ table_4 AS (
         TRIM(COALESCE((SELECT CONCAT(p1) FROM UNNEST(CROSSREF_clintrial_fromabstract_ids) AS p1) ,'')),
         COALESCE(PUBMED_clintrial_fromfield_ids,""), " ", 
         COALESCE(PUBMED_clintrial_fromabstract_ids,""), " "
-       ),'  ',' ')) AS ANYSOURCE_clintrials,
+       ),'  ',' ')) AS ANYSOURCE_clintrial_ids,
 
   ------ 4.2 Determine if ANY Clinical Trial is found from ANY source
    IF (CROSSREF_clintrial_fromfield_found 
