@@ -1,7 +1,8 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Dashboard query
+-- Montreal Neuro - Dashboard query for The Neuro's publications
+-- Run this 3rd and cascade to "dashboard_data_pubs"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_28a';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_010_02d';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -32,7 +33,7 @@ enriched_doi_table AS (
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_27` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_10_02` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF 1. SELECT enriched_doi_table
 
@@ -41,7 +42,8 @@ enriched_doi_table AS (
 -----------------------------------------------------------------------
 # target DOIs is the DOI subset of interest. Used to subset the Academic Observatory
 target_dois AS (
-  SELECT DISTINCT(doi)
+  SELECT
+  DISTINCT(doi)
   FROM
     `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long`
     -- {{doi_table}} WHERE "http://ror.org/XXXXX" in (SELECT identifier FROM UNNEST(affiliations.institutions))
@@ -54,8 +56,8 @@ target_dois AS (
 main_select AS (
   SELECT
   ------ 3.1 DOI TABLE: Misc METADATA
-  enriched_doi_table.academic_observatory.doi,
-  target_dois.doi as source_doi,
+  lower(enriched_doi_table.academic_observatory.doi) as doi,
+  lower(target_dois.doi) as source_doi,
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
@@ -275,9 +277,10 @@ main_select AS (
   clintrial_extract.PUBMED_clintrial_fromabstract_ids,	
   clintrial_extract.PUBMED_clintrial_fromabstract_found,
 
-  ------ 3.20 CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL sources
-  clintrial_extract.ANYSOURCE_clintrials,
+  ------ 3.20 CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL/ANY  data sources
+  clintrial_extract.ANYSOURCE_clintrial_ids,
   clintrial_extract.ANYSOURCE_clintrial_found,
+  
   CASE
     WHEN clintrial_extract.ANYSOURCE_clintrial_found
     THEN "Trial-ID found in any publication in Pubmed or Crossref"
@@ -294,7 +297,8 @@ main_select AS (
     END as PUBMED_opendata_fromfield_found_PRETTY,
 
 -----------------------------------------------------------------------
--- 3.22: JOIN ENRICHED AND TIDIED DOI TABLE TO THE TARGET DOIS
+-- 3.22: Join the enriched and tidied DOI table to the target DOIs 
+-------- from The Neuro's publication dataset
 -----------------------------------------------------------------------
  FROM
    target_dois
@@ -307,21 +311,40 @@ main_select AS (
 
 -----------------------------------------------------------------------
 -- 4: Calc additional variables that require the previous steps
+----- This include linking the DOIs from The Neuro's publications (this sheet)
+----- which have Trial-IDs that are also found in the list of trials from 
+----- The Neuro stored in 'dashboard_data_trials'
 -----------------------------------------------------------------------
- SELECT
+SELECT
   main_select.*,
-  ------ 4.1 Match DOIs from The Neuro's publications
-  ------     to the list of TrialIDs provided for The Neuro
-  p1.PUBS_doi_CONCAT,
-  p1.PUBS_doi_found as found_in_trial_dataset,
-    CASE
-      WHEN p1.PUBS_doi_found IS NULL THEN "No reference of Trial dataset Trial-IDs in The Neuro's publications"
-      ELSE "Trial dataset Trial-IDs referenced in The Neuro's publications"
-      END as found_in_trial_dataset_PRETTY,
+
+  ------ 4.1 Match ALL DOIs from The Neuro's publications
+  ------     which have Trial-IDs (from Crossref/Pubmed) that are on the list of 
+  -------    Trial-IDs provided for The Neuro
+  ------     Note: This is NOT the list of Trial-IDs from Pubmed/Crossref
+  ------     Note: Multiple Trial-IDs from the trial list might match each DOI,
+
+  # The Trial-IDs need to be concatenated as there may be many
+  TRIM(CONCAT(p1.nct_id, ' ')) AS TRIALDATA_trialids_CONCAT,
+
+  CASE
+    WHEN p1.PUBSDATA_ALL_dois_matching_trialid IS NULL
+    THEN FALSE
+    ELSE TRUE
+    END as TRIALDATA_trialids_found,
+
+  CASE
+    WHEN p1.PUBSDATA_ALL_dois_matching_trialid IS NULL 
+    THEN "Trial dataset Trial-IDs not found The Neuro's publications"
+    ELSE "Trial dataset Trial-IDs found in The Neuro's publications"
+    END as TRIALDATA_trialids_found_PRETTY,
   
   ----- 4.2 UTILITY - add a variable for the script version
   var_SQL_script_name
   
+  # var_DATA_trials
   FROM main_select
   LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
-  ON '%main_select.doi%' LIKE '%p1.PUBS_doi_CONCAT'
+  # This may need to have a wildcard to capture 1:many
+  ON main_select.doi = p1.PUBSDATA_ALL_dois_matching_trialid
+  
