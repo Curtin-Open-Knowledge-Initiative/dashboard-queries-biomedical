@@ -1,7 +1,8 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Trial Data query
+-- Montreal Neuro - Trial Data query 
+-- Run this 2nd and cascade to "dashboard_data_trials"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_09_28b_trialdata';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_10_02d_trialdata';
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
@@ -91,67 +92,26 @@ FROM `university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver1_raw`
 
 -----------------------------------------------------------------------
 -- 3 Extract and flatten (by DOI) the list of DOIs and Trial-IDs
--- associated with the publication set for The Neuro
------------------------------------------------------------------------
-d_pubs_extract_flat AS (
-SELECT 
-  doi as PUBS_doi,
-  PUBS_clintrials_unnested as PUBS_clintrials_unnested
-FROM
-  `university-of-ottawa.neuro_dashboard_data.dashboard_data`,
-  UNNEST(SPLIT(ANYSOURCE_clintrials," ")) as PUBS_clintrials_unnested
-  WHERE ANYSOURCE_clintrial_found
-), # END SELECT 5. d_pubs_extract_flat
-
------------------------------------------------------------------------
--- 4. To the Trial Data, join matching publications ONLY from The Neuro
--- which reference those Trial-IDs
------------------------------------------------------------------------
-d_clintrial_extract AS (
-SELECT 
-  trials_data.*,
-  #d_pubs_extract_flat.PUBS_doi,
-  TRIM(CONCAT(d_pubs_extract_flat.PUBS_doi, ' ')) AS PUBS_doi_CONCAT,
-
- CASE
-    WHEN d_pubs_extract_flat.PUBS_doi IS NOT NULL
-    THEN TRUE
-    ELSE FALSE
-    END AS PUBS_doi_found,
-
-  CASE
-    WHEN d_pubs_extract_flat.PUBS_doi IS NOT NULL
-    THEN "Trial-IDs from the Neuro's trial dataset in The Neuro publications"
-    ELSE "No Trial-IDs from the Neuro's trial dataset in The Neuro publications"
-    END AS PUBS_doi_found_PRETTY,
-
-  FROM trials_data
-  LEFT JOIN d_pubs_extract_flat 
-  ON trials_data.nct_id = d_pubs_extract_flat.PUBS_clintrials_unnested
-), # END SELECT 3. d_clintrial_extract
-
------------------------------------------------------------------------
--- 5 Extract and flatten (by DOI) the list of DOIs and Trial-IDs
--- associated with ANY SOURCE (ie Crossref and Pubmed)
+-- associated with ANY SOURCE (ie Crossref or Pubmed)
 -----------------------------------------------------------------------
 d_anysource_extract_flat AS (
 SELECT 
-  doi as ANYSOURCE_doi,
-  ANYSOURCE_clintrials AS ANYSOURCE_clintrials_CONCAT,
-  ANYSOURCE_clintrials_unnested
+  LOWER(doi) as ANYSOURCE_doi,
+  ANYSOURCE_clintrial_ids_flat
 FROM
-  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_09_27`,
-  UNNEST(SPLIT(ANYSOURCE_clintrials," ")) as ANYSOURCE_clintrials_unnested
+  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_10_02`,
+  UNNEST(SPLIT(ANYSOURCE_clintrial_ids," ")) as ANYSOURCE_clintrial_ids_flat
   WHERE ANYSOURCE_clintrial_found
-) # END SELECT 5. d_anysource_extract_flat
+), # END SELECT 3. d_anysource_extract_flat
 
 -----------------------------------------------------------------------
--- 6. To the Trial Data, join matching DOIs and Trial-IDs
+-- 4. To the Trial Data, join matching DOIs
 -- associated with ANY SOURCE (ie Crossref and Pubmed)
 -----------------------------------------------------------------------
-SELECT
-  d_clintrial_extract.*,
-  d_anysource_extract_flat.ANYSOURCE_doi,
+d_trials_data_joined_2_anysource AS (
+  SELECT
+  trials_data.*,
+  TRIM(CONCAT(d_anysource_extract_flat.ANYSOURCE_doi, ' ')) AS ANYSOURCE_ALL_dois_matching_trialid,
 
   CASE
     WHEN d_anysource_extract_flat.ANYSOURCE_doi IS NOT NULL
@@ -161,20 +121,55 @@ SELECT
 
   CASE
     WHEN d_anysource_extract_flat.ANYSOURCE_doi IS NOT NULL
-    THEN "Trial-IDs from the Neuro's trial dataset in a Crossref or Pubmed publication"
+    THEN "Trial-IDs from the Neuro's trial dataset found in a Crossref or Pubmed publication"
     ELSE "No Trial-IDs from the Neuro's trial dataset found in a Crossref or Pubmed publication"
     END AS ANYSOURCE_doi_found_PRETTY,
 
-  CONCAT(d_anysource_extract_flat.ANYSOURCE_clintrials_CONCAT, ' ') AS ANYSOURCE_clintrials_ALL,
-
-  ----- UTILITY - add a variable for the script version
-  var_SQL_script_name
-
-  FROM d_clintrial_extract
+  FROM trials_data
   LEFT JOIN d_anysource_extract_flat 
-  ON d_clintrial_extract.nct_id = d_anysource_extract_flat.ANYSOURCE_clintrials_unnested
+  ON lower(trials_data.nct_id) = lower(d_anysource_extract_flat.ANYSOURCE_clintrial_ids_flat)
   
-  # END OF 6. SELECT d_clintrial_extract_AND_trial_data
+  # END OF 4. SELECT d_trials_data_joined_2_anysource
+),
 
+-----------------------------------------------------------------------
+-- 5.From the flatted list of DOIs and Trial-IDs associated with ANY SOURCE 
+-- (ie Crossref or Pubmed) select JUST the rows with DOIs in the publication set
+-----------------------------------------------------------------------
+d_pubs_data_intersect_anysource AS (
+  SELECT
+  DISTINCT(LOWER(contributed_pubs.doi)) AS PUBSDATA_doi, 
+  d_anysource_extract_flat.ANYSOURCE_clintrial_ids_flat
+  FROM
+    `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long` as contributed_pubs
+  INNER JOIN d_anysource_extract_flat 
+  ON LOWER(contributed_pubs.doi) = LOWER(d_anysource_extract_flat.ANYSOURCE_doi)
+) # END OF 5. SELECT d_pubs_data_intersect_anysource
+
+-----------------------------------------------------------------------
+-- 6. To the Trial Data, join matching DOIs and Trial-IDs
+-- associated with just the DOIs in the publication set
+-----------------------------------------------------------------------
+  SELECT
+  d_trials_data_joined_2_anysource.*,
+  TRIM(CONCAT(d_pubs_data_intersect_anysource.PUBSDATA_doi, ' ')) AS PUBSDATA_ALL_dois_matching_trialid,
+
+  CASE
+    WHEN d_pubs_data_intersect_anysource.PUBSDATA_doi IS NOT NULL
+    THEN TRUE
+    ELSE FALSE
+    END AS PUBSDATA_doi_found,
+
+  CASE
+    WHEN d_pubs_data_intersect_anysource.PUBSDATA_doi IS NOT NULL
+    THEN "Trial-IDs from the Neuro's trial dataset found in a publication from The Neuro"
+    ELSE "No Trial-IDs from the Neuro's trial dataset found in a publication from The Neuro"
+    END AS PUBSDATA_doi_found_PRETTY,
+
+  FROM d_trials_data_joined_2_anysource
+  LEFT JOIN d_pubs_data_intersect_anysource 
+  ON lower(d_trials_data_joined_2_anysource.nct_id) = lower(d_pubs_data_intersect_anysource.ANYSOURCE_clintrial_ids_flat)
+  
+  # END OF 6. SELECT d_trials_data_joined_2_pubs
 
  
