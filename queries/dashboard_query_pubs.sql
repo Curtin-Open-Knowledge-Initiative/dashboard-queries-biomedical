@@ -2,7 +2,7 @@
 -- Montreal Neuro - Dashboard query for The Neuro's publications
 -- Run this 3rd and cascade to "dashboard_data_pubs"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_010_02d';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1m_2023_010_03a';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
