@@ -2,7 +2,9 @@
 -- Montreal Neuro - Trial Data query 
 -- Run this 2nd and cascade to "dashboard_data_trials"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1l_2023_10_02d_trialdata';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1m_query_trials_2023_10_03a';
+DECLARE var_TrialDataset_name STRING DEFAULT 'combined-ctgov-studies.csv';
+
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
@@ -34,6 +36,8 @@ AS (
 -----------------------------------------------------------------------
 with trials_data AS (
   SELECT
+  # desscriptions of fields are here: https://github.com/maia-sh/the-neuro-trials/blob/main/R/03_combine-trials.R
+  
   # ==== Metric name on dashboard: # Trials
   function_cast_string(nct_id) as nct_id,
   CASE
@@ -45,49 +49,47 @@ with trials_data AS (
     ELSE "Has Trial-ID"
     END as nct_id_found_PRETTY,
 
-  # ==== Metric name on dashboard: # Prospective registrations 
-  # has_summary_results IS A TEMPORARY CALC UNTIL THE VARIABLE is_prospective IS ADDED
-  function_cast_boolean(has_summary_results) as is_prospective,
-  CASE
-    WHEN function_cast_boolean(has_summary_results) IS TRUE THEN "Registered before enrollment started"
-    ELSE "Registered after enrollment started"
-    END as is_prospective_PRETTY,
-  
-  # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
-  # is_multicentric IS A TEMPORARY CALC UNTIL THE VARIABLE is_summary_results_1y IS ADDED
-  function_cast_boolean(is_multicentric) as is_summary_results_1y,
-  CASE
-    WHEN function_cast_boolean(is_multicentric) IS TRUE THEN "Summary results reported within 1 year of trial completion"
-    ELSE "Summary results not reported within 1 year of trial completion"
-    END as is_summary_results_1y_PRETTY,
-
-  function_cast_date(last_update_submitted_date) as last_update_submitted_date,
+  #function_cast_string(source) as source,
+  #function_cast_date(last_update_submitted_date) as last_update_submitted_date,
   function_cast_date(registration_date) as registration_date,
-  function_cast_date(summary_results_date) as summary_results_date,
-  function_cast_string(study_type) as study_type,
-  function_cast_string(phase) as phase,
-  function_cast_int(enrollment) as enrollment,
-  function_cast_string(recruitment_status) as recruitment_status,
-  function_cast_string(title) as title,
+  #function_cast_date(summary_results_date) as summary_results_date,
+  #function_cast_string(study_type) as study_type,
+  #function_cast_string(phase) as phase,
+  #function_cast_int(enrollment) as enrollment,
+  #function_cast_string(recruitment_status) as recruitment_status,
+  #function_cast_string(title) as title,
   function_cast_datetime(start_date) as start_date,
   function_cast_datetime(completion_date) as completion_date,
-  function_cast_datetime(primary_completion_date) as primary_completion_date,
-  function_cast_boolean(has_summary_results) as has_summary_results,
-  function_cast_string(allocation) as allocation,
-  function_cast_string(masking) as masking,
-  function_cast_string(main_sponsor) as main_sponsor,
-  function_cast_boolean(is_multicentric) as is_multicentric,
-  function_cast_string(montreal_neuro_lead_sponsor) as montreal_neuro_lead_sponsor,
-  function_cast_string(montreal_neuro_principal_investigator) as montreal_neuro_principal_investigator,
-  function_cast_string(montreal_neuro_study_director) as montreal_neuro_study_director,
-  function_cast_string(montreal_neuro_study_chair) as montreal_neuro_study_chair,
-  function_cast_string(montreal_neuro_unspecified_official) as montreal_neuro_unspecified_official,
-  function_cast_string(montreal_neuro_responsible_party) as montreal_neuro_responsible_party,
-  function_cast_int(registration_year) as registration_year,
-  function_cast_int(start_year) as start_year,
-  function_cast_int(completion_year) as completion_year
+  #function_cast_datetime(primary_completion_date) as primary_completion_date,
+  #function_cast_boolean(has_summary_results) as has_summary_results,
+  #function_cast_string(allocation) as allocation,
+  #function_cast_string(masking) as masking,
+  #function_cast_string(main_sponsor) as main_sponsor,
+  #function_cast_boolean(is_multicentric) as is_multicentric,
+  #function_cast_int(registration_year) as registration_year,
+  #function_cast_int(start_year) as start_year,
+  #function_cast_int(completion_year) as completion_year,
 
-FROM `university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver1_raw`
+  # ==== Metric name on dashboard: # Prospective registrations 
+  function_cast_boolean(is_prospective) as is_prospective,
+  CASE
+    WHEN function_cast_boolean(is_prospective) IS TRUE THEN "Registered before enrollment started"
+    ELSE "Registered after enrollment started"
+    END as is_prospective_PRETTY,
+
+  #function_cast_int(days_cd_to_summary) as days_cd_to_summary,
+  #function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
+
+  # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
+  function_cast_boolean(is_summary_results_1y_cd) as is_summary_results_1y_cd,
+  CASE
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS TRUE THEN "Summary results reported within 1 year of trial completion"
+    ELSE "Summary results not reported within 1 year of trial completion"
+    END as is_summary_results_1y_cd_PRETTY,
+
+  #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
+
+FROM `university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw`
 ), # End of 2. SELECT trials_data
 
 -----------------------------------------------------------------------
@@ -165,6 +167,10 @@ d_pubs_data_intersect_anysource AS (
     THEN "Trial-IDs from the Neuro's trial dataset found in a publication from The Neuro"
     ELSE "No Trial-IDs from the Neuro's trial dataset found in a publication from The Neuro"
     END AS PUBSDATA_doi_found_PRETTY,
+
+  ----- 4.2 UTILITY - add a variable for the script and input data versions
+  var_SQL_script_name,
+  var_TrialDataset_name,
 
   FROM d_trials_data_joined_2_anysource
   LEFT JOIN d_pubs_data_intersect_anysource 
