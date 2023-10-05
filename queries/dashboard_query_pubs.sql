@@ -2,7 +2,7 @@
 -- Montreal Neuro - Dashboard query for The Neuro's publications
 -- Run this 3rd and cascade to "dashboard_data_pubs"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1m_2023_010_03a';
+DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1m_2023_10_04';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -198,7 +198,7 @@ main_select AS (
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
     ELSE FALSE
   END AS has_publisher_orcid,
-
+  
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN "Has publisher ORCID"
     ELSE "Does not have publisher ORCID"
