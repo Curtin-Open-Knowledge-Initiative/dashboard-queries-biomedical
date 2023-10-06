@@ -1,9 +1,11 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Trial Data query 
 -- Run this 2nd and cascade to "dashboard_data_trials"
+-- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1m_query_trials_2023_10_03a';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_trials_2023_10_06';
 DECLARE var_TrialDataset_name STRING DEFAULT 'combined-ctgov-studies.csv';
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06_trialdata';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -101,7 +103,7 @@ SELECT
   LOWER(doi) as ANYSOURCE_doi,
   ANYSOURCE_clintrial_ids_flat
 FROM
-  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_10_02`,
+  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1n_2023_10_06`,
   UNNEST(SPLIT(ANYSOURCE_clintrial_ids," ")) as ANYSOURCE_clintrial_ids_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END SELECT 3. d_anysource_extract_flat
@@ -171,6 +173,7 @@ d_pubs_data_intersect_anysource AS (
   ----- 4.2 UTILITY - add a variable for the script and input data versions
   var_SQL_script_name,
   var_TrialDataset_name,
+  var_output_table,
 
   FROM d_trials_data_joined_2_anysource
   LEFT JOIN d_pubs_data_intersect_anysource 
