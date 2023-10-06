@@ -2,9 +2,9 @@
 -- Montreal Neuro - Trial Data query 
 -- Run this 4th and cascade to "dashboard_data_orcids"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1m_query_orcid_2023_10_04';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_orcid_2023_10_06';
 DECLARE var_ORCID_Dataset_name STRING DEFAULT 'neuro_pis_orcid.csv';
-
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06_orcid';
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
@@ -76,7 +76,8 @@ FROM `university-of-ottawa.neuro_data_raw.neuro_pis_orcid`
 
   ----- 3.2 UTILITY - add a variable for the script and input data versions
   var_SQL_script_name,
-  var_ORCID_Dataset_name
+  var_ORCID_Dataset_name,
+  var_output_table
 
   FROM orcid_data
   
