@@ -1,8 +1,11 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Dashboard query for The Neuro's publications
 -- Run this 3rd and cascade to "dashboard_data_pubs"
+-- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'montreal_neuro_ver1m_2023_10_04';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_pubs_2023_10_06';
+DECLARE var_PubsDataset_name STRING DEFAULT 'raw20230217_theneuro_dois_20102022_tidy_long';
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06';
 -----------------------------------------------------------------------
 -- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
 -----------------------------------------------------------------------
@@ -33,7 +36,7 @@ enriched_doi_table AS (
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1l_2023_10_02` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1n_2023_10_06` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF 1. SELECT enriched_doi_table
 
@@ -340,9 +343,10 @@ SELECT
     END as TRIALDATA_trialids_found_PRETTY,
   
   ----- 4.2 UTILITY - add a variable for the script version
-  var_SQL_script_name
-  
-  # var_DATA_trials
+  var_SQL_script_name,
+  var_PubsDataset_name,
+  var_output_table
+
   FROM main_select
   LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
   # This may need to have a wildcard to capture 1:many
