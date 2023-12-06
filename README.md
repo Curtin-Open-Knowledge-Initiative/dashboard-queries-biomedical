@@ -32,28 +32,27 @@ Filenames contain a version number (e.g. 1n) which corresponds to to a “sprint
 
 Steps to run these scripts and update data on the dashboards:
 
-## STEP 1
+## STEP 0
 If making a new dashboard version, export the dashboard as a PDF and upload to the google drive folder, and incriment the dashboard version on the FAQ page.
 
 
-## STEP 2
-“clintrial_extract_ver1n_2023_10_05” is a version of the script to create a data extract of the Academic Observatory to extract Crossref and Pubmed data and make a combined list of Clinical trials from these. This SQL script is listed as being required to be run first, but if the data already exists on disc then it does not need to be re-run. If it does need to be run to make changes or for some other reason, then do the following.
+## STEP 1 - PUBMED
+“neuro_ver1o_query1_pubmed_2023_12_06” is a version of the script to create a data extract of the Academic Observatory to extract Crossref and Pubmed data and make a combined list of Clinical trials from these. This SQL script is listed as being required to be run first, but if the data already exists on disc then it does not need to be re-run. If it does need to be run to make changes or for some other reason, then do the following.
 
-1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “clintrial_extract_ver1n_2023_10_06” 
+1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1o_query1_pubmed_2023_12_06” 
 2. Set variables at the top of the SQL script. These are not actual locations, but just text to be added as a field in the output file:
 change the variable var_SQL_script_name to be the new script name
 3. In the script, make sure that you are happy with the versions of the input dataset for:
     - Crossref from Academic Observatory
-    - PubMed extract
 4. Make any other changes you want to make to the script and save the changes.
 5. Run the script.
-6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1n_2023_10_06’
+6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_pubmed_2023_12_06’
 
 
-## STEP 3: 
-“neuro_ver1m_query_trials_2023_10_03a” is a version of the Trial Data query script and should be run second due to dependencies between the files.
+## STEP 2 - TRIALS
+“neuro_ver1o_query2_trials_2023_12_06” is a version of the Trial Data query script and should be run second due to dependencies between the files.
 
-1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1n_query_trials_2023_10_06” 
+1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1o_query2_trials_2023_12_06” 
 2. Set variables at the top of the SQL script. These are not actual locations, but just text to be added as a field in the output file:
     - var_SQL_script_name to be the new script name
     - var_TrialDataset_name to be the name of the input datafile
@@ -64,13 +63,13 @@ change the variable var_SQL_script_name to be the new script name
     - The list of publication DOIs
 4. Make any other changes you want to make to the script and save the changes.
 5. Run the script.
-6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1n_2023_10_06_trialdata’
+6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_trialdata_2023_12_06’
 
 
-## STEP 4: 
-“neuro_ver1m_query_pubs_2023_10_04” is the main dashboard query for The Neuro's publications and should be run third due to dependencies between the files.
+## STEP 3 - PUBLICATIONS
+“neuro_ver1o_query3_pubs_2023_12_06” is the main dashboard query for The Neuro's publications and should be run third due to dependencies between the files.
 
-1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1n_query_pubs_2023_10_06” 
+1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1o_query3_pubs_2023_12_06” 
 2. Set variables at the top of the SQL script. These are not actual locations, but just text to be added as a field in the output file:
     - change the variable var_SQL_script_name to be the new script name
     - change the variable var_PubsDataset_name to be the name of the input datafile
@@ -83,13 +82,13 @@ change the variable var_SQL_script_name to be the new script name
     - The list of publication DOIs
 4. Make any other changes you want to make to the script and save the changes.
 5. Run the script.
-6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1n_2023_10_06’
+6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_pubs_2023_12_06’
 
 
-## STEP 5: 
-“neuro_ver1m_query_orcid_2023_10_04” is a version of the Researcher ORCID Data query script and should be run fourth due to dependencies between the files.
+## STEP 4 - ORCID
+“neuro_ver1o_query4_orcid_2023_12_06” is a version of the Researcher ORCID Data query script and should be run fourth due to dependencies between the files.
 
-1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1n_query_orcid_2023_10_06” 
+1. In Bigquery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, e.g. “neuro_ver1o_query4_orcid_2023_12_06” 
 2. Set variables at the top of the SQL script. These are not actual locations, but just text to be added as a field in the output file:
     - change the variable var_SQL_script_name to be the new script name
     - change the variable var_ORCID_Dataset_name to be the name of the input datafile
@@ -99,18 +98,19 @@ dataset for:
     - The contributed Researcher ORCID data
 4. Make any other changes you want to make to the script and save the changes.
 5. Run the script.
-6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1n_2023_10_06’
+6. Save the output to a table with a similar naming convention to the script name, eg: ‘university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_orcid_2023_12_06’
 
 
-## STEP 6: 
+## STEP 5 
 Edit the following views to point at the tables created in Steps 2-4”. Do this by opening the view, going to the ‘Details’ tab, and clicking ‘Edit Query’. In the tab that opens, edit the query and select ‘Save View’. Back in the view, click ’Refresh’ at the top right.
 
     - university-of-ottawa.neuro_dashboard_data.dashboard_data_trials
     - university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs
     - University-of-ottawa.neuro_dashboard_data.dashboard_data_orcid
 
+*Note: the *pubmed* data from Step 1 is not used in the dashboard
 
-## STEP 7: 
+## STEP 6
 In LookerStudio  refresh the data connections to look at the new files:
 
     - Have the dashboard in edit mode and go to “Resource” > “Manage added data sources”
@@ -119,11 +119,11 @@ In LookerStudio  refresh the data connections to look at the new files:
     - For “Apply connection changes” click “Yes”, then “Done”
 
 
-## STEP 8: 
+## STEP 7 
 Check all dashboard pages that everything looks OK. 
 
 ## STEP 9: 
-Refresh the data extract for XX in the linked Google Sheet, “Data”, “Data Connectors”, “Refresh Options”, “Refresh All”. Copy/paste the main publication SQL into the dashboard page too.
+Refresh the data extract for the Publications output that is made available the linked Google Sheet, “Data”, “Data Connectors”, “Refresh Options”, “Refresh All”. Copy/paste the main publication SQL into the dashboard page too.
 
 ## STEP 10: 
-Back the scripts up to Github
+Back-up the scripts to Github
