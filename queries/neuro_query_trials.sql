@@ -3,9 +3,9 @@
 -- Run this 2nd and cascade to "dashboard_data_trials"
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_trials_2023_10_06';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_trials_2023_12_04';
 DECLARE var_TrialDataset_name STRING DEFAULT 'combined-ctgov-studies.csv';
-DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06_trialdata';
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver10_2023_12_04_trialdata';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
