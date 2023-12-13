@@ -4,7 +4,7 @@
 -- Creates a data subset of the Academic Observatory to extract Crossref 
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2023_12_04';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2023_12_06';
 DECLARE var_SQL_year_cutoff INT64 DEFAULT 2000;
 
 # --------------------------------------------------
