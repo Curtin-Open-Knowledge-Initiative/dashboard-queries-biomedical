@@ -4,13 +4,13 @@
 -- Creates a data subset of the Academic Observatory to extract Crossref 
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2023_12_11';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2023_12_11b';
 DECLARE var_SQL_year_cutoff INT64 DEFAULT 2000;
 
 # --------------------------------------------------
 # 0. Setup table 
 # --------------------------------------------------
-#CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2023_12_11a`
+#CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2023_12_11b`
 # AS (
 
 -----------------------------------------------------------------------
@@ -31,17 +31,6 @@ WITH main_select AS (
     ELSE FALSE
     END as CROSSREF_clintrial_fromfield_found,
 
-#(SELECT clinical_trial_number FROM UNNEST crossref.clinical_trial_number),
-#  #n1.clinical_trial_number,
-#
-#  STRUCT(
-#    ARRAY_AGG(##
-#
-#    ("crossref_field" AS registry,
-#    n1.clinical_trial_number AS id,
-##    n1.type AS type
-#    )) as CROSSREF_clintrial_fromfield,
-
   # The following field is used for QC
   ARRAY_LENGTH(academic_observatory.crossref.clinical_trial_number) AS CROSSREF_clintrial_fromfield_num,
 
@@ -55,12 +44,6 @@ WITH main_select AS (
   END as CROSSREF_clintrial_fromabstract_found,
 
   # NOTE ###### THIS MAY NOT HANDLE DUPLICATE RETURNED VALUES 
-
-  #
-  #REGEXP_EXTRACT_ALL(UPPER(academic_observatory.crossref.abstract), r'NCT0\\d{7}') 
-  #  AS CROSSREF_clintrial_fromabstract_ids,
-  #
-
   STRUCT(
     "crossref_abstract" AS registry,
     REGEXP_EXTRACT_ALL(UPPER(academic_observatory.crossref.abstract), r'NCT0\\d{7}') AS id
@@ -70,7 +53,11 @@ WITH main_select AS (
   academic_observatory.crossref.abstract AS abstract_CROSSREF,  
   pubmed.MedlineCitation.Article.Abstract.AbstractText AS abstract_PUBMED,
 
-  "" AS PUBMED_clintrial_fromabstract_ids, # adding dummy values
+  STRUCT(
+    "pubmed_abstract" AS registry,
+    "" AS id
+    ) AS PUBMED_clintrial_fromabstract,
+
   FALSE AS PUBMED_clintrial_fromabstract_found # adding dummy values
  -----------------------------------------------------------------------
  FROM
@@ -85,12 +72,19 @@ WITH main_select AS (
 -----------------------------------------------------------------------
 pubmed_1_clintrials AS (
  SELECT
-   pubmed.doi as doi,   
-   ARRAY_AGG(STRUCT(
-     ARRAY_CONCAT(p2a.AccessionNumberList) AS clinical_trial_number,
+   pubmed.doi as doi, 
+
+   # ORIG WITH A GROUP BY DOI
+   #ARRAY_AGG(STRUCT(
+   #  ARRAY_CONCAT(p2a.AccessionNumberList) AS id,
+   #  p2a.DataBankName AS registry
+   #  )) as PUBMED_clintrial_fromfield,
+
+    STRUCT(
+     p2a.AccessionNumberList AS id,
      p2a.DataBankName AS registry
-     )) as PUBMED_clintrial_fromfield,
-      
+     ) as PUBMED_clintrial_fromfield,  
+
   FROM  
    `academic-observatory.observatory.doi20231203` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2a
@@ -98,7 +92,7 @@ pubmed_1_clintrials AS (
    WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff AND
    REGEXP_CONTAINS(p2a.DataBankName,'ANZCTR|ChiCTR|CRiS|ClinicalTrials\\.gov|CTRI|DRKS|EudraCT|IRCT|ISRCTN|JapicCTI|JMACCT|JPRN|NTR|PACTR|ReBec|REPEC|RPCEC|SLCTR|TCTR|UMIN CTR|UMIN-CTR')
    
-   group by pubmed.doi
+   #group by pubmed.doi
 ), # END. SELECT pubmed_1_clintrials
 
 -----------------------------------------------------------------------
@@ -108,11 +102,17 @@ pubmed_2_databanks AS (
  SELECT
    pubmed.doi as doi,   
     
-   ARRAY_AGG(STRUCT(
-     ARRAY_CONCAT(p2b.AccessionNumberList) AS databank_id,
-     p2b.DataBankName AS registry
-     )) as PUBMED_opendata_fromfield,
+      # ORIG WITH A GROUP BY DOI
+   #ARRAY_AGG(STRUCT(
+   #  ARRAY_CONCAT(p2b.AccessionNumberList) AS id,
+   #  p2b.DataBankName AS registry
+   #  )) as PUBMED_opendata_fromfield,
       
+   STRUCT(
+     p2b.AccessionNumberList AS id,
+     p2b.DataBankName AS registry
+     ) as PUBMED_opendata_fromfield,
+
   FROM  
    `academic-observatory.observatory.doi20231203` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2b
@@ -120,29 +120,8 @@ pubmed_2_databanks AS (
    WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff AND
    REGEXP_CONTAINS(p2b.DataBankName,'BioProject|dbGaP|dbSNP|dbVar|Dryad|figshare|GDB|GENBANK|GEO|OMIM|PIR|PubChem-BioAssay|PubChem-Compound|PubChem-Substance|RefSeq|SRA|SWISSPROT|UniMES|UniParc|UniProtKB|UniRef|PDB|Protein')
    
-   group by pubmed.doi
+  # group by pubmed.doi
 ), # END. SELECT pubmed_2_databanks
-
------------------------------------------------------------------------
--- 2z Extract ALL Registry data from the Pubmed data in the DOI table
---   This is done as a seperate processing step as the raw field is
---   overloaded so needs to be unpacked/flattened, the re-combined
---   and renamed
---   This ALL extraction of all data is just for QC
------------------------------------------------------------------------
-pubmed_3_all AS (
- SELECT
-   pubmed.doi as doi,   
-   ARRAY_AGG(STRUCT(
-     ARRAY_CONCAT(p2z.AccessionNumberList) AS id,
-     p2z.DataBankName AS registry
-     )) as pubmed_extract_ALL,
-  FROM  
-   `academic-observatory.observatory.doi20231203` AS academic_observatory,
-   UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2z
-   WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff
-   group by doi
-), # END. SELECT pubmed_3_all
 
 -----------------------------------------------------------------------
 -- 3a: Link Pubmed data to main query - clintrials
@@ -185,17 +164,17 @@ FROM enhanced_plus_1
 crossref_renaming AS (
 SELECT
   doi,
-  ARRAY_AGG(
+  #ARRAY_AGG(
     STRUCT(
-      n1.clinical_trial_number AS A_id,
-      n1.type AS A_type
-      )
+      n1.clinical_trial_number AS id,
+      n1.type AS type
+      #)
     ) AS CROSSREF_clintrial_fromfield,
 
  FROM
     main_select,
     UNNEST (CROSSREF_clintrial_fromfield_original) as n1
-    GROUP BY doi
+    #GROUP BY doi
 ),
 
 -----------------------------------------------------------------------
@@ -217,10 +196,6 @@ FROM enhanced_plus_2
 SELECT
   * ,
 
-  ------ 5.1 Tidy clinical trial data from Crossref Abstracts into a structure:
-  ------     Uses CROSSREF_clintrial_fromabstract_ids
-  ------     This is not done in the main select as that had a complex search
-
   ------ 5.0 Clinical Trial - combine Trial-IDs from all sources
   ------ NOTE: This has been commented out for now
 
@@ -232,25 +207,47 @@ SELECT
   #      COALESCE(PUBMED_clintrial_fromabstract_ids,""), " "
   #     ),'  ',' ')) AS ANYSOURCE_clintrial_ids,
 
-CROSSREF_clintrial_fromfield
-AS ANYSOURCE_clintrial_ids,
 
-  ------ 5.1 Determine if ANY Clinical Trial is found from ANY source
+#SELECT
+# p1.affiliation
+#FROM
+# `academic-observatory.observatory.doi20230325`,
+# UNNEST(crossref.author) as p1
+
+
+#  (SELECT 
+#   STRING_AGG(id, " ")
+##   FROM UNNEST(CROSSREF_clintrial_fromfield)
+ #  ) AS ANYSOURCE_clintrial_ids1,
+
+
+  (SELECT 
+   STRING_AGG(id_unnest_1, " ")
+   FROM UNNEST(PUBMED_clintrial_fromfield.id) AS id_unnest_1
+   ) AS PUBMED_clintrial_fromfield_idlist,
+
+  PUBMED_clintrial_fromfield.id AS ANYSOURCE_clintrial_ids2,
+
+#CONCAT(CROSSREF_clintrial_fromfield.id)
+#AS ANYSOURCE_clintrial_ids, # PLACEHOLDER
+
+  ------ 5.2 Determine if ANY Clinical Trial is found from ANY source
    IF (CROSSREF_clintrial_fromfield_found 
     OR CROSSREF_clintrial_fromabstract_found
     OR PUBMED_clintrial_fromfield_found
     OR PUBMED_clintrial_fromabstract_found, 
     TRUE, FALSE) AS ANYSOURCE_clintrial_found,
   
-    ----- 5.2 UTILITY - add a variable for the script version
+    ----- 5.3 UTILITY - add a variable for the script version
   var_SQL_script_name
 
   FROM enhanced_plus_3
-  WHERE CROSSREF_clintrial_fromfield_num < 4
-  ORDER BY CROSSREF_clintrial_fromfield_num DESC
-  limit 1000
+  WHERE CROSSREF_clintrial_fromfield_num < 4. # THIS IS FOR QC
+  ORDER BY CROSSREF_clintrial_fromfield_num DESC # THIS IS FOR QC
+  limit 1000 # THIS IS FOR QC
 
 #) # End create table
  
-#where doi = '10.1002/HUMU.10140'
-#OR doi  = '10.1186/S12884-017-1594-Z' 
+#where doi = '10.1002/HUMU.10140' # THIS IS FOR QC
+#OR doi  = '10.1186/S12884-017-1594-Z' # THIS IS FOR QC
+
