@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - v 1.e"
+title "Exploring Flowcharts using DiagrammeR - ver1.f"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -286,18 +286,22 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, fillcolor='#AAEAED']
       
   # ---------------------------------------------------------
-  # DATASETS: Contributed - OUTPUT
+  # DATASETS: OUTPUT
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - Contributed DATA: pubs - OUTPUT
   OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\n@@15',
-      shape=rectangle, fillcolor='#3BB143']
+      shape=rectangle, fillcolor='#9DD8A1']
       
   # ------ SHAPES & LABELS - trials - OUTPUT
   OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\n@@16',
-      shape=rectangle, fillcolor='#3BB143']
+      shape=rectangle, fillcolor='#9DD8A1']
 
   # ------ SHAPES & LABELS - Contributed DATA: ORCIDs - OUTPUT
   OUTPUT_Dashboard_ORCID[label = 'Dashboard data - Researcher ORCIDs \\n@@17',
+      shape=rectangle, fillcolor='#9DD8A1']
+      
+   # ------ SHAPES & LABELS - Dashboard
+  OUTPUT_Dashboard[label = 'Dashboard',
       shape=rectangle, fillcolor='#3BB143']
       
   # ---------------------------------------------------------
@@ -334,7 +338,7 @@ graph_biomedical_main <- "digraph {
   Process_01 -> Output_Table_1
   
   # ---------------------------------------------------------
-  # PROCESS #02 - Combine the contributed clinical trial data
+  # PROCESS #02 - SQL to combine the contributed clinical trial data
   # with the meta list of clinical trial numbers
   # ---------------------------------------------------------
   Process_02[label = 'SQL process #2 - Match the contributed clinical trial data
@@ -346,15 +350,34 @@ graph_biomedical_main <- "digraph {
   DATA_Contributed_trials -> Process_02
   DATA_Contributed_pubs -> Process_02
   Process_02 -> OUTPUT_Dashboard_trials
+  OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
+  
+  # ---------------------------------------------------------
+  # PROCESS #03 - SQL to process the ORCID data for the dashbaord
+  # ---------------------------------------------------------
+  Process_03[label = 'SQL process #3 - process the ORCID data for the dashbaord', 
+      shape=rectangle, style='filled, dashed', fillcolor=grey]
+  
+  DATA_Contributed_ORCID -> Process_03
+  Process_03 -> OUTPUT_Dashboard_ORCID
+  OUTPUT_Dashboard_ORCID -> OUTPUT_Dashboard
+  
+    # ---------------------------------------------------------
+  # PROCESS #04 - SQL to process the Publication and Oddpub data for the dashboard
+  # ---------------------------------------------------------
+  Process_04[label = 'SQL process #4 - process the Publication and Oddpub data for the dashboard', 
+      shape=rectangle, style='filled, dashed', fillcolor=grey]
+  
+  Output_Table_1 -> Process_04
+  DATA_Contributed_pubs -> Process_04
+  DATA_Contributed_Oddpub -> Process_04
+  Process_04 -> OUTPUT_Dashboard_pubs
+  OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
   
   
-  
-  
-
 
   ### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
   ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
-
 
   }    
      # ------ Add footnotes 
