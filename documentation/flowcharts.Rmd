@@ -1,41 +1,41 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - v 1.c"
+title "Exploring Flowcharts using DiagrammeR - v 1.e"
 author: "Rebecca Handcock"
-date: "2023-12-13"
+date: "2023-12-14"
 output: html_document
 ---
 
-```{r message=FALSE, warning=FALSE}
+```{r message=TRUE, paged.print=TRUE}
 #------------------------------------------------|
 # Set BigQuery files
 # This would ideally be done programatically, but for now is hard-coded
 #------------------------------------------------|
 
 # Academic Observatory - this is the version of the Academic Observatory
-AcademicObservatory_data <- "academic-observatory.observatory.doi20231210"
-AcademicObservatory_prettyname <- "doi20231210"
+AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
+AcademicObservatory_raw <- "doi20231210"
 AcademicObservatory_var1 <- "doi"
 
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-Contributed_pubs_data <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
-Contributed_pubs_prettyname <- "raw20230217_theneuro_dois_20102022"
+Contributed_pubs_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
+Contributed_pubs_raw <- "TheNeuro_dois_2010-2022.csv"
 Contributed_pubs_var1 <- "doi"
 
 # Contributed DATA: Oddpub - Output from the Oddpub processing
-Contributed_Oddpub_data <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
-Contributed_Oddpub_prettyname <- "raw20230217_theneuro_oddpub_screening"
+Contributed_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
+Contributed_Oddpub_raw <- "NEURO_oddpub_screening.csv"
 Contributed_Oddpub_var1 <- "doi"
 
 # Contributed DATA: trials - List of actual clinical trials for the institution
-Contributed_trials_data <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
-Contributed_trials_prettyname <- "combined-ctgov-studies.csv"
+Contributed_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
+Contributed_trials_raw <- "combined-ctgov-studies.csv"
 Contributed_trials_var1 <- "nct_id"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
-Contributed_ORCID_data <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
-Contributed_ORCID_prettyname <- "neuro_pis_orcid"
+Contributed_ORCID_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
+Contributed_ORCID_raw <- "neuro_pis_orcid.csv"
 Contributed_ORCID_var1 <- "orcid_id"
 
 # ----------------------------------------------------------------------
@@ -43,15 +43,15 @@ Contributed_ORCID_var1 <- "orcid_id"
 # included in the dashbaord output tables
 
 # Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-Dashboard_trials_data <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
+Dashboard_trials_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
 Dashboard_trials_var1 <- "nct_id"
 
 # Output dashboard data - from the SQL - Step 3 - Pubs
-Dashboard_pubs_data <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
+Dashboard_pubs_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
 Dashboard_pubs_var1 <- "doi"
 
 # Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-Dashboard_orcid_data <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
+Dashboard_orcid_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
 Dashboard_orcid_var1 <- "orcid_id"
 
 # ----------------------------------------------------------------------
@@ -152,61 +152,65 @@ dbListTables(con)
 ```
 
 
-```{r}
+```{r Process Bigquery files, message=TRUE, messages=TRUE, paged.print=TRUE}
 #------------------------------------------------|
 # Fetch information about BigQuery datasets
 # These values will be displayed later in the flowchart
 #------------------------------------------------|
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-Contributed_pubs_table <- str_split(Contributed_pubs_data, "\\.")[[1]][3]
-Contributed_pubs_count1 <- F_bigquery_sql_count_distinct(Contributed_pubs_data, Contributed_pubs_var1)
+Contributed_pubs_table_short <- str_split(Contributed_pubs_table, "\\.")[[1]][3]
+Contributed_pubs_count1 <- F_bigquery_sql_count_distinct(Contributed_pubs_table, Contributed_pubs_var1)
 Contributed_pubs_count1 <- Contributed_pubs_count1$f0_
 print(paste("Contributed pubs (Target DOIs):",Contributed_pubs_table, "has", Contributed_pubs_count1,"distinct values for",Contributed_pubs_var1))
+Dashboard_pubs_table_short <- str_split(Dashboard_pubs_table, "\\.")[[1]][3]
 
 # Contributed DATA: Oddpub - Output from the Oddpub processing
-Contributed_Oddpub_table <- str_split(Contributed_Oddpub_data, "\\.")[[1]][3]
-Contributed_Oddpub_count1 <- F_bigquery_sql_count_distinct(Contributed_Oddpub_data, Contributed_Oddpub_var1)
+Contributed_Oddpub_table_short <- str_split(Contributed_Oddpub_table, "\\.")[[1]][3]
+Contributed_Oddpub_count1 <- F_bigquery_sql_count_distinct(Contributed_Oddpub_table, Contributed_Oddpub_var1)
 Contributed_Oddpub_count1 <- Contributed_Oddpub_count1$f0_
 print(paste("Contributed ODDPUB:", Contributed_Oddpub_table, "has", Contributed_Oddpub_count1,"distinct values for",Contributed_Oddpub_var1))
 
 # Contributed DATA: trials - List of actual clinical trials for the institution
-Contributed_trials_table <- str_split(Contributed_trials_data, "\\.")[[1]][3]
-Contributed_trials_count1 <- F_bigquery_sql_count_distinct(Contributed_trials_data, Contributed_trials_var1)
+Contributed_trials_table_short <- str_split(Contributed_trials_table, "\\.")[[1]][3]
+Contributed_trials_count1 <- F_bigquery_sql_count_distinct(Contributed_trials_table, Contributed_trials_var1)
 Contributed_trials_count1 <- Contributed_trials_count1$f0_
 print(paste("Contributed TRIALS:", Contributed_trials_table, "has", Contributed_trials_count1,"distinct values for",Contributed_trials_var1))
+Dashboard_trials_table_short <- str_split(Dashboard_trials_table, "\\.")[[1]][3]
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
-Contributed_ORCID_table <- str_split(Contributed_ORCID_data, "\\.")[[1]][3]
-Contributed_ORCID_count1 <- F_bigquery_sql_count_distinct(Contributed_ORCID_data, Contributed_ORCID_var1)
+Contributed_ORCID_table_short <- str_split(Contributed_ORCID_table, "\\.")[[1]][3]
+Contributed_ORCID_count1 <- F_bigquery_sql_count_distinct(Contributed_ORCID_table, Contributed_ORCID_var1)
 Contributed_ORCID_count1 <- Contributed_ORCID_count1$f0_
 print(paste("Contributed ODDPUB:", Contributed_ORCID_table, "has", Contributed_ORCID_count1,"distinct values for",Contributed_ORCID_var1))
+Dashboard_orcid_table_short <- str_split(Dashboard_orcid_table, "\\.")[[1]][3]
+
 # ----------------------------------------------------------------------
 
 # Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-Dashboard_trials_table <- str_split(Dashboard_trials_data, "\\.")[[1]][3]
-Dashboard_trials_count1 <- F_bigquery_sql_count_distinct(Dashboard_trials_data, Dashboard_trials_var1)
+Dashboard_trials_table_short <- str_split(Dashboard_trials_table, "\\.")[[1]][3]
+Dashboard_trials_count1 <- F_bigquery_sql_count_distinct(Dashboard_trials_table, Dashboard_trials_var1)
 Dashboard_trials_count1 <- Dashboard_trials_count1$f0_
-print(paste("DASHBOARD INPUT:", Dashboard_trials_table, "has", Dashboard_trials_count1,
+print(paste("DASHBOARD TABLE:", Dashboard_trials_table, "has", Dashboard_trials_count1,
             "distinct values for", Dashboard_trials_var1))
 
 # Output dashboard data - from the SQL - Step 3 - Pubs
-Dashboard_pubs_table <- str_split(Dashboard_pubs_data, "\\.")[[1]][3]
-Dashboard_pubs_count1 <- F_bigquery_sql_count_distinct(Dashboard_pubs_data, Dashboard_pubs_var1)
+Dashboard_pubs_table_short <- str_split(Dashboard_pubs_table, "\\.")[[1]][3]
+Dashboard_pubs_count1 <- F_bigquery_sql_count_distinct(Dashboard_pubs_table, Dashboard_pubs_var1)
 Dashboard_pubs_count1 <- Dashboard_pubs_count1$f0_
-print(paste("DASHBOARD INPUT:", Dashboard_pubs_table, "has", Dashboard_pubs_count1,
+print(paste("DASHBOARD TABLE:", Dashboard_pubs_table, "has", Dashboard_pubs_count1,
             "distinct values for", Dashboard_pubs_var1))
 
 # Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-Dashboard_orcid_table <- str_split(Dashboard_orcid_data, "\\.")[[1]][3]
-Dashboard_orcid_count1 <- F_bigquery_sql_count_distinct(Dashboard_orcid_data, Dashboard_orcid_var1)
+Dashboard_orcid_table_short <- str_split(Dashboard_orcid_table, "\\.")[[1]][3]
+Dashboard_orcid_count1 <- F_bigquery_sql_count_distinct(Dashboard_orcid_table, Dashboard_orcid_var1)
 Dashboard_orcid_count1 <- Dashboard_orcid_count1$f0_
-print(paste("DASHBOARD INPUT:", Dashboard_orcid_table, "has", Dashboard_orcid_count1,
+print(paste("DASHBOARD TABLE:", Dashboard_orcid_table, "has", Dashboard_orcid_count1,
             "distinct values for", Dashboard_orcid_var1))
 
 # Academic Observatory - this is the version of the Academic Observatory
-AcademicObservatory_table <- str_split(AcademicObservatory_data, "\\.")[[1]][3]
-AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(AcademicObservatory_data, AcademicObservatory_var1)
+AcademicObservatory_table_short <- str_split(AcademicObservatory_table, "\\.")[[1]][3]
+AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(AcademicObservatory_table, AcademicObservatory_var1)
 AcademicObservatory_count1 <- AcademicObservatory_count1$f0_
 print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has", 
             AcademicObservatory_count1,"distinct values for",AcademicObservatory_var1))
@@ -214,7 +218,7 @@ print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has",
 
 
 
-```{r warning=TRUE, messages=TRUE,fig.show='show'}
+```{r graph_biomedical_main, error=traceback, fig.show='show', warning=TRUE, messages=TRUE}
 #------------------------------------------------|
 # Main
 #------------------------------------------------|
@@ -229,25 +233,77 @@ graph_biomedical_main <- "digraph {
       fontname = Helvetica, fontsize=10]
 
   # ---------------------------------------------------------
-  # DATASET: ACADEMIC OBSERVATORY
+  # DATASETS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - Academic Observatory
-  DATA_AcademicObservatory[label = 'Academic Observatory \\n@@1 \\n @@2 DOIs',fillcolor='#ff671c']
+  DATA_AcademicObservatory[label = 'Academic Observatory \\n@@1 \\n@@2 DOIs',fillcolor='#ff671c']
 
- # ---------------------------------------------------------
+  DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
+  DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
+  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor='transparent']
+  DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FFA376']
+  DATA_Unpaywall[label='Unpaywall',fillcolor='#FFA376']
+  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor='transparent']
+  DATA_OpenCit[label='Open \\nCitations',fillcolor='transparent']
+  DATA_Pubmed[label='PubMed',fillcolor='#FFA376']
+  
+  # ---------------------------------------------------------
+  # DATASETS: Contributed - RAW
+  # ---------------------------------------------------------
+  # ------ SHAPES & LABELS - Contributed DATA: pubs - RAW
+  DATA_Contributed_pubs_raw[label = 'Target publication DOIs - raw \\n@@3',
+      shape=rectangle, fillcolor='#2CCCD3']
+      
+  # ------ SHAPES & LABELS - Contributed DATA: Oddpub - RAW
+  DATA_Contributed_Oddpub_raw[label = 'Oddpub output - raw \\n@@4',
+      shape=rectangle, fillcolor='#2CCCD3']
+      
+  # ------ SHAPES & LABELS - trials - RAW
+  DATA_Contributed_trials_raw[label = 'Clinical Trials - raw \\n@@5',
+      shape=rectangle, fillcolor='#2CCCD3']
+
+  # ------ SHAPES & LABELS - Contributed DATA: ORCID - RAW
+  DATA_Contributed_ORCID_raw[label = 'Researcher ORCIDs - raw \\n@@6',
+      shape=rectangle, fillcolor='#2CCCD3']
+      
+  # ---------------------------------------------------------
+  # DATASETS: Contributed - PROCESSED
+  # ---------------------------------------------------------
+  # ------ SHAPES & LABELS - Contributed DATA: pubs - PROCESSED
+  DATA_Contributed_pubs[label = 'Target publication DOIs - imported \\n@@7 \\n@@8 DOIs',
+      shape=rectangle, fillcolor='#AAEAED']
+      
+  # ------ SHAPES & LABELS - Contributed DATA: Oddpubs - PROCESSED
+  DATA_Contributed_Oddpub[label = 'Oddpub output- imported \\n@@9 \\n@@10 DOIs',
+      shape=rectangle, fillcolor='#AAEAED']
+      
+  # ------ SHAPES & LABELS - trials - PROCESSED
+  DATA_Contributed_trials[label = 'Clinical Trials - imported \\n@@11 \\n@@12 trials',
+      shape=rectangle, fillcolor='#AAEAED']
+
+  # ------ SHAPES & LABELS - Contributed DATA: ORCIDs - PROCESSED
+  DATA_Contributed_ORCID[label = 'Researcher ORCIDs - imported \\n@@13 \\n@@14 ORCIDs',
+      shape=rectangle, fillcolor='#AAEAED']
+      
+  # ---------------------------------------------------------
+  # DATASETS: Contributed - OUTPUT
+  # ---------------------------------------------------------
+  # ------ SHAPES & LABELS - Contributed DATA: pubs - OUTPUT
+  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\n@@15',
+      shape=rectangle, fillcolor='#3BB143']
+      
+  # ------ SHAPES & LABELS - trials - OUTPUT
+  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\n@@16',
+      shape=rectangle, fillcolor='#3BB143']
+
+  # ------ SHAPES & LABELS - Contributed DATA: ORCIDs - OUTPUT
+  OUTPUT_Dashboard_ORCID[label = 'Dashboard data - Researcher ORCIDs \\n@@17',
+      shape=rectangle, fillcolor='#3BB143']
+      
+  # ---------------------------------------------------------
   # LINKS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
  
-  DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FAF0E6']
-  DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FAF0E6']
-  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor='#FFFFFF']
-  DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FAF0E6']
-  DATA_Unpaywall[label='Unpaywall',fillcolor='#FAF0E6']
-  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor='#FFFFFF']
-  DATA_OpenCit[label='Open \\nCitations',fillcolor='#FFFFFF']
-  DATA_Pubmed[label='PubMed',fillcolor='#FAF0E6']
-
-  # ------ LINKS - Academic Observatory
   DATA_CrossrefMeta   -> DATA_AcademicObservatory
   DATA_CrossrefFunder -> DATA_AcademicObservatory 
   DATA_CrossrefEvents -> DATA_AcademicObservatory
@@ -255,84 +311,70 @@ graph_biomedical_main <- "digraph {
   DATA_Unpaywall      -> DATA_AcademicObservatory
   DATA_ROR            -> DATA_AcademicObservatory
   DATA_OpenCit        -> DATA_AcademicObservatory
-  DATA_Pubmed        -> DATA_AcademicObservatory
+  DATA_Pubmed         -> DATA_AcademicObservatory
 
   # ---------------------------------------------------------
-  # PROCESS #1 - From the AO, create meta list of clinical trial numbers
+  # LINKS: CONTRIBUTED DATA - raw to processed
+  # ---------------------------------------------------------
+  DATA_Contributed_pubs_raw -> DATA_Contributed_pubs
+  DATA_Contributed_Oddpub_raw -> DATA_Contributed_Oddpub
+  DATA_Contributed_trials_raw -> DATA_Contributed_trials
+  DATA_Contributed_ORCID_raw -> DATA_Contributed_ORCID
+  
+  # ---------------------------------------------------------
+  # PROCESS #01 - From the AO, create meta list of clinical trial numbers
   # associated with DOIs
   # ---------------------------------------------------------
-  # ------ PROCESS #1 - SHAPES & LABELS
-  PROCESS1_Meta_Clintrials_from_AO[label = 'Create meta-list of clinical trial numbers associated with DOIs \\n using Crossref & Pubmed fields and abstract search', 
-      shape=rectangle, style='filled, dashed', fillcolor=transparent]
+  Process_01[label = 'SQL process #1 - Create meta-list of clinical trial numbers associated with DOIs \\n using Crossref & Pubmed fields and abstract search', 
+      shape=rectangle, style='filled, dashed', fillcolor=grey]
   
-  Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in the Academic Observatory']
+  Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
 
-  DATA_AcademicObservatory -> PROCESS1_Meta_Clintrials_from_AO
-  PROCESS1_Meta_Clintrials_from_AO -> Output_Table_1
-
-  # ---------------------------------------------------------
-  # DATASETS: Contributed 
-  # ---------------------------------------------------------
-  # ------ SHAPES & LABELS - Contributed DATA: pubs
-  DATA_Contributed_pubs[label = 'Target publication DOIs \\n from The Neuro \\n@@3 \\n@@4 DOIs',
-      shape=rectangle, fillcolor='#2cccd3']
-      
-  # ------ SHAPES & LABELS - Contributed DATA: Oddpub
-  DATA_Contributed_Oddpub[label = 'Oddpub output \\n@@5 \\n@@6 DOIs',
-      shape=rectangle, fillcolor='#2cccd3']
-      
-  # ------ SHAPES & LABELS - trials
-  DATA_Contributed_trials[label = 'Clinical Trials \\n from The Neuro \\n@@7 \\n@@8 trials',
-      shape=rectangle, fillcolor='#2cccd3']
-      
-  # ------ SHAPES & LABELS - Contributed DATA: ORCID
-  DATA_Contributed_ORCID[label = 'Research ORCIDs \\n from The Neuro \\n@@9 \\n@@10 ORCIDs',
-      shape=rectangle, fillcolor='#2cccd3']
-  # ---------------------------------------------------------
-      
-  # ---------------------------------------------------------
-  # PROCESS #X - Enrich AO with contributed data and subset with 
-  #              list of DOIs from contributed
-  # ---------------------------------------------------------
-  # ------ PROCESS #X - SHAPES & LABELS
-  PROCESS1_Combined_AO_and_Contributed[label = 'Enrich A0 with Contributed', 
-      shape=rectangle, style='filled, dashed', fillcolor=transparent]
-  
-  INTERMEDIATE_enriched_AO[label = 'enriched_doi_table = \\nAcademic Observatory enriched with Contributed data']
-
-  # ------ PROCESS #1 - Combined AO and Contributed data 
-  rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
-  DATA_AcademicObservatory -> PROCESS1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
-
-  DATA_Contributed_Pubs -> PROCESS1_Combined_AO_and_Contributed 
-  PROCESS1_Combined_AO_and_Contributed -> INTERMEDIATE_enriched_AO
-  
+  DATA_AcademicObservatory -> Process_01
+  Process_01 -> Output_Table_1
   
   # ---------------------------------------------------------
-  # PROCESS #2 - Use DOIs from contributed data to subset AO data 
+  # PROCESS #02 - Combine the contributed clinical trial data
+  # with the meta list of clinical trial numbers
   # ---------------------------------------------------------
-  # ------ PROCESS #1 - SHAPES & LABELS
-  PROCESS2_Subset_AO_by_DOIs[label = 'Subset \\nAcademic Observatory \\nby the DOIs', 
-      shape=rectangle, style='filled, dashed', fillcolor=transparent]
+  Process_02[label = 'SQL process #2 - Match the contributed clinical trial data
+   to the meta list of clinical trial numbers from Pubmed and Crossref
+   and to the contributed DOIs', 
+      shape=rectangle, style='filled, dashed', fillcolor=grey]
   
-  INTERMEDIATE_pubs[label = 'pubs = \\nCombined data \\nfor DOIs of interest']
+  Output_Table_1 -> Process_02
+  DATA_Contributed_trials -> Process_02
+  DATA_Contributed_pubs -> Process_02
+  Process_02 -> OUTPUT_Dashboard_trials
+  
+  
+  
+  
 
-  # ------ PROCESS #2 - Combined AO and Contributed data 
-  INTERMEDIATE_enriched_AO -> PROCESS2_Subset_AO_by_DOIs 
-  PROCESS2_Subset_AO_by_DOIs -> INTERMEDIATE_pubs
+
+  ### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
+  ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
+
 
   }    
      # ------ Add footnotes 
-     [1]:AcademicObservatory_prettyname
+     [1]:AcademicObservatory_table_short
      [2]:AcademicObservatory_count1
-     [3]:Contributed_pubs_prettyname
-     [4]:Contributed_pubs_count1
-     [5]:Contributed_Oddpub_prettyname
-     [6]:Contributed_Oddpub_count1
-     [7]:Contributed_trials_prettyname
-     [8]:Contributed_trials_count1
-     [9]:Contributed_ORCID_prettyname
-     [10]:Contributed_ORCID_count1
+     [3]:Contributed_pubs_raw
+     [4]:Contributed_Oddpub_raw
+     [5]:Contributed_trials_raw
+     [6]:Contributed_ORCID_raw
+     [7]:Contributed_pubs_table_short
+     [8]:Contributed_pubs_count1
+     [9]:Contributed_Oddpub_table_short
+     [10]:Contributed_Oddpub_count1
+     [11]:Contributed_trials_table_short
+     [12]:Contributed_trials_count1
+     [13]:Contributed_ORCID_table_short
+     [14]:Contributed_ORCID_count1
+     [15]:Dashboard_trials_table_short
+     [16]:Dashboard_pubs_table_short
+     [17]:Dashboard_orcid_table_short
    "
    
 # Plot to graph to the screen / HTML
@@ -346,32 +388,3 @@ F_export_grViz_graph2image(graph_biomedical_main)
 
 
 ```
-
-
-```{r}
-# METHOD 1: Simple graph with default all-in-one creation of the graph
-graph_test <- "digraph {
-  graph[layout = dot, rankdir = LR]
-  
-  a [label = 'Test label @@1']
-  b [label = '@@2']
-  c
-  
-  a -> b -> c 
-  }
-    # ------ Add footnotes 
-    [1]:'Hello!'
-    [2]: Dashboard_count1
-  "
-
-F_export_grViz_graph2image(graph_test)
-```
-```{r}
-# METHOD 2: Creating the graph from a DOT file, e.g. dot-graph.gv
-
-
-
-```
-
-
-
