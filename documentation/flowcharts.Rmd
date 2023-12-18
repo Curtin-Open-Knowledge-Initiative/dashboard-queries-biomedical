@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - ver1.i"
+title "Exploring Flowcharts using DiagrammeR - ver1.j"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -13,29 +13,28 @@ output: html_document
 
 # Academic Observatory - this is the version of the Academic Observatory
 AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
-AcademicObservatory_raw <- "doi20231210"
 AcademicObservatory_var1 <- "doi"
 
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-Contributed_pubs_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
 Contributed_pubs_raw <- "TheNeuro_dois_2010-2022.csv"
+Contributed_pubs_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
 Contributed_pubs_var1 <- "doi"
 
 # Contributed DATA: Oddpub - Output from the Oddpub processing
-Contributed_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
 Contributed_Oddpub_raw <- "NEURO_oddpub_screening.csv"
+Contributed_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
 Contributed_Oddpub_var1 <- "doi"
 
 # Contributed DATA: trials - List of actual clinical trials for the institution
-Contributed_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
 Contributed_trials_raw <- "combined-ctgov-studies.csv"
+Contributed_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
 Contributed_trials_var1 <- "nct_id"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
-Contributed_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
 Contributed_orcid_raw <- "neuro_pis_orcid.csv"
+Contributed_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
 Contributed_orcid_var1 <- "orcid_id"
 
 # ----------------------------------------------------------------------
@@ -276,34 +275,34 @@ graph_biomedical_main <- "digraph {
   # DATASETS: Contributed - PROCESSED
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - Contributed DATA: pubs - PROCESSED
-  DATA_Contributed_pubs[label = 'Target publication DOIs - imported \\n@@7 \\n@@8 DOIs',
+  DATA_Contributed_pubs[label = 'Target publication DOIs - imported \\n@@7 \\n@@8 unique [@@9]',
       shape=rectangle, fillcolor='#AAEAED']
       
   # ------ SHAPES & LABELS - Contributed DATA: Oddpubs - PROCESSED
-  DATA_Contributed_Oddpub[label = 'Oddpub output- imported \\n@@9 \\n@@10 DOIs',
+  DATA_Contributed_Oddpub[label = 'Oddpub output- imported \\n@@10 \\n@@11 unique [@@12]',
       shape=rectangle, fillcolor='#AAEAED']
-      
+
   # ------ SHAPES & LABELS - trials - PROCESSED
-  DATA_Contributed_trials[label = 'Clinical Trials - imported \\n@@11 \\n@@12 trials',
+  DATA_Contributed_trials[label = 'Clinical Trials - imported \\n@@13 \\n@@14 unique [@@15]',
       shape=rectangle, fillcolor='#AAEAED']
 
   # ------ SHAPES & LABELS - Contributed DATA: ORCIDs - PROCESSED
-  DATA_Contributed_orcid[label = 'Researcher ORCIDs - imported \\n@@13 \\n@@14 ORCIDs',
+  DATA_Contributed_orcid[label = 'Researcher ORCIDs - imported \\n@@16 \\n@@17 unique [@@18]',
       shape=rectangle, fillcolor='#AAEAED']
       
   # ---------------------------------------------------------
   # DATASETS: OUTPUT
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - Contributed DATA: pubs - OUTPUT
-  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\n@@15 \\n@@16 non-NULL DOIs',
+  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\n@@19 \\n@@20 unique non-NULL [@@21]',
       shape=rectangle, fillcolor='#9DD8A1']
       
   # ------ SHAPES & LABELS - trials - OUTPUT
-  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\n@@17 \\n@@18 trials',
+  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\n@@22 \\n@@23 unique non-NULL [@@24]',
       shape=rectangle, fillcolor='#9DD8A1']
 
   # ------ SHAPES & LABELS - Contributed DATA: ORCIDs - OUTPUT
-  OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\n@@19 \\n@@20 ORCIDs',
+  OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\n@@25 \\n@@26 unique non-NULL [@@27]',
       shape=rectangle, fillcolor='#9DD8A1']
       
    # ------ SHAPES & LABELS - Dashboard
@@ -416,18 +415,26 @@ graph_biomedical_main <- "digraph {
   [6]:Contributed_orcid_raw
   [7]:Contributed_pubs_table_short
   [8]:Contributed_pubs_count1
-  [9]:Contributed_Oddpub_table_short
-  [10]:Contributed_Oddpub_count1
-  [11]:Contributed_trials_table_short
-  [12]:Contributed_trials_count1
-  [13]:Contributed_orcid_table_short
-  [14]:Contributed_orcid_count1
-  [15]:Dashboard_pubs_table_short
-  [16]:Dashboard_pubs_count1  
-  [17]:Dashboard_trials_table_short
-  [18]:Dashboard_trials_count1
-  [19]:Dashboard_orcid_table_short
-  [20]:Dashboard_orcid_count1
+  [9]:Contributed_pubs_var1
+  [10]:Contributed_Oddpub_table_short
+  [11]:Contributed_Oddpub_count1
+  [12]:Contributed_Oddpub_var1
+  [13]:Contributed_trials_table_short
+  [14]:Contributed_trials_count1
+  [15]:Contributed_trials_var1
+  [16]:Contributed_orcid_table_short
+  [17]:Contributed_orcid_count1
+  [18]:Contributed_orcid_var1
+  [19]:Dashboard_pubs_table_short
+  [20]:Dashboard_pubs_count1  
+  [21]:Dashboard_pubs_var1
+  [22]:Dashboard_trials_table_short
+  [23]:Dashboard_trials_count1
+  [24]:Dashboard_trials_var1
+  [25]:Dashboard_orcid_table_short
+  [26]:Dashboard_orcid_count1
+  [27]:Dashboard_orcid_var1
+
   "
    
 # Plot to graph to the screen / HTML
@@ -443,6 +450,7 @@ F_export_grViz_graph2image(graph_biomedical_main)
 ### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
 ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
 ### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
+### HOW TO Include a quote in a label, e.g.   \\' 
 ### HOW TO:   A cluster is a subgraph placed in its own distinct rectangle of the layout. A subgraph is recognized as a cluster ### when its name has the prefix cluster
 ### subgraph cluster_A {
 ### AAAA [label = 'Testing AAA']
