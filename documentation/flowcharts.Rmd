@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - ver1.f"
+title "Exploring Flowcharts using DiagrammeR - ver1.g"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -65,6 +65,7 @@ Dashboard_orcid_var1 <- "orcid_id"
 
 # Github: https://github.com/rich-iannone/DiagrammeR
 # Functions: https://rich-iannone.github.io/DiagrammeR/reference/index.html
+# Package: https://cran.r-project.org/web/packages/DiagrammeR/DiagrammeR.pdf
 
 # DiagrammeR is a package within htmlwidgets for R. It is used to generate graphs using graphviz and mermaid library.
 #install.packages("DiagrammeR")
@@ -107,7 +108,7 @@ F_bigquery_sql_count_distinct <- function(F_table, F_variable){
 ```
 
 
-```{r message=FALSE, warning=FALSE}
+```{r FUNCTION: F_export_grViz_graph2image, message=FALSE, warning=FALSE}
 #------------------------------------------------|
 # FUNCTION export grViz graph to an image file
 #------------------------------------------------|
@@ -126,7 +127,7 @@ F_export_grViz_graph2image <- function(graph2plot){
 ```
 
 
-```{r}
+```{r Connect to BigQuery database}
 #------------------------------------------------|
 # Connect to BigQuery database
 #------------------------------------------------|
@@ -185,7 +186,7 @@ Contributed_ORCID_count1 <- Contributed_ORCID_count1$f0_
 print(paste("Contributed ODDPUB:", Contributed_ORCID_table, "has", Contributed_ORCID_count1,"distinct values for",Contributed_ORCID_var1))
 Dashboard_orcid_table_short <- str_split(Dashboard_orcid_table, "\\.")[[1]][3]
 
-# ----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
 # Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
 Dashboard_trials_table_short <- str_split(Dashboard_trials_table, "\\.")[[1]][3]
@@ -224,12 +225,14 @@ print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has",
 #------------------------------------------------|
 
 graph_biomedical_main <- "digraph {
+  # ---------------------------------------------------------
   # --- Set default attibutes
+  # ---------------------------------------------------------
   layout = dot
   node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
       style='filled,rounded', fillcolor=transparent,
-      fontname = Helvetica, fontsize=10]
-  edge [color=black, arrowhead=normal, arrowsize=0.7, 
+      fontname = Helvetica, fontsize=12]
+  edge [color=black, arrowhead=normal, arrowsize=1, penwidth=2, 
       fontname = Helvetica, fontsize=10]
 
   # ---------------------------------------------------------
@@ -252,19 +255,19 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - Contributed DATA: pubs - RAW
   DATA_Contributed_pubs_raw[label = 'Target publication DOIs - raw \\n@@3',
-      shape=rectangle, fillcolor='#2CCCD3']
+      shape=oval, fillcolor='#2CCCD3']
       
   # ------ SHAPES & LABELS - Contributed DATA: Oddpub - RAW
   DATA_Contributed_Oddpub_raw[label = 'Oddpub output - raw \\n@@4',
-      shape=rectangle, fillcolor='#2CCCD3']
+      shape=ellipse, fillcolor='#2CCCD3']
       
   # ------ SHAPES & LABELS - trials - RAW
   DATA_Contributed_trials_raw[label = 'Clinical Trials - raw \\n@@5',
-      shape=rectangle, fillcolor='#2CCCD3']
+      shape=ellipse, fillcolor='#2CCCD3']
 
   # ------ SHAPES & LABELS - Contributed DATA: ORCID - RAW
   DATA_Contributed_ORCID_raw[label = 'Researcher ORCIDs - raw \\n@@6',
-      shape=rectangle, fillcolor='#2CCCD3']
+      shape=ellipse, fillcolor='#2CCCD3']
       
   # ---------------------------------------------------------
   # DATASETS: Contributed - PROCESSED
@@ -329,7 +332,10 @@ graph_biomedical_main <- "digraph {
   # PROCESS #01 - From the AO, create meta list of clinical trial numbers
   # associated with DOIs
   # ---------------------------------------------------------
-  Process_01[label = 'SQL process #1 - Create meta-list of clinical trial numbers associated with DOIs \\n using Crossref & Pubmed fields and abstract search', 
+  Process_01[label = '
+  SQL process #1 - Create meta-list of clinical trial numbers 
+  associated with DOIs using Crossref & Pubmed fields and 
+  abstract search', 
       shape=rectangle, style='filled, dashed', fillcolor=grey]
   
   Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
@@ -376,9 +382,7 @@ graph_biomedical_main <- "digraph {
   
   
 
-  ### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
-  ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
-
+  
   }    
      # ------ Add footnotes 
      [1]:AcademicObservatory_table_short
@@ -409,5 +413,10 @@ F_export_grViz_graph2image(graph_biomedical_main)
 #grViz(graph_biomedical_main) %>%
 #    export_svg %>% charToRaw %>% rsvg_pdf("graph_biomedical_main")
 
+# --------------------------------------
+### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
+### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
+### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
+#   https://graphviz.org/doc/info/shapes.html
 
 ```
