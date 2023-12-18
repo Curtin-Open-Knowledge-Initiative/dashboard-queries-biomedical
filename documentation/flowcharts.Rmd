@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - ver1.h"
+title "Exploring Flowcharts using DiagrammeR - ver1.i"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -68,6 +68,7 @@ Dashboard_orcid_var1 <- "orcid_id"
 # Package: https://cran.r-project.org/web/packages/DiagrammeR/DiagrammeR.pdf
 # Tutorial: https://epirhandbook.com/en/diagrams-and-charts.html
 # Reference; https://graphviz.org/pdf/dotguide.pdf
+# Turotial: https://builtin.com/data-science/diagrammer
 
 # DiagrammeR is a package within htmlwidgets for R. It is used to generate graphs using graphviz and mermaid library.
 #install.packages("DiagrammeR")
@@ -222,7 +223,7 @@ print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has",
 
 
 
-```{r graph_biomedical_main, error=traceback, fig.show='show', warning=TRUE, messages=TRUE}
+```{r graph_biomedical_main, fig.show='show', warning=TRUE, messages=TRUE}
 #------------------------------------------------|
 # Main
 #------------------------------------------------|
@@ -233,10 +234,9 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   layout = dot
   node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
-      style='filled,rounded', fillcolor=transparent,
-      fontname = Helvetica, fontsize=12]
-  edge [color=black, arrowhead=normal, arrowsize=1, penwidth=2, 
-      fontname = Helvetica, fontsize=10]
+      style='filled,rounded', fillcolor=transparent, penwidth=1.5
+      fontname = Helvetica, fontsize=16, compound=TRUE]
+  edge [color=black, arrowhead=normal, arrowsize=1.2, penwidth=2.5]
 
   # ---------------------------------------------------------
   # DATASETS: ACADEMIC OBSERVATORY
@@ -246,11 +246,11 @@ graph_biomedical_main <- "digraph {
 
   DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
   DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
-  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor='transparent']
+  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor=white]
   DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FFA376']
   DATA_Unpaywall[label='Unpaywall',fillcolor='#FFA376']
-  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor='transparent']
-  DATA_OpenCit[label='Open \\nCitations',fillcolor='transparent']
+  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor=white]
+  DATA_OpenCit[label='Open \\nCitations',fillcolor=white]
   DATA_Pubmed[label='PubMed',fillcolor='#FFA376']
   
   # ---------------------------------------------------------
@@ -307,7 +307,7 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, fillcolor='#9DD8A1']
       
    # ------ SHAPES & LABELS - Dashboard
-  OUTPUT_Dashboard[label = 'Dashboard',
+  OUTPUT_Dashboard[label = 'Dashboard', fontsize=24,
       shape=rectangle, fillcolor='#3BB143']
       
   # ---------------------------------------------------------
@@ -315,6 +315,9 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
  
   subgraph cluster_AcademicObservatory {
+     style='filled, dashed';
+     fillcolor='#FFF0E9';
+
      DATA_CrossrefMeta   -> DATA_AcademicObservatory
      DATA_CrossrefFunder -> DATA_AcademicObservatory 
      DATA_CrossrefEvents -> DATA_AcademicObservatory
@@ -337,88 +340,95 @@ graph_biomedical_main <- "digraph {
   # PROCESS #01 - From the AO, create meta list of clinical trial numbers
   # associated with DOIs
   # ---------------------------------------------------------
+
   Process_01[label = '
-  SQL process #1 - Create <B>meta-list</br> of clinical trial numbers 
+  SQL process #1 - Create meta-list of clinical trial numbers 
   associated with DOIs using Crossref & Pubmed fields and 
   abstract search', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey]
+      shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
   
   Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
-
+    
   DATA_AcademicObservatory -> Process_01
   Process_01 -> Output_Table_1
-  
-  }
+
   # ---------------------------------------------------------
   # PROCESS #02 - SQL to combine the contributed clinical trial data
   # with the meta list of clinical trial numbers
   # ---------------------------------------------------------
-  Process_02[label = 'SQL process #2 - Match the contributed clinical trial data
-   to the meta list of clinical trial numbers from Pubmed and Crossref
-   and to the contributed DOIs', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey]
+  Process_02[label = 'SQL process #2
+    Match the contributed clinical trial data to 
+    the meta list  of clinical trial numbers from 
+    Pubmed and Crossref, and to the contributed DOIs', 
+    shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
   
   Output_Table_1 -> Process_02
   DATA_Contributed_trials -> Process_02
   DATA_Contributed_pubs -> Process_02
   Process_02 -> OUTPUT_Dashboard_trials
   OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
-  
+    
   # ---------------------------------------------------------
   # PROCESS #03 - SQL to process the ORCID data for the dashbaord
   # ---------------------------------------------------------
-  Process_03[label = 'SQL process #3 - process the ORCID data for the dashbaord', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey]
+  Process_03[label = 'SQL process #3
+    Process the ORCID data', 
+      shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
   
   DATA_Contributed_orcid -> Process_03
   Process_03 -> OUTPUT_Dashboard_orcid
   OUTPUT_Dashboard_orcid -> OUTPUT_Dashboard
-  
+    
   # ---------------------------------------------------------
   # PROCESS #04 - SQL to process the Publication and Oddpub data for the dashboard
   # ---------------------------------------------------------
-  Process_04[label = 'SQL process #4 - process the Publication and Oddpub data for the dashboard', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey]
+  Process_04[label = 'SQL process #4
+    Process the Publication and Oddpub data', 
+    fontsize=18, shape=rectangle, style='filled, dashed', fillcolor=grey]
   
   Output_Table_1 -> Process_04
   DATA_Contributed_pubs -> Process_04
   DATA_Contributed_Oddpub -> Process_04
   Process_04 -> OUTPUT_Dashboard_pubs
   OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
-  
+      
   # ---------------------------------------------------------
   # PROCESS #05 - Oddpub processing
   # ---------------------------------------------------------
+  subgraph cluster_P05_Oddpub {
+    style='filled, dashed';
+    fillcolor='#E9FAFA';
+
+    Process_05[label = 'Charite Oddpub processing', fontsize=18,
+        shape=rectangle, style='filled, dashed', fillcolor=white]
+    DATA_Contributed_pubs_raw -> Process_05
+    DATA_Contributed_trials_raw -> Process_05
+    Process_05 -> DATA_Contributed_Oddpub_raw
+    }
   
-  Process_05[label = 'Charite Oddpub processing',
-      shape=rectangle, style='filled, dashed', fillcolor='#23A3A9']
-  DATA_Contributed_pubs_raw -> Process_05
-  DATA_Contributed_trials_raw -> Process_05
-  Process_05 -> DATA_Contributed_Oddpub_raw
-  
-  }    
-     # ------ Add footnotes 
-     [1]:AcademicObservatory_table_short
-     [2]:AcademicObservatory_count1
-     [3]:Contributed_pubs_raw
-     [4]:Contributed_Oddpub_raw
-     [5]:Contributed_trials_raw
-     [6]:Contributed_orcid_raw
-     [7]:Contributed_pubs_table_short
-     [8]:Contributed_pubs_count1
-     [9]:Contributed_Oddpub_table_short
-     [10]:Contributed_Oddpub_count1
-     [11]:Contributed_trials_table_short
-     [12]:Contributed_trials_count1
-     [13]:Contributed_orcid_table_short
-     [14]:Contributed_orcid_count1
-     [15]:Dashboard_pubs_table_short
-     [16]:Dashboard_pubs_count1  
-     [17]:Dashboard_trials_table_short
-     [18]:Dashboard_trials_count1
-     [19]:Dashboard_orcid_table_short
-     [20]:Dashboard_orcid_count1
-   "
+  # ------ Add footnotes 
+  }
+  [1]:AcademicObservatory_table_short
+  [2]:AcademicObservatory_count1
+  [3]:Contributed_pubs_raw
+  [4]:Contributed_Oddpub_raw
+  [5]:Contributed_trials_raw
+  [6]:Contributed_orcid_raw
+  [7]:Contributed_pubs_table_short
+  [8]:Contributed_pubs_count1
+  [9]:Contributed_Oddpub_table_short
+  [10]:Contributed_Oddpub_count1
+  [11]:Contributed_trials_table_short
+  [12]:Contributed_trials_count1
+  [13]:Contributed_orcid_table_short
+  [14]:Contributed_orcid_count1
+  [15]:Dashboard_pubs_table_short
+  [16]:Dashboard_pubs_count1  
+  [17]:Dashboard_trials_table_short
+  [18]:Dashboard_trials_count1
+  [19]:Dashboard_orcid_table_short
+  [20]:Dashboard_orcid_count1
+  "
    
 # Plot to graph to the screen / HTML
 DiagrammeR::grViz(graph_biomedical_main)
@@ -433,7 +443,8 @@ F_export_grViz_graph2image(graph_biomedical_main)
 ### HOW TO RANK rank=same {DATA_Contributed_Pubs, DATA_AcademicObservatory}
 ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
 ### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
-### HOW TO:     subgraph cluster_A {
+### HOW TO:   A cluster is a subgraph placed in its own distinct rectangle of the layout. A subgraph is recognized as a cluster ### when its name has the prefix cluster
+### subgraph cluster_A {
 ### AAAA [label = 'Testing AAA']
 ### BBBB
 #   https://graphviz.org/doc/info/shapes.html
