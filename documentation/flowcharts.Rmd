@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - ver2.b"
+title "Exploring Flowcharts using DiagrammeR - ver2.c"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -29,7 +29,7 @@ ORG_trials_raw <- "ORG_trials_YYYMM22.txt"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the organisation
 # ORG_orcid_YYYMM22.txt
-ORG_orcid_raw <- "ORG_orcid_YYYMM22.txt [neuro_pis_orcid.csv]"
+ORG_orcid_raw <- "ORG_orcid_YYYMM22.txt \\n[neuro_pis_orcid.csv]"
 ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
 ORG_orcid_var1 <- "orcid_id"
 
@@ -236,10 +236,11 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # --- Set default attibutes
   # ---------------------------------------------------------
-  layout = dot
+  layout = dot;
+  compound=TRUE;
   node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
-      style='filled,rounded', fillcolor=transparent, penwidth=1.5
-      fontname = Helvetica, fontsize=16, compound=TRUE]
+      style='filled, rounded', fillcolor=transparent, penwidth=1.5
+      fontname = Helvetica, fontsize=16]
   edge [color=black, arrowhead=normal, arrowsize=1.2, penwidth=2.5]
 
   # ---------------------------------------------------------
@@ -261,36 +262,37 @@ graph_biomedical_main <- "digraph {
   # INPUT DATASETS: ORGANISATION - RAW
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - DATA - ORG - dois
-  DATA_ORG_dois_raw[label = 'Target publication DOIs \\n@@3',
-      shape=oval, fillcolor='#AC94F4']
+  DATA_ORG_dois_raw[label = 'ORG publication DOIs \\n@@3',
+      fillcolor='#AC94F4']
 
   # ------ SHAPES & LABELS - DATA - ORG - clinical trials
-  DATA_ORG_trials_raw[label = 'Researcher Clinical Trials \\n@@_NEW5',
-      shape=ellipse, fillcolor='#AC94F4']
+  DATA_ORG_trials_raw[label = 'ORG Researcher Clinical Trials \\n@@_NEW5',
+      fillcolor='#AC94F4']
 
   # ------ SHAPES & LABELS - DATA - ORG - orcid
-  DATA_ORG_orcid_raw[label = 'Researcher ORCIDs \\n@@6_NEW4',
-      shape=ellipse, fillcolor='#AC94F4']   
+  DATA_ORG_orcid_raw[label = 'ORG Researcher ORCIDs \\n@@6_NEW4',
+      fillcolor='#AC94F4']   
    
   subgraph cluster_ORG_raw {
-     label='Datasets provided by the Organisation'; fontsize=30; fontname = Helvetica;
-     style='filled, dashed'; fillcolor='#E2D9FB';
+     label='Datasets provided by the Organisation'; 
+     fontsize=20; fontname='Helvetica-Bold';
+     style='filled, rounded'; fillcolor='#E2D9FB';
 
     DATA_ORG_dois_raw
     DATA_ORG_trials_raw
     DATA_ORG_orcid_raw
-  }
+  } # END cluster_ORG
   
   # ---------------------------------------------------------
   # INPUT DATASETS: PROJECT - OUTPUT
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - DATA - PROJECT - Oddpub - OUTPUT
-  DATA_PROJECT_Oddpub_output[label = 'PROJECT: Oddpub processing output - Data and Software \\n@@4',
-      shape=ellipse, fillcolor='#2CCCD3']
+  DATA_PROJECT_Oddpub_output[label = 'Output from Oddpub processing - Data and Software \\n@@4',
+      fillcolor='#2CCCD3']
       
   # ------ SHAPES & LABELS - DATA - PROJECT - Charite Trials - OUTPUT
-  DATA_PROJECT_charite_trials_output[label = 'PROJECT: Charite clinical trial processing - output \\n@@5',
-      shape=ellipse, fillcolor='#2CCCD3']
+  DATA_PROJECT_charite_trials_output[label = 'Output from Charite clinical trial processing \\n@@5',
+      fillcolor='#2CCCD3']
   
   # ---------------------------------------------------------
   # PROCESSED DATASETS - INTERMEDIATE
@@ -312,7 +314,7 @@ graph_biomedical_main <- "digraph {
   DATA_PROCESSED_trials[label = 'Charite Clinical Trials - imported \\n@@13 \\n@@14 unique [@@15]',
       shape=rectangle, fillcolor='#AAEAED']
 
-  rank=same {DATA_PROCESSED_dois, DATA_PROCESSED_orcid, DATA_PROCESSED_oddpub, DATA_PROCESSED_trials}
+rank=same {OUTPUT_Dashboard, DATA_PROCESSED_dois, DATA_PROCESSED_orcid, DATA_PROCESSED_oddpub, DATA_PROCESSED_trials}
 
   # ---------------------------------------------------------
   # PROCESSED DATASETS - DASHBOARD
@@ -330,18 +332,18 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, fillcolor='#9DD8A1']
       
    # ------ SHAPES & LABELS - Dashboard
-  OUTPUT_Dashboard[label = 'Dashboard', fontsize=24,
-      shape=rectangle, fillcolor='#3BB143']
+  OUTPUT_Dashboard[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
+      shape=filled, fillcolor='#3BB143']
      
-  rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
   rank=same {Process_02, Process_03, Process_04}
+  rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
 
   # ---------------------------------------------------------
   # LINKS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
   subgraph cluster_AcademicObservatory {
-     label='Academic Observatory'; fontsize=30; fontname = Helvetica;
-     style='filled, dashed';fillcolor='#FFF0E9';
+     label='Academic Observatory'; fontsize=20; fontname = 'Helvetica-Bold';
+     style='filled, rounded'; fillcolor='#FFF0E9';
 
      DATA_CrossrefMeta   -> DATA_AcademicObservatory
      DATA_CrossrefFunder -> DATA_AcademicObservatory 
@@ -351,61 +353,69 @@ graph_biomedical_main <- "digraph {
      DATA_ROR            -> DATA_AcademicObservatory
      DATA_OpenCit        -> DATA_AcademicObservatory
      DATA_Pubmed         -> DATA_AcademicObservatory
-  }
-  
-  # ---------------------------------------------------------
-  # LINKS: CONTRIBUTED DATA - raw to processed
-  # ---------------------------------------------------------
-  DATA_ORG_dois_raw -> DATA_PROCESSED_dois
-  DATA_PROJECT_Oddpub_output 
-#DATA_ORG_charite_trials_raw -> DATA_PROCESSED_trials
-  DATA_ORG_orcid_raw -> DATA_PROCESSED_orcid
-  
-  
+  } # END cluster_AcademicObservatory
+
   # ---------------------------------------------------------
   # PROCESS #0_Oddpub - Oddpub processing
   # ---------------------------------------------------------
   subgraph cluster_P0_Oddpub {
-    style='filled, dashed'; fillcolor='#E9FAFA';
+    style='filled'; fillcolor='#E9FAFA';
 
-    Process_0_Oddpub[label = 'Project - Oddpub Processing', fontsize=24,
-        shape=rectangle, style='filled', fillcolor='#2CCCD3']
+    Process_0_Oddpub[label = 'PROJECT - Oddpub Processing', fontsize=18,
+        shape=rectangle, style='filled, dashed', fillcolor='#2CCCD3']
+    
     DATA_ORG_dois_raw -> Process_0_Oddpub
     Process_0_Oddpub -> DATA_PROJECT_Oddpub_output
-    }
-  
-  DATA_PROJECT_Oddpub_output -> DATA_PROCESSED_oddpub
+     } # END cluster_P0_Oddpub
   
   # ---------------------------------------------------------
   # PROCESS #0_Charite - Charite clinical trial processing
   # ---------------------------------------------------------
   subgraph cluster_P0_Charite {
-    style='filled, dashed'; fillcolor='#E9FAFA';
+    style='filled'; fillcolor='#E9FAFA';
 
-    Process_0_Charite[label = 'Project - Oddpub Processing', fontsize=24,
-        shape=rectangle, style='filled', fillcolor='#2CCCD3']
+    Process_0_Charite[label = 'PROJECT - Charite Processing', 
+        fontname='Helvetica-Bold', fontsize=18,
+        shape=rectangle, style='filled, dashed', fillcolor='#2CCCD3']
+    
     DATA_ORG_trials_raw -> Process_0_Charite
     Process_0_Charite -> DATA_PROJECT_charite_trials_output
-    }
-  
-  DATA_PROJECT_charite_trials_output -> DATA_PROCESSED_trials
+    DATA_PROJECT_charite_trials_output -> Process_02
+    } # END cluster_P0_Charite
   
   # ---------------------------------------------------------
   # PROCESS #01 - From the AO, create meta list of clinical trial numbers
   # associated with DOIs
   # ---------------------------------------------------------
-
-  Process_01[label = '
-  SQL process #1 - Create meta-list of clinical trial numbers 
-  associated with DOIs using Crossref & Pubmed fields and 
-  abstract search', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
   
-  Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
-    
-  DATA_AcademicObservatory -> Process_01
+  DATA_AcademicObservatory -> Process_01 [lhead = cluster_01]
+
+  subgraph cluster_01 {
+ 
+   Process_01_TITLE[label = 'SQL process #1', 
+      fontsize=20, fontname='Helvetica-Bold',
+      style='filled', color='transparent', fillcolor='#D7EFD9']
+
+  Process_01[label = 'Create meta-list of clinical trial numbers 
+    associated with DOIs using Crossref & Pubmed fields and 
+    abstract search', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+  
+
+  # Links within process box
+  #edge [color=pink, arrowsize=0.8, minlen = 1]
+  #edge [style=bold, color=pink, ]
+  #rankdir=TB;
+
+  #nodesep=0.5; #hack
+  Process_01_TITLE -> Process_01
   Process_01 -> Output_Table_1
 
+    Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
+
+  } # END cluster_01
+  
+  
   # ---------------------------------------------------------
   # PROCESS #02 - SQL to combine the contributed clinical trial data
   # with the meta-list of clinical trial numbers
@@ -414,11 +424,9 @@ graph_biomedical_main <- "digraph {
     Match the contributed clinical trial data to 
     the meta-list of clinical trial numbers from 
     Pubmed and Crossref, and to the contributed DOIs', 
-    shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
+    shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9', fontsize=18]
   
   Output_Table_1 -> Process_02
-  DATA_PROCESSED_trials -> Process_02
-  DATA_PROCESSED_dois -> Process_02
   Process_02 -> OUTPUT_Dashboard_trials
   OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
     
@@ -427,9 +435,9 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   Process_03[label = 'SQL process #3
     Process the ORCID data', 
-      shape=rectangle, style='filled, dashed', fillcolor=grey, fontsize=18]
+      shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9', fontsize=18]
   
-  DATA_PROCESSED_orcid -> Process_03
+  #DATA_PROCESSED_orcid -> Process_03
   Process_03 -> OUTPUT_Dashboard_orcid
   OUTPUT_Dashboard_orcid -> OUTPUT_Dashboard
     
@@ -438,14 +446,16 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   Process_04[label = 'SQL process #4
     Process the Publication and Oddpub data', 
-    fontsize=18, shape=rectangle, style='filled, dashed', fillcolor=grey]
+    fontsize=18, shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9']
   
   Output_Table_1 -> Process_04
-  DATA_PROCESSED_dois -> Process_04
-  DATA_PROCESSED_oddpub -> Process_04
+  #DATA_PROCESSED_dois -> Process_04
+  #DATA_PROCESSED_oddpub -> Process_04
   Process_04 -> OUTPUT_Dashboard_pubs
   OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
     
+  }
+  
   # ------ Add footnotes 
   }
   [1]:COKI_AcademicObservatory_table_short
