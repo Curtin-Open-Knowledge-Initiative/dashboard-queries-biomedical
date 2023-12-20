@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - ver2.c"
+title "Exploring Flowcharts using DiagrammeR - ver2.d"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -239,9 +239,9 @@ graph_biomedical_main <- "digraph {
   layout = dot;
   compound=TRUE;
   node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
-      style='filled, rounded', fillcolor=transparent, penwidth=1.5
+      style='filled, rounded', fillcolor=white, penwidth=1.5
       fontname = Helvetica, fontsize=16]
-  edge [color=black, arrowhead=normal, arrowsize=1.2, penwidth=2.5]
+  edge [color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5]
 
   # ---------------------------------------------------------
   # DATASETS: ACADEMIC OBSERVATORY
@@ -262,15 +262,15 @@ graph_biomedical_main <- "digraph {
   # INPUT DATASETS: ORGANISATION - RAW
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - DATA - ORG - dois
-  DATA_ORG_dois_raw[label = 'ORG publication DOIs \\n@@3',
+  DATA_ORG_dois_raw[label = 'publication DOIs \\n@@3',
       fillcolor='#AC94F4']
 
   # ------ SHAPES & LABELS - DATA - ORG - clinical trials
-  DATA_ORG_trials_raw[label = 'ORG Researcher Clinical Trials \\n@@_NEW5',
+  DATA_ORG_trials_raw[label = 'Researcher Clinical Trials \\n@@_NEW5',
       fillcolor='#AC94F4']
 
   # ------ SHAPES & LABELS - DATA - ORG - orcid
-  DATA_ORG_orcid_raw[label = 'ORG Researcher ORCIDs \\n@@6_NEW4',
+  DATA_ORG_orcid_raw[label = 'Researcher ORCIDs \\n@@6_NEW4',
       fillcolor='#AC94F4']   
    
   subgraph cluster_ORG_raw {
@@ -300,21 +300,19 @@ graph_biomedical_main <- "digraph {
 
   # ------ SHAPES & LABELS - DATA - PROCESSED - pubs dois
   DATA_PROCESSED_dois[label = 'Target publication DOIs - imported \\n@@7 \\n@@8 unique [@@9]',
-      shape=rectangle, fillcolor='#AAEAED']
+      shape=rectangle, fillcolor=white]
 
   # ------ SHAPES & LABELS - DATA - PROCESSED - orcids
   DATA_PROCESSED_orcid[label = 'Researcher ORCIDs - imported \\n@@16 \\n@@17 unique [@@18]',
-      shape=rectangle, fillcolor='#AAEAED']
+      shape=rectangle, fillcolor=white]
       
   # ------ SHAPES & LABELS - DATA - PROCESSED - Oddpubs
   DATA_PROCESSED_oddpub[label = 'Oddpub output - imported \\n@@10 \\n@@11 unique [@@12]',
-      shape=rectangle, fillcolor='#AAEAED']
+      shape=rectangle, fillcolor=white]
 
   # ------ SHAPES & LABELS - DATA - PROCESSED - trials
   DATA_PROCESSED_trials[label = 'Charite Clinical Trials - imported \\n@@13 \\n@@14 unique [@@15]',
-      shape=rectangle, fillcolor='#AAEAED']
-
-rank=same {OUTPUT_Dashboard, DATA_PROCESSED_dois, DATA_PROCESSED_orcid, DATA_PROCESSED_oddpub, DATA_PROCESSED_trials}
+      shape=rectangle, fillcolor=white]
 
   # ---------------------------------------------------------
   # PROCESSED DATASETS - DASHBOARD
@@ -330,13 +328,13 @@ rank=same {OUTPUT_Dashboard, DATA_PROCESSED_dois, DATA_PROCESSED_orcid, DATA_PRO
   # ------ SHAPES & LABELS - DASHBOARD files - orcid
   OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\n@@25 \\n@@26 unique non-NULL [@@27]',
       shape=rectangle, fillcolor='#9DD8A1']
-      
-   # ------ SHAPES & LABELS - Dashboard
+  
+  # ------ SHAPES & LABELS - Dashboard
   OUTPUT_Dashboard[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
       shape=filled, fillcolor='#3BB143']
      
-  rank=same {Process_02, Process_03, Process_04}
-  rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
+  #rank=same {Process_2, Process_3, process_4}
+  #rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
 
   # ---------------------------------------------------------
   # LINKS: ACADEMIC OBSERVATORY
@@ -356,106 +354,145 @@ rank=same {OUTPUT_Dashboard, DATA_PROCESSED_dois, DATA_PROCESSED_orcid, DATA_PRO
   } # END cluster_AcademicObservatory
 
   # ---------------------------------------------------------
+  # PROCESS #0_Charite - Charite clinical trial processing
+  # ---------------------------------------------------------
+  DATA_ORG_trials_raw -> DATA_PROCESSED_trials
+    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+      
+  subgraph cluster_0_Charite {
+    label='Charite Processing - by the project'; 
+    fontsize=20; fontname='Helvetica-Bold';
+    style='filled, rounded'; fillcolor='#E9FAFA';
+      
+    DATA_PROCESSED_trials -> Process_0_Charite
+
+    Process_0_Charite[label = 'Charite processing', 
+        shape=rectangle, style='filled, dashed', fillcolor=white]
+    
+    Process_0_Charite -> DATA_PROJECT_charite_trials_output
+    } # END cluster_0_Charite
+    
+  # ---------------------------------------------------------
   # PROCESS #0_Oddpub - Oddpub processing
   # ---------------------------------------------------------
-  subgraph cluster_P0_Oddpub {
-    style='filled'; fillcolor='#E9FAFA';
+  DATA_ORG_dois_raw -> DATA_PROCESSED_dois
+    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+       
+  subgraph cluster_0_Oddpub{
+      label='Oddpub Processing - by the project'; 
+      fontsize=20; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#E9FAFA';
+      
+    DATA_PROCESSED_dois -> Process_0_Oddpub
 
-    Process_0_Oddpub[label = 'PROJECT - Oddpub Processing', fontsize=18,
-        shape=rectangle, style='filled, dashed', fillcolor='#2CCCD3']
-    
-    DATA_ORG_dois_raw -> Process_0_Oddpub
+    Process_0_Oddpub[label = 'Oddpub processing', fontsize=18,
+        shape=rectangle, style='filled, dashed', fillcolor=white]
+
     Process_0_Oddpub -> DATA_PROJECT_Oddpub_output
      } # END cluster_P0_Oddpub
   
   # ---------------------------------------------------------
-  # PROCESS #0_Charite - Charite clinical trial processing
-  # ---------------------------------------------------------
-  subgraph cluster_P0_Charite {
-    style='filled'; fillcolor='#E9FAFA';
-
-    Process_0_Charite[label = 'PROJECT - Charite Processing', 
-        fontname='Helvetica-Bold', fontsize=18,
-        shape=rectangle, style='filled, dashed', fillcolor='#2CCCD3']
-    
-    DATA_ORG_trials_raw -> Process_0_Charite
-    Process_0_Charite -> DATA_PROJECT_charite_trials_output
-    DATA_PROJECT_charite_trials_output -> Process_02
-    } # END cluster_P0_Charite
-  
-  # ---------------------------------------------------------
-  # PROCESS #01 - From the AO, create meta list of clinical trial numbers
+  # PROCESS #1 - From the AO, create meta list of clinical trial numbers
   # associated with DOIs
   # ---------------------------------------------------------
-  
-  DATA_AcademicObservatory -> Process_01 [lhead = cluster_01]
+  DATA_AcademicObservatory ->  Process_1
+    [minlen=2, ltail = cluster_AcademicObservatory, lhead = cluster_1]
 
-  subgraph cluster_01 {
+  subgraph cluster_1 {
+    label='SQL process #1 - by COKI'; 
+      fontsize=20; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
  
-   Process_01_TITLE[label = 'SQL process #1', 
-      fontsize=20, fontname='Helvetica-Bold',
-      style='filled', color='transparent', fillcolor='#D7EFD9']
-
-  Process_01[label = 'Create meta-list of clinical trial numbers 
-    associated with DOIs using Crossref & Pubmed fields and 
-    abstract search', 
+    Process_1[label = 'Create meta-list of clinical trial numbers associated with 
+    DOIs using Crossref & Pubmed fields and abstract search', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
+    Process_1 -> Intermediate_Table_1 Intermediate_Table_1[label = 'Intermediate Table \\n 
+      All Clinical Trial Numbers found for DOIs in Crossref & Pubmed',
+      fillcolor='#9DD8A1']
 
-  # Links within process box
-  #edge [color=pink, arrowsize=0.8, minlen = 1]
-  #edge [style=bold, color=pink, ]
-  #rankdir=TB;
-
-  #nodesep=0.5; #hack
-  Process_01_TITLE -> Process_01
-  Process_01 -> Output_Table_1
-
-    Output_Table_1[label = 'Intermediate Table \\n All Clinical Trial Numbers found for DOIs in Crossref & Pubmed']
-
-  } # END cluster_01
-  
+    } # END cluster_1
   
   # ---------------------------------------------------------
-  # PROCESS #02 - SQL to combine the contributed clinical trial data
+  # PROCESS #2 - SQL to combine the contributed clinical trial data
   # with the meta-list of clinical trial numbers
   # ---------------------------------------------------------
-  Process_02[label = 'SQL process #2
-    Match the contributed clinical trial data to 
-    the meta-list of clinical trial numbers from 
-    Pubmed and Crossref, and to the contributed DOIs', 
-    shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9', fontsize=18]
+  DATA_PROJECT_charite_trials_output -> Process_2
+      [minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
+      
+  Intermediate_Table_1 -> Process_2
+    [minlen=2, ltail = cluster_1, lhead = cluster_2]
   
-  Output_Table_1 -> Process_02
-  Process_02 -> OUTPUT_Dashboard_trials
-  OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
+  subgraph cluster_2 {
+    label='SQL process #2 - by COKI'; 
+      fontsize=20; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
+      
+    Process_2[label = 'Match the contributed clinical trial data to 
+      the meta-list of clinical trial numbers from 
+      Pubmed and Crossref, and to the contributed DOIs', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+  
+    Process_2 -> OUTPUT_Dashboard_trials
     
+    } # END cluster_2
+
+    OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
+      [minlen=2, ltail = cluster_2]
+
   # ---------------------------------------------------------
-  # PROCESS #03 - SQL to process the ORCID data for the dashbaord
+  # PROCESS #3 - SQL to process the ORCID data for the dashbaord
   # ---------------------------------------------------------
-  Process_03[label = 'SQL process #3
-    Process the ORCID data', 
-      shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9', fontsize=18]
-  
-  #DATA_PROCESSED_orcid -> Process_03
-  Process_03 -> OUTPUT_Dashboard_orcid
+  DATA_ORG_orcid_raw -> DATA_PROCESSED_orcid
+    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_3]
+
+  subgraph cluster_3 {
+    label='SQL process #3 - by COKI'; 
+      fontsize=20; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
+   
+    DATA_PROCESSED_orcid -> Process_3
+    
+    Process_3[label = 'Process the ORCID data', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+
+    Process_3 -> OUTPUT_Dashboard_orcid
+    } # END cluster_3
+
   OUTPUT_Dashboard_orcid -> OUTPUT_Dashboard
-    
+    [minlen=2, ltail = cluster_3]
+
   # ---------------------------------------------------------
-  # PROCESS #04 - SQL to process the Publication and Oddpub data for the dashboard
+  # PROCESS #4 - SQL to process the Publication and Oddpub data for the dashboard
   # ---------------------------------------------------------
-  Process_04[label = 'SQL process #4
-    Process the Publication and Oddpub data', 
-    fontsize=18, shape=rectangle, style='filled, dashed', fillcolor='#D7EFD9']
+  DATA_PROJECT_Oddpub_output -> process_4
+      [minlen=2, ltail = cluster_0_Oddpub, lhead = cluster_4]
+      
+  process_4[label = 'Process the Publication and Oddpub data', 
+      fontsize=18, shape=rectangle, style='filled, dashed', fillcolor=white]
   
-  Output_Table_1 -> Process_04
-  #DATA_PROCESSED_dois -> Process_04
-  #DATA_PROCESSED_oddpub -> Process_04
-  Process_04 -> OUTPUT_Dashboard_pubs
-  OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
+  subgraph cluster_4 {
+    label='SQL process #4 - by COKI'; 
+    fontsize=20; fontname='Helvetica-Bold';
+    style='filled, rounded'; fillcolor='#D7EFD9';
+      
+    Intermediate_Table_1 -> process_4
+      [minlen=2, ltail = cluster_1, lhead = cluster_4]
+
+    process_4 -> OUTPUT_Dashboard_pubs
     
-  }
-  
+  } # END cluster_4
+
+    OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
+      [minlen=2, ltail = cluster_4]
+
+
+  # JUNK
+  #OUTPUT_Dashboard -> DATA_PROCESSED_orcid
+  #OUTPUT_Dashboard -> DATA_PROCESSED_dois
+  #OUTPUT_Dashboard -> DATA_PROCESSED_trials
+  #OUTPUT_Dashboard -> DATA_PROCESSED_oddpub
+
   # ------ Add footnotes 
   }
   [1]:COKI_AcademicObservatory_table_short
