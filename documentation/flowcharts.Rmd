@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2i.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2j.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -191,7 +191,7 @@ VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")
 VAR_ORG_orcid_table_short <- str_split(VAR_ORG_orcid_table, "\\.")[[1]][3]
 ORG_orcid_count1 <- F_bigquery_sql_count_distinct(VAR_ORG_orcid_table, VAR_ORG_orcid_var1)
 ORG_orcid_count1 <- ORG_orcid_count1$f0_
-print(paste("Contributed ODDPUB:", VAR_ORG_orcid_table, "has", ORG_orcid_count1,"distinct values for",VAR_ORG_orcid_var1))
+print(paste("Contributed ORCID:", VAR_ORG_orcid_table, "has", ORG_orcid_count1,"distinct values for",VAR_ORG_orcid_var1))
 VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
 DASHBOARD_orcid_count1 <- F_bigquery_sql_count_distinct(VAR_DASHBOARD_orcid_table, VAR_DASHBOARD_orcid_var1)
 
@@ -238,10 +238,11 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   layout = dot;
   compound=TRUE;
+
   node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
       style='filled, rounded', fillcolor=white, penwidth=1.5
       fontname = Helvetica, fontsize=16]
-  edge [color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5]
+  edge [minlen=1, color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5]
 
   # ---------------------------------------------------------
   # INPUT DATASETS: ORGANISATION - RAW
@@ -365,8 +366,9 @@ graph_biomedical_main <- "digraph {
   # ------------------- LINKS BETWEEN-CLUSTERS
 
   DATA_AcademicObservatory ->  PROCESS_1
-    [ltail = cluster_AcademicObservatory, lhead = cluster_1] 
 
+    [minlen=2, ltail = cluster_AcademicObservatory, lhead = cluster_1] 
+    
   # ------------------- CLUSTER
   
   subgraph cluster_1 {
@@ -387,7 +389,7 @@ graph_biomedical_main <- "digraph {
       
     # ------------------- LINKS
 
-    PROCESS_1 -> Intermediate_Table_1
+    PROCESS_1 -> Intermediate_Table_1 [label='  @@7 has  \\n   @@8 unique @@9', labeljust=l]
     
     } # END cluster_1
   
@@ -399,11 +401,10 @@ graph_biomedical_main <- "digraph {
   # ------------------- LINKS BETWEEN-CLUSTERS
 
   Intermediate_Table_1 -> NODE_Imported_trials
-    [ltail = cluster_1, lhead = cluster_2]
+    [minlen=2, ltail = cluster_1, lhead = cluster_2]
     
   DATA_PROJECT_charite_trials_output -> NODE_Imported_trials
-    [label = 'TEST label @@3',
-    ltail = cluster_0_Charite, lhead = cluster_2]
+    [minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
 
   # ------------------- CLUSTER
   
@@ -424,7 +425,7 @@ graph_biomedical_main <- "digraph {
   
     # ------------------- LINKS
     
-    NODE_Imported_trials -> PROCESS_2
+    NODE_Imported_trials -> PROCESS_2 [label='  @@7 has\\n   @@8 unique @@9', labeljust=l]
 
     PROCESS_2 -> NODE_Dashboard_trials
     
@@ -452,7 +453,7 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
-    NODE_Processed_orcid -> PROCESS_3
+    NODE_Processed_orcid -> PROCESS_3 [label='  @@10 has\\n   @@11 unique @@12', labeljust=l]
     PROCESS_3 -> NODE_Dashboard_orcid
     
     } # END cluster_3
@@ -463,7 +464,7 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
   DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4
-      [ltail = cluster_0_Oddpub, lhead = cluster_4]
+      [minlen=2, ltail = cluster_0_Oddpub, lhead = cluster_4]
 
   NODE_ORG_dois_raw -> NODE_Imported_dois_to_Process_4
       [ltail = cluster_ORG_raw, lhead = cluster_4]
@@ -491,10 +492,10 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- LINKS
 
-    NODE_Imported_dois_to_Process_4 -> process_4
-    
-    NODE_Imported_oddpub -> process_4
+    NODE_Imported_oddpub -> process_4 [label='  @@13 has\\n   @@14 unique @@15', labeljust=l]
 
+    NODE_Imported_dois_to_Process_4 -> process_4 [label='  @@16 has\\n   @@17 unique @@18', labeljust=l]
+    
     process_4 -> NODE_Dashboard_pubs
       
   } # END cluster_4
@@ -502,7 +503,6 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # Main dashboard
   # ---------------------------------------------------------
-
 
   # ------------------- NODES
   
@@ -520,13 +520,13 @@ graph_biomedical_main <- "digraph {
      
   # ------------------- LINKS BETWEEN-CLUSTERS
 
-  NODE_Dashboard_trials -> NODE_Dashboard_MAIN
+  NODE_Dashboard_trials -> NODE_Dashboard_MAIN [label='  @@19 has\\n   @@20 unique @@21', labeljust=l]
       [ltail = cluster_2, minlen=2]
 
-  NODE_Dashboard_orcid -> NODE_Dashboard_MAIN
+  NODE_Dashboard_orcid -> NODE_Dashboard_MAIN [label='  @@22 has\\n   @@23 unique @@24', labeljust=l]
       [ltail = cluster_3, minlen=2]
 
-  NODE_Dashboard_pubs -> NODE_Dashboard_MAIN
+  NODE_Dashboard_pubs -> NODE_Dashboard_MAIN [label='  @@25 has\\n   @@26 unique @@27', labeljust=l]
       [ltail = cluster_4, minlen=2]
 
   # ---------------------------------------------------------
@@ -537,6 +537,31 @@ graph_biomedical_main <- "digraph {
   [1]:VAR_COKI_AcademicObservatory_table_short
   [2]:COKI_AcademicObservatory_count1
   [3]:VAR_ORG_dois_file
+  [4]:VAR_COKI_AcademicObservatory_table_short
+  [5]:COKI_AcademicObservatory_count1
+  [6]:VAR_COKI_AcademicObservatory_var1
+  [7]:VAR_PROJECT_trials_table_short
+  [8]:PROJECT_trials_count1
+  [9]:VAR_PROJECT_trials_var1
+  [10]:VAR_ORG_orcid_table_short
+  [11]:ORG_orcid_count1
+  [12]:VAR_ORG_orcid_var1
+  [13]:VAR_PROJECT_Oddpub_table_short
+  [14]:PROJECT_Oddpub_count1
+  [15]:VAR_PROJECT_Oddpub_var1
+  [16]:VAR_ORG_dois_table_short
+  [17]:ORG_dois_count1
+  [18]:VAR_ORG_dois_var1
+  [19]:VAR_DASHBOARD_trials_table_short
+  [20]:DASHBOARD_trials_count1
+  [21]:VAR_DASHBOARD_trials_var1
+  [22]:VAR_DASHBOARD_orcid_table_short
+  [23]:DASHBOARD_orcid_count1
+  [24]:VAR_DASHBOARD_orcid_var1
+  [25]:VAR_DASHBOARD_pubs_table_short
+  [26]:DASHBOARD_pubs_count1
+  [27]:VAR_DASHBOARD_pubs_var1
+
   "
    
 # Plot to graph to the screen / HTML
