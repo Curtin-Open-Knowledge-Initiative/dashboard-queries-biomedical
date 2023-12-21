@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2e.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2f.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -12,54 +12,54 @@ output: html_document
 #------------------------------------------------|
 
 # Academic Observatory - this is the version of the Academic Observatory
-COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
-COKI_AcademicObservatory_var1 <- "doi"
+VAR_COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
+VAR_COKI_AcademicObservatory_var1 <- "doi"
 
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
 #ORG_dois_YYYMM22.txt
-ORG_dois_raw <- "ORG_dois_YYYMM22.txt [TheNeuro_dois_2010-2022.csv]"
-ORG_dois_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
-ORG_dois_var1 <- "doi"
+VAR_ORG_dois_file <- "TheNeuro_dois_2010-2022.csv"
+VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
+VAR_ORG_dois_var1 <- "doi"
 
 # Contributed DATA: trials - List of actual clinical trials for the organisation
 # ORG_trials_YYYMM22.txt
-ORG_trials_raw <- "ORG_trials_YYYMM22.txt"
+VAR_ORG_trials_file <- "XXX"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the organisation
 # ORG_orcid_YYYMM22.txt
-ORG_orcid_raw <- "ORG_orcid_YYYMM22.txt \\n[neuro_pis_orcid.csv]"
-ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
-ORG_orcid_var1 <- "orcid_id"
+VAR_ORG_orcid_file <- "ORG_orcid_YYYMM22.txt \\n[neuro_pis_orcid.csv]"
+VAR_ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
+VAR_ORG_orcid_var1 <- "orcid_id"
 
 # ----------------------------------------------------------------------
 # OLD Contributed DATA: Oddpub - Output from the Oddpub processing
 # NEW DATA: Project Process- Oddpub - Output from the Oddpub processing
-PROJECT_Oddpub_raw <- "NEURO_oddpub_screening.csv"
-PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
-PROJECT_Oddpub_var1 <- "doi"
+VAR_PROJECT_Oddpub_file <- "NEURO_oddpub_screening.csv"
+VAR_PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
+VAR_PROJECT_Oddpub_var1 <- "doi"
 
 # NEW DATA: Project Process- Charite - Output from the Charite processing
-PROJECT_trials_raw <- "combined-ctgov-studies.csv"
-PROJECT_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
-PROJECT_trials_var1 <- "nct_id"
+VAR_PROJECT_trials_file <- "combined-ctgov-studies.csv"
+VAR_PROJECT_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
+VAR_PROJECT_trials_var1 <- "nct_id"
 
 # ----------------------------------------------------------------------
 # Note, processing Step #1 only produces an intermediate table, so is not 
 # included in the dashbaord output tables
 
 # Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-DASHBOARD_trials_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
-DASHBOARD_trials_var1 <- "nct_id"
+VAR_DASHBOARD_trials_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
+VAR_DASHBOARD_trials_var1 <- "nct_id"
 
 # Output dashboard data - from the SQL - Step 3 - Pubs
-DASHBOARD_pubs_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
-DASHBOARD_pubs_var1 <- "doi"
+VAR_DASHBOARD_pubs_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
+VAR_DASHBOARD_pubs_var1 <- "doi"
 
 # Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-DASHBOARD_orcid_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
-DASHBOARD_orcid_var1 <- "orcid_id"
+VAR_DASHBOARD_orcid_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
+VAR_DASHBOARD_orcid_var1 <- "orcid_id"
 
 ```
 
@@ -168,62 +168,62 @@ dbListTables(con)
 #------------------------------------------------|
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-ORG_dois_table_short <- str_split(ORG_dois_table, "\\.")[[1]][3]
-ORG_dois_count1 <- F_bigquery_sql_count_distinct(ORG_dois_table, ORG_dois_var1)
+VAR_ORG_dois_table_short <- str_split(VAR_ORG_dois_table, "\\.")[[1]][3]
+ORG_dois_count1 <- F_bigquery_sql_count_distinct(VAR_ORG_dois_table, VAR_ORG_dois_var1)
 ORG_dois_count1 <- ORG_dois_count1$f0_
-print(paste("Contributed pubs (Target DOIs):",ORG_dois_table, "has", ORG_dois_count1,"distinct values for", ORG_dois_var1))
-DASHBOARD_pubs_table_short <- str_split(DASHBOARD_pubs_table, "\\.")[[1]][3]
+print(paste("Contributed pubs (Target DOIs):",VAR_ORG_dois_table, "has", ORG_dois_count1,"distinct values for", VAR_ORG_dois_var1))
+VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
 
 # Contributed DATA: Oddpub - Output from the Oddpub processing
-PROJECT_Oddpub_table_short <- str_split(PROJECT_Oddpub_table, "\\.")[[1]][3]
-PROJECT_Oddpub_count1 <- F_bigquery_sql_count_distinct(PROJECT_Oddpub_table, PROJECT_Oddpub_var1)
+VAR_PROJECT_Oddpub_table_short <- str_split(VAR_PROJECT_Oddpub_table, "\\.")[[1]][3]
+PROJECT_Oddpub_count1 <- F_bigquery_sql_count_distinct(VAR_PROJECT_Oddpub_table, VAR_PROJECT_Oddpub_var1)
 PROJECT_Oddpub_count1 <- PROJECT_Oddpub_count1$f0_
-print(paste("Contributed ODDPUB:", PROJECT_Oddpub_table, "has", PROJECT_Oddpub_count1,"distinct values for",PROJECT_Oddpub_var1))
+print(paste("Contributed ODDPUB:", VAR_PROJECT_Oddpub_table, "has", PROJECT_Oddpub_count1,"distinct values for",VAR_PROJECT_Oddpub_var1))
 
 # Contributed DATA: trials - List of actual clinical trials for the institution
-PROJECT_trials_table_short <- str_split(PROJECT_trials_table, "\\.")[[1]][3]
-PROJECT_trials_count1 <- F_bigquery_sql_count_distinct(PROJECT_trials_table, PROJECT_trials_var1)
+VAR_PROJECT_trials_table_short <- str_split(VAR_PROJECT_trials_table, "\\.")[[1]][3]
+PROJECT_trials_count1 <- F_bigquery_sql_count_distinct(VAR_PROJECT_trials_table, VAR_PROJECT_trials_var1)
 PROJECT_trials_count1 <- PROJECT_trials_count1$f0_
-print(paste("CLINICAL TRIALS:", PROJECT_trials_table, "has", PROJECT_trials_count1,"distinct values for",PROJECT_trials_var1))
-DASHBOARD_trials_table_short <- str_split(DASHBOARD_trials_table, "\\.")[[1]][3]
+print(paste("CLINICAL TRIALS:", VAR_PROJECT_trials_table, "has", PROJECT_trials_count1,"distinct values for",VAR_PROJECT_trials_var1))
+VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
-ORG_orcid_table_short <- str_split(ORG_orcid_table, "\\.")[[1]][3]
-ORG_orcid_count1 <- F_bigquery_sql_count_distinct(ORG_orcid_table, ORG_orcid_var1)
+VAR_ORG_orcid_table_short <- str_split(VAR_ORG_orcid_table, "\\.")[[1]][3]
+ORG_orcid_count1 <- F_bigquery_sql_count_distinct(VAR_ORG_orcid_table, VAR_ORG_orcid_var1)
 ORG_orcid_count1 <- ORG_orcid_count1$f0_
-print(paste("Contributed ODDPUB:", ORG_orcid_table, "has", ORG_orcid_count1,"distinct values for",ORG_orcid_var1))
-DASHBOARD_orcid_table_short <- str_split(DASHBOARD_orcid_table, "\\.")[[1]][3]
-DASHBOARD_orcid_count1 <- F_bigquery_sql_count_distinct(DASHBOARD_orcid_table, DASHBOARD_orcid_var1)
+print(paste("Contributed ODDPUB:", VAR_ORG_orcid_table, "has", ORG_orcid_count1,"distinct values for",VAR_ORG_orcid_var1))
+VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
+DASHBOARD_orcid_count1 <- F_bigquery_sql_count_distinct(VAR_DASHBOARD_orcid_table, VAR_DASHBOARD_orcid_var1)
 
 #----------------------------------------------------------------------
 
 # Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-DASHBOARD_trials_table_short <- str_split(DASHBOARD_trials_table, "\\.")[[1]][3]
-DASHBOARD_trials_count1 <- F_bigquery_sql_count_distinct(DASHBOARD_trials_table, DASHBOARD_trials_var1)
+VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
+DASHBOARD_trials_count1 <- F_bigquery_sql_count_distinct(VAR_DASHBOARD_trials_table, VAR_DASHBOARD_trials_var1)
 DASHBOARD_trials_count1 <- DASHBOARD_trials_count1$f0_
-print(paste("DASHBOARD TABLE:", DASHBOARD_trials_table, "has", DASHBOARD_trials_count1,
-            "distinct values for", DASHBOARD_trials_var1))
+print(paste("DASHBOARD TABLE:", VAR_DASHBOARD_trials_table, "has", DASHBOARD_trials_count1,
+            "distinct values for", VAR_DASHBOARD_trials_var1))
 
 # Output dashboard data - from the SQL - Step 3 - Pubs
-DASHBOARD_pubs_table_short <- str_split(DASHBOARD_pubs_table, "\\.")[[1]][3]
-DASHBOARD_pubs_count1 <- F_bigquery_sql_count_distinct(DASHBOARD_pubs_table, DASHBOARD_pubs_var1)
+VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
+DASHBOARD_pubs_count1 <- F_bigquery_sql_count_distinct(VAR_DASHBOARD_pubs_table, VAR_DASHBOARD_pubs_var1)
 DASHBOARD_pubs_count1 <- DASHBOARD_pubs_count1$f0_
-print(paste("DASHBOARD TABLE:", DASHBOARD_pubs_table, "has", DASHBOARD_pubs_count1,
-            "distinct values for", DASHBOARD_pubs_var1))
+print(paste("DASHBOARD TABLE:", VAR_DASHBOARD_pubs_table, "has", DASHBOARD_pubs_count1,
+            "distinct values for", VAR_DASHBOARD_pubs_var1))
 
 # Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-DASHBOARD_orcid_table_short <- str_split(DASHBOARD_orcid_table, "\\.")[[1]][3]
-DASHBOARD_orcid_count1 <- F_bigquery_sql_count_distinct(DASHBOARD_orcid_table, DASHBOARD_orcid_var1)
+VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
+DASHBOARD_orcid_count1 <- F_bigquery_sql_count_distinct(VAR_DASHBOARD_orcid_table, VAR_DASHBOARD_orcid_var1)
 DASHBOARD_orcid_count1 <- DASHBOARD_orcid_count1$f0_
-print(paste("DASHBOARD TABLE:", DASHBOARD_orcid_table, "has", DASHBOARD_orcid_count1,
-            "distinct values for", DASHBOARD_orcid_var1))
+print(paste("DASHBOARD TABLE:", VAR_DASHBOARD_orcid_table, "has", DASHBOARD_orcid_count1,
+            "distinct values for", VAR_DASHBOARD_orcid_var1))
 
 # Academic Observatory - this is the version of the Academic Observatory
-COKI_AcademicObservatory_table_short <- str_split(COKI_AcademicObservatory_table, "\\.")[[1]][3]
-COKI_AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(COKI_AcademicObservatory_table, COKI_AcademicObservatory_var1)
+VAR_COKI_AcademicObservatory_table_short <- str_split(VAR_COKI_AcademicObservatory_table, "\\.")[[1]][3]
+COKI_AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(VAR_COKI_AcademicObservatory_table, VAR_COKI_AcademicObservatory_var1)
 COKI_AcademicObservatory_count1 <- COKI_AcademicObservatory_count1$f0_
-print(paste("ACADEMIC OBSERVATORY:",COKI_AcademicObservatory_table, "has", 
-            COKI_AcademicObservatory_count1,"distinct values for",COKI_AcademicObservatory_var1))
+print(paste("ACADEMIC OBSERVATORY:",VAR_COKI_AcademicObservatory_table, "has", 
+            COKI_AcademicObservatory_count1,"distinct values for",VAR_COKI_AcademicObservatory_var1))
 ```
 
 
@@ -261,64 +261,47 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # INPUT DATASETS: ORGANISATION - RAW
   # ---------------------------------------------------------
-  # ------ SHAPES & LABELS - DATA - ORG - dois
-  DATA_ORG_dois_raw[label = 'publication DOIs \\n@@3',
-      fillcolor='#AC94F4']
-
-  # ------ SHAPES & LABELS - DATA - ORG - clinical trials
-  DATA_ORG_trials_raw[label = 'Researcher Clinical Trials \\n@@_NEW5',
-      fillcolor='#AC94F4']
-
-  # ------ SHAPES & LABELS - DATA - ORG - orcid
-  DATA_ORG_orcid_raw[label = 'Researcher ORCIDs \\n@@6_NEW4',
-      fillcolor='#AC94F4']   
-   
+  
+  # ------------------- CLUSTER
+  
   subgraph cluster_ORG_raw {
      label='Datasets provided by the Organisation'; 
      fontsize=20; fontname='Helvetica-Bold';
      style='filled, rounded'; fillcolor='#E2D9FB';
 
-    DATA_ORG_dois_raw
-    DATA_ORG_trials_raw
-    DATA_ORG_orcid_raw
-  } # END cluster_ORG
-  
-  # ---------------------------------------------------------
-  # PROCESSED DATASETS - INTERMEDIATE
-  # ---------------------------------------------------------
+    # ------------------- NODES
 
-  # ------ SHAPES & LABELS - DATA - PROCESSED - pubs dois
-  DATA_PROCESSED_dois[label = 'Target publication DOIs - imported \\n@@7 \\n@@8 unique [@@9]',
-      shape=rectangle, fillcolor=white]
+     ORG_dois_raw_node[label = 'publication DOIs \\n ORG_dois_YYYMM22.txt',
+        fillcolor='#AC94F4']
 
-  # ------ SHAPES & LABELS - DATA - PROCESSED - orcids
-  DATA_PROCESSED_orcid[label = 'Researcher ORCIDs - imported \\n@@16 \\n@@17 unique [@@18]',
-      shape=rectangle, fillcolor=white]
+     ORG_trials_raw_node[label = 'Researcher Clinical Trials',
+        fillcolor='#AC94F4']
+
+     ORG_orcid_raw_node[label = 'Researcher ORCIDs',
+        fillcolor='#AC94F4']   
       
-
-
-  # ------ SHAPES & LABELS - DATA - PROCESSED - trials
-  DATA_PROCESSED_trials[label = 'Charite Clinical Trials - imported \\n@@13 \\n@@14 unique [@@15]',
-      shape=rectangle, fillcolor=white]
-
+  } # END cluster_ORG_raw
+  
   # ---------------------------------------------------------
   # PROCESSED DATASETS - DASHBOARD
   # ---------------------------------------------------------
   # ------ SHAPES & LABELS - DASHBOARD files - pubs
-  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\n@@19 \\n@@20 unique non-NULL [@@21]',
+  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\nXXX \\nXXX unique non-NULL (XXX)',
       shape=rectangle, fillcolor='#9DD8A1']
       
   # ------ SHAPES & LABELS - DASHBOARD files - trials
-  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\n@@22 \\n@@23 unique non-NULL [@@24]',
+  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\nXXX \\nXXX unique non-NULL (XXX)',
       shape=rectangle, fillcolor='#9DD8A1']
 
   # ------ SHAPES & LABELS - DASHBOARD files - orcid
-  OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\n@@25 \\n@@26 unique non-NULL [@@27]',
+  OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\nXXX \\nXXX unique non-NULL (XXX)',
       shape=rectangle, fillcolor='#9DD8A1']
 
   # ---------------------------------------------------------
   # LINKS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
+  
+  # -------------------CLUSTER
   subgraph cluster_AcademicObservatory {
      label='Academic Observatory'; fontsize=20; fontname = 'Helvetica-Bold';
      style='filled, rounded'; fillcolor='#FFF0E9';
@@ -336,46 +319,58 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # PROCESS #0_Charite - Charite clinical trial processing
   # ---------------------------------------------------------
-  DATA_ORG_trials_raw -> DATA_PROCESSED_trials
-    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
-      
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
+  # ------------------- CLUSTER
   subgraph cluster_0_Charite {
-    label='Charite Processing - by the project'; 
+    label='Charite Processing\\n by the project'; 
     fontsize=20; fontname='Helvetica-Bold';
     style='filled, rounded'; fillcolor='#E9FAFA';
       
-    # -- Nodes
-    Process_0_Charite[label = 'Charite processing', 
+    # ------------------- NODES
+    
+    Process_0_Charite[label = 'Charite processing of clinical trial data', 
         shape=rectangle, style='filled, dashed', fillcolor=white]
     
-    DATA_PROJECT_charite_trials_output[label = 'Output from Charite clinical trial processing \\n@@5',
+    DATA_PROJECT_charite_trials_output[label = 'Output from Charite clinical trial processing \\nXXX',
       fillcolor='#2CCCD3']
       
-    DATA_PROCESSED_trials -> Process_0_Charite
-
+    # ------------------- LINKS
+    
+    ORG_trials_raw_node -> Process_0_Charite
+      [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+      
     Process_0_Charite -> DATA_PROJECT_charite_trials_output
+    
     } # END cluster_0_Charite
     
   # ---------------------------------------------------------
   # PROCESS #0_Oddpub - Oddpub processing
   # ---------------------------------------------------------
-  DATA_ORG_dois_raw -> DATA_PROCESSED_dois
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  
+  ORG_dois_raw_node -> DATA_PROCESSED_dois
     [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
        
+  # ------------------- CLUSTER
+  
   subgraph cluster_0_Oddpub{
-      label='Oddpub Processing - by the project'; 
-      fontsize=20; fontname='Helvetica-Bold';
-      style='filled, rounded'; fillcolor='#E9FAFA';
+    label='Oddpub Processing\\n by the project'; 
+       fontsize=20; fontname='Helvetica-Bold';
+       style='filled, rounded'; fillcolor='#E9FAFA';
 
-    # -- Nodes
+    # ------------------- NODES
+   
     Process_0_Oddpub[label = 'Oddpub processing', fontsize=18,
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
-    DATA_PROJECT_Oddpub_output[label = 'Output from Oddpub processing - Data and Software \\n@@4',
+    DATA_PROJECT_Oddpub_output[label = 'Output from Oddpub processing - Data and Software \\nXXX',
       fillcolor='#2CCCD3']
       
-    
-    # -- Links
+    # ------------------- LINKS
+
     DATA_PROCESSED_dois -> Process_0_Oddpub [minlen=1]
 
     Process_0_Oddpub -> DATA_PROJECT_Oddpub_output
@@ -387,20 +382,25 @@ graph_biomedical_main <- "digraph {
   # associated with DOIs
   # ---------------------------------------------------------
   
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
   DATA_AcademicObservatory ->  Process_1
     [minlen=2, ltail = cluster_AcademicObservatory, lhead = cluster_1]
 
+  # ------------------- CLUSTER
+  
   subgraph cluster_1 {
-    label='SQL process #1 - by COKI'; 
+    label='SQL process #1 - Clinical Trial Pre-processing\\n by COKI'; 
       fontsize=20; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
  
-    # -- Nodes
+    # ------------------- NODES
+
     Process_1[label = 'Create meta-list of clinical trial numbers associated with 
     DOIs using Crossref & Pubmed fields and abstract search', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
-    # -- Links
+    # ------------------- LINKS
 
     Process_1 -> Intermediate_Table_1 Intermediate_Table_1
       [label = 'Intermediate Table
@@ -414,23 +414,35 @@ graph_biomedical_main <- "digraph {
   # with the meta-list of clinical trial numbers
   # ---------------------------------------------------------
 
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
   Intermediate_Table_1 -> Process_2
     [minlen=2, ltail = cluster_1, lhead = cluster_2]
   
+  DATA_PROJECT_charite_trials_output -> Process_2
+      [label = 'TEST label',
+      minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
+      
+  # ------------------- CLUSTER
+  
   subgraph cluster_2 {
-    label='SQL process #2 - by COKI'; 
+    label='SQL process #2 - Clinical Trials\\n by COKI'; 
       fontsize=20; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
       
-    # -- Nodes
+    # ------------------- NODES
+
+    DATA_PROCESSED_trials[label = 'Charite Clinical Trials - imported \\n \\nXXX unique [XXX]',
+      shape=rectangle, fillcolor=white]
+      
     Process_2[label = 'Match the contributed clinical trial data to 
       the meta-list of clinical trial numbers from 
       Pubmed and Crossref, and to the contributed DOIs', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
-    # -- Links
-    DATA_PROJECT_charite_trials_output -> Process_2
-      [minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
+    # ------------------- LINKS
+    
+    DATA_PROCESSED_trials -> Process_2
 
     Process_2 -> OUTPUT_Dashboard_trials
     
@@ -439,19 +451,29 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # PROCESS #3 - SQL to process the ORCID data for the dashbaord
   # ---------------------------------------------------------
-  DATA_ORG_orcid_raw -> DATA_PROCESSED_orcid
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
+  ORG_orcid_raw_node -> DATA_PROCESSED_orcid
     [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_3]
 
+  # ------------------- CLUSTER
+  
   subgraph cluster_3 {
-    label='SQL process #3 - by COKI'; 
+    label='SQL process #3 - ORCIDs\\n by COKI'; 
       fontsize=20; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
    
-    # -- Nodes
+    # ------------------- NODES
+
+    DATA_PROCESSED_orcid[label = 'Researcher ORCIDs - imported \\nXXX \\nXXX unique [XXX]',
+      shape=rectangle, fillcolor=white]
+      
     Process_3[label = 'Process the ORCID data', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
 
-    # -- Links
+    # ------------------- LINKS
+
     DATA_PROCESSED_orcid -> Process_3
     Process_3 -> OUTPUT_Dashboard_orcid
     
@@ -460,23 +482,39 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # PROCESS #4 - SQL to process the Publication and Oddpub data for the dashboard
   # ---------------------------------------------------------
-  DATA_PROJECT_Oddpub_output -> process_4
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  
+  DATA_PROJECT_Oddpub_output -> DATA_PROCESSED_dois
       [minlen=2, ltail = cluster_0_Oddpub, lhead = cluster_4]
-      
+  
+  ORG_dois_raw_node -> process_4
+      [label = 'e.g.\\n @@3',
+      minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+    
+  # ------------------- CLUSTER
+  
   subgraph cluster_4 {
-    label='SQL process #4 - by COKI'; 
+    label='SQL process #4 - Publications & Oddpub\\n by COKI'; 
     fontsize=20; fontname='Helvetica-Bold';
     style='filled, rounded'; fillcolor='#D7EFD9';
 
-    # -- Nodes
-    DATA_PROCESSED_oddpub[label = 'Oddpub output - imported \\n@@10 \\n@@11 unique [@@12]',
+    # ------------------- NODES
+
+    DATA_PROCESSED_dois[label = 'Target publication DOIs - imported XXX unique (XXX)',
+      shape=rectangle, fillcolor=white]
+      
+    DATA_PROCESSED_oddpub[label = 'Oddpub output - imported',
       shape=rectangle, fillcolor=white]
       
     process_4[label = 'Process the Publication and Oddpub data', 
       fontsize=18, shape=rectangle, style='filled, dashed', fillcolor=white]
 
-    # -- Links
+    # ------------------- LINKS
+
     DATA_PROCESSED_oddpub -> process_4
+      [label = 'Oddpub output - imported \\nXX \\nXX unique (XXX)']
+      
     Intermediate_Table_1 -> process_4
       [minlen=2, ltail = cluster_1, lhead = cluster_4]
 
@@ -488,10 +526,13 @@ graph_biomedical_main <- "digraph {
   # Main dashboard
   # ---------------------------------------------------------
 
-  # ------ SHAPES & LABELS - Dashboard
+  # ------------------- NODES
+  
   OUTPUT_Dashboard[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
       shape=filled, fillcolor='#3BB143']
      
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
   OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
       [minlen=2, ltail = cluster_2]
       
@@ -504,36 +545,14 @@ graph_biomedical_main <- "digraph {
   #rank=same {Process_2, Process_3, process_4}
   #rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
   
+  # ---------------------------------------------------------
   # ------ Add footnotes 
+  # ---------------------------------------------------------
+  
   }
-  [1]:COKI_AcademicObservatory_table_short
+  [1]:VAR_COKI_AcademicObservatory_table_short
   [2]:COKI_AcademicObservatory_count1
-  [3]:ORG_dois_raw
-  [4]:PROJECT_Oddpub_raw
-  [5]:PROJECT_trials_raw
-  [6]:ORG_orcid_raw
-  [7]:ORG_dois_table_short
-  [8]:ORG_dois_count1
-  [9]:ORG_dois_var1
-  [10]:PROJECT_Oddpub_table_short
-  [11]:PROJECT_Oddpub_count1
-  [12]:PROJECT_Oddpub_var1
-  [13]:PROJECT_trials_table_short
-  [14]:PROJECT_trials_count1
-  [15]:PROJECT_trials_var1
-  [16]:ORG_orcid_table_short
-  [17]:ORG_orcid_count1
-  [18]:ORG_orcid_var1
-  [19]:DASHBOARD_pubs_table_short
-  [20]:DASHBOARD_pubs_count1  
-  [21]:DASHBOARD_pubs_var1
-  [22]:DASHBOARD_trials_table_short
-  [23]:DASHBOARD_trials_count1
-  [24]:DASHBOARD_trials_var1
-  [25]:DASHBOARD_orcid_table_short
-  [26]:DASHBOARD_orcid_count1
-  [27]:DASHBOARD_orcid_var1
-
+  [3]:VAR_ORG_dois_file
   "
    
 # Plot to graph to the screen / HTML
