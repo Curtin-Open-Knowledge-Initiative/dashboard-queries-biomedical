@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2h.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2i.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -402,7 +402,7 @@ graph_biomedical_main <- "digraph {
     [ltail = cluster_1, lhead = cluster_2]
     
   DATA_PROJECT_charite_trials_output -> NODE_Imported_trials
-    [label = 'TEST label',
+    [label = 'TEST label @@3',
     ltail = cluster_0_Charite, lhead = cluster_2]
 
   # ------------------- CLUSTER
