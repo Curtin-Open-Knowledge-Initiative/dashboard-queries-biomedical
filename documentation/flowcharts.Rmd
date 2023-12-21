@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2f.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2g.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -18,7 +18,7 @@ VAR_COKI_AcademicObservatory_var1 <- "doi"
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-#ORG_dois_YYYMM22.txt
+# ORG_dois_YYYMM22.txt
 VAR_ORG_dois_file <- "TheNeuro_dois_2010-2022.csv"
 VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
 VAR_ORG_dois_var1 <- "doi"
@@ -29,7 +29,7 @@ VAR_ORG_trials_file <- "XXX"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the organisation
 # ORG_orcid_YYYMM22.txt
-VAR_ORG_orcid_file <- "ORG_orcid_YYYMM22.txt \\n[neuro_pis_orcid.csv]"
+VAR_ORG_orcid_file <- "neuro_pis_orcid.csv"
 VAR_ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
 VAR_ORG_orcid_var1 <- "orcid_id"
 
@@ -271,32 +271,17 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
 
-     ORG_dois_raw_node[label = 'publication DOIs \\n ORG_dois_YYYMM22.txt',
+     NODE_ORG_dois_raw[label = 'publication DOIs\\n ORG_dois_YYYMM22.txt',
         fillcolor='#AC94F4']
 
-     ORG_trials_raw_node[label = 'Researcher Clinical Trials',
+     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials\\n ORG_trials_YYYMM22.txt',
         fillcolor='#AC94F4']
 
-     ORG_orcid_raw_node[label = 'Researcher ORCIDs',
+     NODE_ORG_orcid_raw[label = 'Researcher ORCIDs\\n ORG_orcid_YYYMM22.txt',
         fillcolor='#AC94F4']   
       
   } # END cluster_ORG_raw
   
-  # ---------------------------------------------------------
-  # PROCESSED DATASETS - DASHBOARD
-  # ---------------------------------------------------------
-  # ------ SHAPES & LABELS - DASHBOARD files - pubs
-  OUTPUT_Dashboard_pubs[label = 'Dashboard data - Publications \\nXXX \\nXXX unique non-NULL (XXX)',
-      shape=rectangle, fillcolor='#9DD8A1']
-      
-  # ------ SHAPES & LABELS - DASHBOARD files - trials
-  OUTPUT_Dashboard_trials[label = 'Dashboard data - Clinical Trials \\nXXX \\nXXX unique non-NULL (XXX)',
-      shape=rectangle, fillcolor='#9DD8A1']
-
-  # ------ SHAPES & LABELS - DASHBOARD files - orcid
-  OUTPUT_Dashboard_orcid[label = 'Dashboard data - Researcher ORCIDs \\nXXX \\nXXX unique non-NULL (XXX)',
-      shape=rectangle, fillcolor='#9DD8A1']
-
   # ---------------------------------------------------------
   # LINKS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
@@ -330,18 +315,20 @@ graph_biomedical_main <- "digraph {
       
     # ------------------- NODES
     
-    Process_0_Charite[label = 'Charite processing of clinical trial data', 
+    PROCESS_0_Charite[label = 'Charite processing of clinical trial data', 
         shape=rectangle, style='filled, dashed', fillcolor=white]
     
-    DATA_PROJECT_charite_trials_output[label = 'Output from Charite clinical trial processing \\nXXX',
+    DATA_PROJECT_charite_trials_output
+      [label = 'Output from Charite clinical trial processing\\n PROJ_trials_YYYMM22.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
     
-    ORG_trials_raw_node -> Process_0_Charite
-      [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+    NODE_ORG_trials_raw -> PROCESS_0_Charite
+      [ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+  # minlen=2, 
       
-    Process_0_Charite -> DATA_PROJECT_charite_trials_output
+    PROCESS_0_Charite -> DATA_PROJECT_charite_trials_output
     
     } # END cluster_0_Charite
     
@@ -351,9 +338,10 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
   
-  ORG_dois_raw_node -> DATA_PROCESSED_dois
-    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
-       
+  NODE_ORG_dois_raw -> NODE_Imported_dois
+    [ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+#    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+     
   # ------------------- CLUSTER
   
   subgraph cluster_0_Oddpub{
@@ -363,17 +351,18 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
    
-    Process_0_Oddpub[label = 'Oddpub processing', fontsize=18,
+    PROCESS_0_Oddpub[label = 'Oddpub processing', fontsize=18,
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
-    DATA_PROJECT_Oddpub_output[label = 'Output from Oddpub processing - Data and Software \\nXXX',
+    DATA_PROJECT_Oddpub_output
+      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_trials_YYYMM22.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
 
-    DATA_PROCESSED_dois -> Process_0_Oddpub [minlen=1]
+    NODE_Imported_dois -> PROCESS_0_Oddpub
 
-    Process_0_Oddpub -> DATA_PROJECT_Oddpub_output
+    PROCESS_0_Oddpub -> DATA_PROJECT_Oddpub_output
     
      } # END cluster_P0_Oddpub
   
@@ -384,8 +373,9 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
 
-  DATA_AcademicObservatory ->  Process_1
-    [minlen=2, ltail = cluster_AcademicObservatory, lhead = cluster_1]
+  DATA_AcademicObservatory ->  PROCESS_1
+    [ltail = cluster_AcademicObservatory, lhead = cluster_1]
+# minlen=2, 
 
   # ------------------- CLUSTER
   
@@ -396,13 +386,13 @@ graph_biomedical_main <- "digraph {
  
     # ------------------- NODES
 
-    Process_1[label = 'Create meta-list of clinical trial numbers associated with 
+    PROCESS_1[label = 'Create meta-list of clinical trial numbers associated with 
     DOIs using Crossref & Pubmed fields and abstract search', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
     # ------------------- LINKS
 
-    Process_1 -> Intermediate_Table_1 Intermediate_Table_1
+    PROCESS_1 -> Intermediate_Table_1 Intermediate_Table_1
       [label = 'Intermediate Table
       All Clinical Trial Numbers found for DOIs in Crossref & Pubmed',
       fillcolor='#9DD8A1']
@@ -416,13 +406,15 @@ graph_biomedical_main <- "digraph {
 
   # ------------------- LINKS BETWEEN-CLUSTERS
 
-  Intermediate_Table_1 -> Process_2
-    [minlen=2, ltail = cluster_1, lhead = cluster_2]
-  
-  DATA_PROJECT_charite_trials_output -> Process_2
+  Intermediate_Table_1 -> PROCESS_2
+    [ltail = cluster_1, lhead = cluster_2]
+ # minlen=2, 
+ 
+  DATA_PROJECT_charite_trials_output -> PROCESS_2
       [label = 'TEST label',
-      minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
-      
+      ltail = cluster_0_Charite, lhead = cluster_2]
+  # minlen=2, 
+    
   # ------------------- CLUSTER
   
   subgraph cluster_2 {
@@ -432,19 +424,19 @@ graph_biomedical_main <- "digraph {
       
     # ------------------- NODES
 
-    DATA_PROCESSED_trials[label = 'Charite Clinical Trials - imported \\n \\nXXX unique [XXX]',
+    NODE_Imported_trials[label = 'Imported\\n Charite Clinical Trials',
       shape=rectangle, fillcolor=white]
       
-    Process_2[label = 'Match the contributed clinical trial data to 
+    PROCESS_2[label = 'Match the contributed clinical trial data to 
       the meta-list of clinical trial numbers from 
       Pubmed and Crossref, and to the contributed DOIs', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
     # ------------------- LINKS
     
-    DATA_PROCESSED_trials -> Process_2
+    NODE_Imported_trials -> PROCESS_2
 
-    Process_2 -> OUTPUT_Dashboard_trials
+    PROCESS_2 -> NODE_Dashboard_trials
     
     } # END cluster_2
 
@@ -453,29 +445,26 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   
   # ------------------- LINKS BETWEEN-CLUSTERS
-
-  ORG_orcid_raw_node -> DATA_PROCESSED_orcid
-    [minlen=2, ltail = cluster_ORG_raw, lhead = cluster_3]
+  NODE_ORG_orcid_raw -> NODE_Processed_orcid
+    [ltail = cluster_ORG_raw, lhead = cluster_3]
+# minlen=2, 
 
   # ------------------- CLUSTER
-  
   subgraph cluster_3 {
     label='SQL process #3 - ORCIDs\\n by COKI'; 
       fontsize=20; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
-   
-    # ------------------- NODES
 
-    DATA_PROCESSED_orcid[label = 'Researcher ORCIDs - imported \\nXXX \\nXXX unique [XXX]',
+    # ------------------- NODES
+    NODE_Processed_orcid[label = 'Imported\\n Researcher ORCIDs',
       shape=rectangle, fillcolor=white]
       
-    Process_3[label = 'Process the ORCID data', 
+    PROCESS_3[label = 'Process the ORCID data xxx xxx xxx xxx xxx xxx xxx ', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
-
-    DATA_PROCESSED_orcid -> Process_3
-    Process_3 -> OUTPUT_Dashboard_orcid
+    NODE_Processed_orcid -> PROCESS_3
+    PROCESS_3 -> NODE_Dashboard_orcid
     
     } # END cluster_3
 
@@ -485,13 +474,15 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
   
-  DATA_PROJECT_Oddpub_output -> DATA_PROCESSED_dois
-      [minlen=2, ltail = cluster_0_Oddpub, lhead = cluster_4]
-  
-  ORG_dois_raw_node -> process_4
+  DATA_PROJECT_Oddpub_output -> NODE_Imported_dois
+      [ltail = cluster_0_Oddpub, lhead = cluster_4]
+ # minlen=2, 
+ 
+  NODE_ORG_dois_raw -> process_4
       [label = 'e.g.\\n @@3',
-      minlen=2, ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
-    
+      ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+  # minlen=2, 
+  
   # ------------------- CLUSTER
   
   subgraph cluster_4 {
@@ -501,10 +492,10 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
 
-    DATA_PROCESSED_dois[label = 'Target publication DOIs - imported XXX unique (XXX)',
+    NODE_Imported_dois[label = 'Imported\\n Target publication DOIs',
       shape=rectangle, fillcolor=white]
       
-    DATA_PROCESSED_oddpub[label = 'Oddpub output - imported',
+    NODE_Imported_oddpub[label = 'Imported\\n Oddpub output',
       shape=rectangle, fillcolor=white]
       
     process_4[label = 'Process the Publication and Oddpub data', 
@@ -512,13 +503,14 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- LINKS
 
-    DATA_PROCESSED_oddpub -> process_4
-      [label = 'Oddpub output - imported \\nXX \\nXX unique (XXX)']
+    NODE_Imported_oddpub -> process_4
+      [label = 'Oddpub output - imported']
       
     Intermediate_Table_1 -> process_4
-      [minlen=2, ltail = cluster_1, lhead = cluster_4]
+      [ltail = cluster_1, lhead = cluster_4]
+# minlen=2, 
 
-    process_4 -> OUTPUT_Dashboard_pubs
+    process_4 -> NODE_Dashboard_pubs
       
   } # END cluster_4
 
@@ -528,22 +520,31 @@ graph_biomedical_main <- "digraph {
 
   # ------------------- NODES
   
-  OUTPUT_Dashboard[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
+  NODE_Dashboard_pubs[label = 'Dashboard data\\n Publications',
+      shape=rectangle, fillcolor='#9DD8A1']
+      
+  NODE_Dashboard_trials[label = 'Dashboard data\\n Clinical Trials',
+      shape=rectangle, fillcolor='#9DD8A1']
+
+  NODE_Dashboard_orcid[label = 'Dashboard data\\n Researcher ORCIDs',
+      shape=rectangle, fillcolor='#9DD8A1']
+      
+  NODE_Dashboard_MAIN[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
       shape=filled, fillcolor='#3BB143']
      
   # ------------------- LINKS BETWEEN-CLUSTERS
 
-  OUTPUT_Dashboard_trials -> OUTPUT_Dashboard
-      [minlen=2, ltail = cluster_2]
+  NODE_Dashboard_trials -> NODE_Dashboard_MAIN
+      [ltail = cluster_2]
+#      [minlen=2, ltail = cluster_2]
       
-  OUTPUT_Dashboard_orcid -> OUTPUT_Dashboard
-      [minlen=2, ltail = cluster_3]
-    
-  OUTPUT_Dashboard_pubs -> OUTPUT_Dashboard
-      [minlen=2, ltail = cluster_4]
-      
-  #rank=same {Process_2, Process_3, process_4}
-  #rank=same {OUTPUT_Dashboard_pubs, OUTPUT_Dashboard_trials, OUTPUT_Dashboard_orcid}
+  NODE_Dashboard_orcid -> NODE_Dashboard_MAIN
+      [ltail = cluster_3]
+#      [minlen=2, ltail = cluster_3]
+
+  NODE_Dashboard_pubs -> NODE_Dashboard_MAIN
+      [ltail = cluster_4]
+#      [minlen=2, ltail = cluster_4]
   
   # ---------------------------------------------------------
   # ------ Add footnotes 
@@ -565,7 +566,7 @@ F_export_grViz_graph2image(graph_biomedical_main)
 #    export_svg %>% charToRaw %>% rsvg_pdf("graph_biomedical_main")
 
 # --------------------------------------
-### HOW TO RANK rank=same {DATA_PROCESSED_dois, DATA_AcademicObservatory}
+### HOW TO RANK rank=same {NODE_Imported_dois, DATA_AcademicObservatory}
 ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
 ### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
 ### HOW TO Include a quote in a label, e.g.   \\' 
