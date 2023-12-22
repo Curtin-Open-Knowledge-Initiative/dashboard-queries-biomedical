@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver2j.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver3d.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -18,17 +18,17 @@ VAR_COKI_AcademicObservatory_var1 <- "doi"
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
-# ORG_dois_YYYMM22.txt
+# ORG_dois_YYYYMM.txt
 VAR_ORG_dois_file <- "TheNeuro_dois_2010-2022.csv"
 VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
 VAR_ORG_dois_var1 <- "doi"
 
 # Contributed DATA: trials - List of actual clinical trials for the organisation
-# ORG_trials_YYYMM22.txt
-VAR_ORG_trials_file <- "XXX"
+# ORG_trials_YYYYMM.txt
+VAR_ORG_trials_file <- "NA"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the organisation
-# ORG_orcid_YYYMM22.txt
+# ORG_orcid_YYYYMM.txt
 VAR_ORG_orcid_file <- "neuro_pis_orcid.csv"
 VAR_ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
 VAR_ORG_orcid_var1 <- "orcid_id"
@@ -69,12 +69,6 @@ VAR_DASHBOARD_orcid_var1 <- "orcid_id"
 #------------------------------------------------|
 
 # Github: https://github.com/rich-iannone/DiagrammeR
-# Functions: https://rich-iannone.github.io/DiagrammeR/reference/index.html
-# Package: https://cran.r-project.org/web/packages/DiagrammeR/DiagrammeR.pdf
-# Tutorial: https://epirhandbook.com/en/diagrams-and-charts.html
-# Reference; https://graphviz.org/pdf/dotguide.pdf
-# Turotial: https://builtin.com/data-science/diagrammer
-
 # DiagrammeR is a package within htmlwidgets for R. It is used to generate graphs using graphviz and mermaid library.
 #install.packages("DiagrammeR")
 library(DiagrammeR)
@@ -227,7 +221,6 @@ print(paste("ACADEMIC OBSERVATORY:",VAR_COKI_AcademicObservatory_table, "has",
 ```
 
 
-
 ```{r graph_biomedical_main, fig.show='show', warning=TRUE, messages=TRUE}
 #------------------------------------------------|
 # Main
@@ -238,32 +231,33 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   layout = dot;
   compound=TRUE;
+  rankdir =TB;
 
-  node [shape = rectangle, fixedsize=FALSE, height=0.01 width=0.4, 
+  node [shape = rectangle, fixedsize=FALSE, height=0.02, width=0.5, margin=0.2,
       style='filled, rounded', fillcolor=white, penwidth=1.5
-      fontname = Helvetica, fontsize=16]
-  edge [minlen=1, color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5]
+      fontname = Helvetica, fontsize=18]
+  edge [color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5,
+     fontname = Helvetica, fontsize=18]
 
   # ---------------------------------------------------------
-  # INPUT DATASETS: ORGANISATION - RAW
+  # DATASETS: Raw from Institution
   # ---------------------------------------------------------
-  
-  # ------------------- CLUSTER
   
   subgraph cluster_ORG_raw {
      label='Datasets provided by the Organisation'; 
-     fontsize=20; fontname='Helvetica-Bold';
+     fontsize=24; fontname='Helvetica-Bold';
      style='filled, rounded'; fillcolor='#E2D9FB';
+     #rank = min;
+     #rankdir =LR;
 
     # ------------------- NODES
-
-     NODE_ORG_dois_raw[label = 'publication DOIs\\n ORG_dois_YYYMM22.txt',
+     NODE_ORG_dois_raw[label = 'publication DOIs\\n ORG_dois_YYYYMM.txt',
         fillcolor='#AC94F4']
 
-     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials\\n ORG_trials_YYYMM22.txt',
+     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials\\n ORG_trials_YYYYMM.txt',
         fillcolor='#AC94F4']
 
-     NODE_ORG_orcid_raw[label = 'Researcher ORCIDs\\n ORG_orcid_YYYMM22.txt',
+     NODE_ORG_orcid_raw[label = 'Researcher ORCIDs\\n ORG_orcid_YYYYMM.txt',
         fillcolor='#AC94F4']   
       
   } # END cluster_ORG_raw
@@ -271,27 +265,24 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # DATASETS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
-  # ------ SHAPES & LABELS - Academic Observatory
-  DATA_AcademicObservatory[label = 'Academic Observatory \\n@@1 \\n@@2 DOIs',fillcolor='#ff671c']
-
-  DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
-  DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
-  DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor=white]
-  DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FFA376']
-  DATA_Unpaywall[label='Unpaywall',fillcolor='#FFA376']
-  DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor=white]
-  DATA_OpenCit[label='Open \\nCitations',fillcolor=white]
-  DATA_Pubmed[label='PubMed',fillcolor='#FFA376']
   
-  # ---------------------------------------------------------
-  # LINKS: ACADEMIC OBSERVATORY
-  # ---------------------------------------------------------
-  
-  # -------------------CLUSTER
   subgraph cluster_AcademicObservatory {
-     label='Academic Observatory'; fontsize=20; fontname = 'Helvetica-Bold';
+     label='Academic Observatory'; fontsize=24; fontname = 'Helvetica-Bold';
      style='filled, rounded'; fillcolor='#FFF0E9';
 
+     # ------------------- NODES
+     DATA_AcademicObservatory[label = 'Academic Observatory',fillcolor='#ff671c']
+
+     DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
+     DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
+     DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor=white]
+     DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FFA376']
+     DATA_Unpaywall[label='Unpaywall',fillcolor='#FFA376']
+     DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor=white]
+     DATA_OpenCit[label='Open \\nCitations',fillcolor=white]
+     DATA_Pubmed[label='PubMed',fillcolor='#FFA376']
+
+     # ------------------- LINKS
      DATA_CrossrefMeta   -> DATA_AcademicObservatory
      DATA_CrossrefFunder -> DATA_AcademicObservatory 
      DATA_CrossrefEvents -> DATA_AcademicObservatory
@@ -300,6 +291,21 @@ graph_biomedical_main <- "digraph {
      DATA_ROR            -> DATA_AcademicObservatory
      DATA_OpenCit        -> DATA_AcademicObservatory
      DATA_Pubmed         -> DATA_AcademicObservatory
+    
+     # ------------------- INVISIBLE LINKS for ordering
+     {
+       edge [color = transparent];
+       rank = same;
+
+       DATA_CrossrefMeta   -> DATA_CrossrefFunder 
+       DATA_CrossrefFunder -> DATA_CrossrefEvents 
+       DATA_CrossrefEvents -> DATA_OpenAlex
+       DATA_OpenAlex       -> DATA_Unpaywall
+       DATA_Unpaywall      -> DATA_ROR
+       DATA_ROR            -> DATA_OpenCit
+       DATA_OpenCit        -> DATA_Pubmed
+     }
+
   } # END cluster_AcademicObservatory
 
   # ---------------------------------------------------------
@@ -313,7 +319,7 @@ graph_biomedical_main <- "digraph {
   # ------------------- CLUSTER
   subgraph cluster_0_Charite {
     label='Charite Processing\\n by the project'; 
-    fontsize=20; fontname='Helvetica-Bold';
+    fontsize=24; fontname='Helvetica-Bold';
     style='filled, rounded'; fillcolor='#E9FAFA';
       
     # ------------------- NODES
@@ -321,7 +327,7 @@ graph_biomedical_main <- "digraph {
         shape=rectangle, style='filled, dashed', fillcolor=white]
     
     DATA_PROJECT_charite_trials_output
-      [label = 'Output from Charite clinical trial processing\\n PROJ_trials_YYYMM22.txt',
+      [label = 'Output from Charite clinical trial processing\\n PROJ_trials_YYYYMM.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
@@ -339,17 +345,17 @@ graph_biomedical_main <- "digraph {
     [ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
 
   # ------------------- CLUSTER
-  subgraph cluster_0_Oddpub{
+  subgraph cluster_0_Oddpub {
     label='Oddpub Processing\\n by the project'; 
-       fontsize=20; fontname='Helvetica-Bold';
+       fontsize=24; fontname='Helvetica-Bold';
        style='filled, rounded'; fillcolor='#E9FAFA';
 
     # ------------------- NODES
-    PROCESS_0_Oddpub[label = 'Oddpub processing', fontsize=18,
+    PROCESS_0_Oddpub[label = 'Oddpub processing of open data and open software',
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
     DATA_PROJECT_Oddpub_output
-      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_trials_YYYMM22.txt',
+      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_trials_YYYMM.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
@@ -365,15 +371,14 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
 
-  DATA_AcademicObservatory ->  PROCESS_1
-
-    [minlen=2, ltail = cluster_AcademicObservatory, lhead = cluster_1] 
+  DATA_AcademicObservatory ->  PROCESS_1 [label='  @@1 has  \\n   @@2 unique @@3', labeljust=l]
+    [ltail = cluster_AcademicObservatory, lhead = cluster_1] 
     
   # ------------------- CLUSTER
   
   subgraph cluster_1 {
-    label='SQL process #1 - Clinical Trial Pre-processing\\n by COKI'; 
-      fontsize=20; fontname='Helvetica-Bold';
+    label='SQL process A - Clinical Trial Pre-processing\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
  
     # ------------------- NODES
@@ -399,18 +404,17 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
 
   # ------------------- LINKS BETWEEN-CLUSTERS
-
   Intermediate_Table_1 -> NODE_Imported_trials
-    [minlen=2, ltail = cluster_1, lhead = cluster_2]
+    [ltail = cluster_1, lhead = cluster_2]
     
   DATA_PROJECT_charite_trials_output -> NODE_Imported_trials
-    [minlen=2, ltail = cluster_0_Charite, lhead = cluster_2]
+    [ltail = cluster_0_Charite, lhead = cluster_2, maxlen=4]
 
   # ------------------- CLUSTER
   
   subgraph cluster_2 {
-    label='SQL process #2 - Clinical Trials\\n by COKI'; 
-      fontsize=20; fontname='Helvetica-Bold';
+    label='SQL process B - Clinical Trials\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
       
     # ------------------- NODES
@@ -441,8 +445,8 @@ graph_biomedical_main <- "digraph {
 
   # ------------------- CLUSTER
   subgraph cluster_3 {
-    label='SQL process #3 - ORCIDs\\n by COKI'; 
-      fontsize=20; fontname='Helvetica-Bold';
+    label='SQL process D - ORCIDs\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
       style='filled, rounded'; fillcolor='#D7EFD9';
 
     # ------------------- NODES
@@ -464,19 +468,18 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- LINKS BETWEEN-CLUSTERS
   DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4
-      [minlen=2, ltail = cluster_0_Oddpub, lhead = cluster_4]
+      [ltail = cluster_0_Oddpub, lhead = cluster_4]
 
   NODE_ORG_dois_raw -> NODE_Imported_dois_to_Process_4
       [ltail = cluster_ORG_raw, lhead = cluster_4]
-  #      [label = 'e.g.\\n @@3',
-  
+
   Intermediate_Table_1 -> NODE_Imported_dois_to_Process_4
       [ltail = cluster_1, lhead = cluster_4]
-
+  
   # ------------------- CLUSTER
   subgraph cluster_4 {
-    label='SQL process #4 - Publications & Oddpub\\n by COKI'; 
-    fontsize=20; fontname='Helvetica-Bold';
+    label='SQL process C - Publications & Oddpub\\n by COKI'; 
+    fontsize=24; fontname='Helvetica-Bold';
     style='filled, rounded'; fillcolor='#D7EFD9';
 
     # ------------------- NODES
@@ -488,7 +491,7 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
     process_4[label = 'Process the Publication and Oddpub data', 
-      fontsize=18, shape=rectangle, style='filled, dashed', fillcolor=white]
+      fontsize=24, shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
 
@@ -515,19 +518,18 @@ graph_biomedical_main <- "digraph {
   NODE_Dashboard_orcid[label = 'Dashboard data\\n Researcher ORCIDs',
       shape=rectangle, fillcolor='#9DD8A1']
       
-  NODE_Dashboard_MAIN[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=20,
+  NODE_Dashboard_MAIN[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=24,
       shape=filled, fillcolor='#3BB143']
      
   # ------------------- LINKS BETWEEN-CLUSTERS
+   NODE_Dashboard_trials -> NODE_Dashboard_MAIN [label='  @@19 has\\n   @@20 unique non-NULL @@21', labeljust=l,
+      ltail = cluster_2]
 
-  NODE_Dashboard_trials -> NODE_Dashboard_MAIN [label='  @@19 has\\n   @@20 unique @@21', labeljust=l]
-      [ltail = cluster_2, minlen=2]
+    NODE_Dashboard_orcid -> NODE_Dashboard_MAIN [label='  @@22 has\\n   @@23 unique non-NULL @@24', labeljust=l,
+      ltail = cluster_3]
 
-  NODE_Dashboard_orcid -> NODE_Dashboard_MAIN [label='  @@22 has\\n   @@23 unique @@24', labeljust=l]
-      [ltail = cluster_3, minlen=2]
-
-  NODE_Dashboard_pubs -> NODE_Dashboard_MAIN [label='  @@25 has\\n   @@26 unique @@27', labeljust=l]
-      [ltail = cluster_4, minlen=2]
+    NODE_Dashboard_pubs -> NODE_Dashboard_MAIN [label='  @@25 has\\n   @@26 unique non-NULL @@27', labeljust=l,
+      ltail = cluster_4]
 
   # ---------------------------------------------------------
   # ------ Add footnotes 
@@ -569,19 +571,28 @@ DiagrammeR::grViz(graph_biomedical_main)
 
 # Export the graph as a PNG image file
 F_export_grViz_graph2image(graph_biomedical_main)
-#library(DiagrammeRsvg) #https://cran.r-project.org/web/packages/DiagrammeRsvg/index.html
-#grViz(graph_biomedical_main) %>%
-#    export_svg %>% charToRaw %>% rsvg_pdf("graph_biomedical_main")
 
 # --------------------------------------
 ### HOW TO RANK rank=same {NODE_Imported_dois, DATA_AcademicObservatory}
 ### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
-### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
+### HOW TO HAVE FOLDER ICONS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
 ### HOW TO Include a quote in a label, e.g.   \\' 
 ### HOW TO:   A cluster is a subgraph placed in its own distinct rectangle of the layout. A subgraph is recognized as a cluster ### when its name has the prefix cluster
 ### subgraph cluster_A {
 ### AAAA [label = 'Testing AAA']
 ### BBBB
 #   https://graphviz.org/doc/info/shapes.html
+
+
+# DiagrammeR Package: https://cran.r-project.org/web/packages/DiagrammeR/DiagrammeR.pdf
+# DiagrammeR Reference: https://rich-iannone.github.io/DiagrammeR/reference/index.html
+# DiagrammeR Node aesthetics: https://rich-iannone.github.io/DiagrammeR/reference/node_aes.html
+# DiagrammeR Edge aesthetics: https://rich-iannone.github.io/DiagrammeR/reference/edge_aes.html
+# library(DiagrammeRsvg) #https://cran.r-project.org/web/packages/DiagrammeRsvg/index.html
+
+# Tutorial: https://epirhandbook.com/en/diagrams-and-charts.html
+# Tutorial: https://builtin.com/data-science/diagrammer
+
+# Graphviz Reference; https://graphviz.org/pdf/dotguide.pdf
 
 ```
