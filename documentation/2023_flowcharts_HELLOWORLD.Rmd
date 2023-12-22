@@ -1,25 +1,10 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - TEST"
+title "Exploring Flowcharts using DiagrammeR - Hello World"
 author: "Rebecca Handcock"
 date: "2023-05-07"
 output: html_document
 ---
 
-```{r message=TRUE, paged.print=TRUE}
-#------------------------------------------------|
-# Set BigQuery files
-# This would ideally be done programatically, but for now is hard-coded
-#------------------------------------------------|
-
-# Academic Observatory - this is the version of the Academic Observatory
-AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
-AcademicObservatory_raw <- "doi20231210"
-AcademicObservatory_var1 <- "doi"
-
-#
-# ----------------------------------------------------------------------
-
-```
 
 ```{r warning=FALSE, message=FALSE, include=FALSE}
 #------------------------------------------------|
@@ -48,7 +33,6 @@ library(purrr)
 ```
 
 
-
 ```{r message=FALSE, warning=FALSE}
 #------------------------------------------------|
 # FUNCTION export grViz graph to an image file
@@ -68,75 +52,15 @@ F_export_grViz_graph2image <- function(graph2plot){
 ```
 
 
-```{r message=FALSE, warning=FALSE}
-#------------------------------------------------|
-# FUNCTION F_bigquery_sql_count_distinct 
-#------------------------------------------------|
-
-F_bigquery_sql_count_distinct <- function(F_table, F_variable){
-  
-  # Set up query generics
-  # SELECT COUNT(DISTINCT published_year) AS count_dist_x FROM `university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs`
-  sql_prefix <- "SELECT COUNT(DISTINCT "
-  sql_middle <- ") FROM `"
-  sql_end <- "`"
-
-  sql <- paste(sql_prefix, F_variable, sql_middle,  F_table, sql_end, sep = "")
-
-  # send the SQL to bigquery
-  F_count <- dbGetQuery(con, sql)
-  return(F_count)
-  }
-```
-
-
-```{r}
 #------------------------------------------------|
 # Connect to BigQuery database
 #------------------------------------------------|
 
-# --- To query BigQuery data with R and BigQuery, you first need to set up a connection to a data set using this syntax:
-# con <- dbConnect(
-#   bigquery(),
-#   project = "university-of-ottawa",
-#   dataset = "neuro_dashboard_data",
-#   billing = "university-of-ottawa"
-# )
-
-con <- dbConnect(
-  bigquery(),
-  project = "university-of-ottawa",
-  dataset = "neuro_dashboard_data",
-  billing = "university-of-ottawa"
-)
-# Now run a simple query to prompt authenticating your Google account
-
-dbListTables(con)
-
-```
-
-
-```{r message=TRUE, messages=TRUE, paged.print=TRUE}
-#------------------------------------------------|
-# Fetch information about BigQuery datasets
-# These values will be displayed later in the flowchart
-#------------------------------------------------|
-
-
-# Academic Observatory - this is the version of the Academic Observatory
-AcademicObservatory_table_short <- str_split(AcademicObservatory_table, "\\.")[[1]][3]
-AcademicObservatory_count1 <- F_bigquery_sql_count_distinct(AcademicObservatory_table, AcademicObservatory_var1)
-AcademicObservatory_count1 <- AcademicObservatory_count1$f0_
-print(paste("ACADEMIC OBSERVATORY:",AcademicObservatory_table, "has", 
-            AcademicObservatory_count1,"distinct values for",AcademicObservatory_var1))
-```
-
-
-
-
-
 ```{r Test graph}
 # METHOD 1: Simple graph with default all-in-one creation of the graph
+
+test_var = "Hi there!"
+
 graph_test <- "digraph {
   graph[layout = dot, rankdir = LR]
   
@@ -148,17 +72,22 @@ graph_test <- "digraph {
   }
     # ------ Add footnotes 
     [1]:'Hello!'
-    [2]: AcademicObservatory_count1
+    [2]: test_var
   "
 
 F_export_grViz_graph2image(graph_test)
 ```
-```{r}
+
+# --------------------------------------
 # METHOD 2: Creating the graph from a DOT file, e.g. dot-graph.gv
-
-
-
-```
-
+### HOW TO RANK rank=same {NODE_Imported_dois, DATA_AcademicObservatory}
+### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
+### HOW TO HAVE FOLDERS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
+### HOW TO Include a quote in a label, e.g.   \\' 
+### HOW TO:   A cluster is a subgraph placed in its own distinct rectangle of the layout. A subgraph is recognized as a cluster ### when its name has the prefix cluster
+### subgraph cluster_A {
+### AAAA [label = 'Testing AAA']
+### BBBB
+#   https://graphviz.org/doc/info/shapes.html
 
 
