@@ -4,13 +4,15 @@
 -- Creates a data subset of the Academic Observatory to extract Crossref 
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_12f';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_15';
 DECLARE var_SQL_year_cutoff INT64 DEFAULT 2000;
 
 # --------------------------------------------------
 # 0. Setup table 
 # --------------------------------------------------
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_12`
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_15`
  AS (
 
 -----------------------------------------------------------------------
@@ -97,6 +99,7 @@ WITH main_select AS (
  -----------------------------------------------------------------------
  FROM
     ------ Crossref from Academic Observatory.
+    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
     `academic-observatory.observatory.doi20231217` AS academic_observatory
     WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff
 
@@ -116,7 +119,8 @@ pubmed_1_clintrials AS (
        )
       ) as PUBMED_clintrial_fromfield, 
 
-  FROM  
+  FROM 
+   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
    `academic-observatory.observatory.doi20231217` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2a
 
@@ -140,7 +144,8 @@ pubmed_2_databanks AS (
     )
    ) as PUBMED_opendata_fromfield,
       
-  FROM  
+  FROM 
+   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
    `academic-observatory.observatory.doi20231217` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2b
 
