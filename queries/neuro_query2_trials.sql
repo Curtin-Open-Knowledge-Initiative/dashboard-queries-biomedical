@@ -3,12 +3,13 @@
 -- Run this 2nd and cascade to "dashboard_data_trials"
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_trials_2023_12_04';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_15a';
 DECLARE var_TrialDataset_name STRING DEFAULT 'combined-ctgov-studies.csv';
-DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver10_2023_12_04_trialdata';
-
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1o_2024_01_15_trialdata';
+  
 -----------------------------------------------------------------------
--- 1. FUNCTIONS
+-- 0. FUNCTIONS
 -----------------------------------------------------------------------
 
 # == FUNCTION ====================================
@@ -33,6 +34,13 @@ AS (
    EXTRACT(DATE FROM (CAST(NULLIF(CAST(x AS STRING), "NA") AS TIMESTAMP)))
    );
 
+# --------------------------------------------------
+# 0. Setup table 
+# --------------------------------------------------
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_15_trialdata`
+ AS (
+
 -----------------------------------------------------------------------
 -- 2. PROCESS TRIAL DATA
 -----------------------------------------------------------------------
@@ -41,7 +49,7 @@ with trials_data AS (
   # desscriptions of fields are here: https://github.com/maia-sh/the-neuro-trials/blob/main/R/03_combine-trials.R
   
   # ==== Metric name on dashboard: # Trials
-  function_cast_string(nct_id) as nct_id,
+  UPPER(function_cast_string(nct_id)) as nct_id,
   CASE
     WHEN nct_id IS NULL THEN FALSE
     ELSE TRUE
@@ -50,6 +58,9 @@ with trials_data AS (
     WHEN nct_id IS NULL THEN "No Trial-ID"
     ELSE "Has Trial-ID"
     END as nct_id_found_PRETTY,
+
+  -----------------------------------------------------------------------
+  # The following comemnted out variables are extract columns in the input data that are not used upstream
 
   #function_cast_string(source) as source,
   #function_cast_date(last_update_submitted_date) as last_update_submitted_date,
@@ -91,20 +102,28 @@ with trials_data AS (
 
   #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
 FROM `university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw`
 ), # End of 2. SELECT trials_data
 
+
+-----------------------------------------------------------------------
+# The next step is to get a list of DOIs that mention the imported Trials
+# This uses the file of PubMeD and Crossref TrialIDs/DOIs ceated in Step 1
+-----------------------------------------------------------------------
 -----------------------------------------------------------------------
 -- 3 Extract and flatten (by DOI) the list of DOIs and Trial-IDs
 -- associated with ANY SOURCE (ie Crossref or Pubmed)
+-- This needs to be done as the data in Step 1 by DOIs not TrialIDs
 -----------------------------------------------------------------------
 d_anysource_extract_flat AS (
 SELECT 
   LOWER(doi) as ANYSOURCE_doi,
-  ANYSOURCE_clintrial_ids_flat
+  UPPER(TRIM(ANYSOURCE_clintrial_id_flat)) as ANYSOURCE_clintrial_id_flat
 FROM
-  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1n_2023_10_06`,
-  UNNEST(SPLIT(ANYSOURCE_clintrial_ids," ")) as ANYSOURCE_clintrial_ids_flat
+  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_15`,
+  UNNEST(SPLIT(ANYSOURCE_clintrial_idlist," ")) as ANYSOURCE_clintrial_id_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END SELECT 3. d_anysource_extract_flat
 
@@ -113,9 +132,9 @@ FROM
 -- associated with ANY SOURCE (ie Crossref and Pubmed)
 -----------------------------------------------------------------------
 d_trials_data_joined_2_anysource AS (
-  SELECT
+  SELECT DISTINCT
   trials_data.*,
-  TRIM(CONCAT(d_anysource_extract_flat.ANYSOURCE_doi, ' ')) AS ANYSOURCE_ALL_dois_matching_trialid,
+  LOWER(TRIM(CONCAT(d_anysource_extract_flat.ANYSOURCE_doi, ' '))) AS ANYSOURCE_ALL_dois_matching_trialid,
 
   CASE
     WHEN d_anysource_extract_flat.ANYSOURCE_doi IS NOT NULL
@@ -131,20 +150,21 @@ d_trials_data_joined_2_anysource AS (
 
   FROM trials_data
   LEFT JOIN d_anysource_extract_flat 
-  ON lower(trials_data.nct_id) = lower(d_anysource_extract_flat.ANYSOURCE_clintrial_ids_flat)
-  
+  ON lower(trials_data.nct_id) = lower(d_anysource_extract_flat.ANYSOURCE_clintrial_id_flat)  
   # END OF 4. SELECT d_trials_data_joined_2_anysource
 ),
 
 -----------------------------------------------------------------------
 -- 5.From the flatted list of DOIs and Trial-IDs associated with ANY SOURCE 
--- (ie Crossref or Pubmed) select JUST the rows with DOIs in the publication set
+-- (ie Crossref or Pubmed) select JUST the rows with DOIs in 
+-- the contributed publication set
 -----------------------------------------------------------------------
 d_pubs_data_intersect_anysource AS (
   SELECT
   DISTINCT(LOWER(contributed_pubs.doi)) AS PUBSDATA_doi, 
-  d_anysource_extract_flat.ANYSOURCE_clintrial_ids_flat
+  d_anysource_extract_flat.ANYSOURCE_clintrial_id_flat
   FROM
+  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
     `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long` as contributed_pubs
   INNER JOIN d_anysource_extract_flat 
   ON LOWER(contributed_pubs.doi) = LOWER(d_anysource_extract_flat.ANYSOURCE_doi)
@@ -152,9 +172,10 @@ d_pubs_data_intersect_anysource AS (
 
 -----------------------------------------------------------------------
 -- 6. To the Trial Data, join matching DOIs and Trial-IDs
--- associated with just the DOIs in the publication set
+-- associated with just the DOIs in the contributed publication set
 -----------------------------------------------------------------------
-  SELECT
+ 
+SELECT
   d_trials_data_joined_2_anysource.*,
   TRIM(CONCAT(d_pubs_data_intersect_anysource.PUBSDATA_doi, ' ')) AS PUBSDATA_ALL_dois_matching_trialid,
 
@@ -177,8 +198,8 @@ d_pubs_data_intersect_anysource AS (
 
   FROM d_trials_data_joined_2_anysource
   LEFT JOIN d_pubs_data_intersect_anysource 
-  ON lower(d_trials_data_joined_2_anysource.nct_id) = lower(d_pubs_data_intersect_anysource.ANYSOURCE_clintrial_ids_flat)
+  ON lower(d_trials_data_joined_2_anysource.nct_id) = lower(d_pubs_data_intersect_anysource.ANYSOURCE_clintrial_id_flat)
   
   # END OF 6. SELECT d_trials_data_joined_2_pubs
-
- 
+  
+  ) # End create table
