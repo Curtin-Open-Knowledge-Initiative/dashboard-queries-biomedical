@@ -5,15 +5,35 @@
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_15';
-DECLARE var_SQL_year_cutoff INT64 DEFAULT 2000;
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_17';
+DECLARE var_SQL_year_cutoff INT64 DEFAULT 1;
+
+-----------------------------------------------------------------------
+-- 0. FUNCTIONS
+-----------------------------------------------------------------------
+CREATE TEMP FUNCTION
+  dedupe_string(input_string STRING, separator STRING)
+    RETURNS STRING AS ( 
+      # Flatten the deduplicated array of sub-strings
+      ARRAY_TO_STRING (
+        # Reconsitutute the de-duplicated flattened sb-strings into an array
+        ARRAY( 
+          SELECT
+            DISTINCT substrings
+          FROM
+            UNNEST(
+            SPLIT(input_string, separator)
+            ) AS substrings
+        ) # End of ARRAY
+      , separator) # End of ARRAY_TO_STRING
+    ); # End of RETURNS
 
 # --------------------------------------------------
 # 0. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_15`
- AS (
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_17`
+AS (
 
 -----------------------------------------------------------------------
 -- 1. EXTRACT AND TIDY FIELDS OF INTEREST (except Pubmed clintrial/databank data)
@@ -31,7 +51,7 @@ WITH main_select AS (
   ------ 1.3 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
   CASE
     WHEN academic_observatory.crossref.abstract IS NULL THEN FALSE
-    WHEN academic_observatory.crossref.abstract = "" THEN FALSE
+    WHEN academic_observatory.crossref.abstract = '' THEN FALSE
     WHEN academic_observatory.crossref.abstract = "{}" THEN FALSE
     WHEN REGEXP_CONTAINS(UPPER(academic_observatory.crossref.abstract), r'NCT[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]') THEN TRUE
     ELSE FALSE
@@ -40,7 +60,7 @@ WITH main_select AS (
   # create struct for CROSSREF_clintrial_fromabstract which is null for the whole struct if no NCT*s were found
   CASE
     WHEN academic_observatory.crossref.abstract IS NULL THEN NULL
-    WHEN academic_observatory.crossref.abstract = "" THEN NULL
+    WHEN academic_observatory.crossref.abstract = '' THEN NULL
     WHEN academic_observatory.crossref.abstract = "{}" THEN NULL
     
     # Could have multiple NCT's in the abstract, and they could be mentioned multiple times
@@ -61,16 +81,16 @@ WITH main_select AS (
    ------ NOTE: the code below only looks for NCTs, not IDs from other registries
   CASE
     WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText IS NULL THEN FALSE
-    WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = "" THEN FALSE
+    WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = '' THEN FALSE
     WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = "{}" THEN FALSE
     WHEN REGEXP_CONTAINS(UPPER(pubmed.MedlineCitation.Article.Abstract.AbstractText), r'NCT[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]') THEN TRUE
     ELSE FALSE
     END as PUBMED_clintrial_fromabstract_found,
  
-  # create struct for PUBMED_clintrial_fromabstract which is null for the whole struct if no NCT*s were found
+  # create struct for PUBMED_clintrial_from abstract which is null for the whole struct if no NCT's were found
   CASE
     WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText IS NULL THEN NULL
-    WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = "" THEN NULL
+    WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = '' THEN NULL
     WHEN pubmed.MedlineCitation.Article.Abstract.AbstractText = "{}" THEN NULL
     
     # Could have multiple NCT's in the abstract, and they could be mentioned multiple times
@@ -240,10 +260,10 @@ enhanced_4b AS (
     CROSSREF_clintrial_fromabstract,
 
     CASE
-      WHEN CROSSREF_clintrial_fromabstract IS NULL THEN ""
+      WHEN CROSSREF_clintrial_fromabstract IS NULL THEN ''
     ELSE
       TRIM((SELECT 
-       STRING_AGG(id_unnest_c1.id, " ")
+       STRING_AGG(TRIM(id_unnest_c1.id), ' ')
        FROM UNNEST(CROSSREF_clintrial_fromabstract) AS id_unnest_c1
        ))
       END AS CROSSREF_clintrial_fromabstract_idlist,
@@ -253,10 +273,10 @@ enhanced_4b AS (
     CROSSREF_clintrial_fromfield,
 
     CASE
-      WHEN CROSSREF_clintrial_fromfield IS NULL THEN ""
+      WHEN CROSSREF_clintrial_fromfield IS NULL THEN ''
     ELSE
       TRIM((SELECT 
-      STRING_AGG(id_unnest_c2.id, " ")
+      STRING_AGG(TRIM(id_unnest_c2.id), ' ')
       FROM UNNEST(CROSSREF_clintrial_fromfield) AS id_unnest_c2
       ))
     END AS CROSSREF_clintrial_fromfield_idlist,
@@ -266,10 +286,10 @@ enhanced_4b AS (
     PUBMED_clintrial_fromabstract,
 
     CASE
-      WHEN PUBMED_clintrial_fromabstract IS NULL THEN ""
+      WHEN PUBMED_clintrial_fromabstract IS NULL THEN ''
     ELSE
       TRIM((SELECT 
-      STRING_AGG(id_unnest_p1.id, " ")
+      STRING_AGG(TRIM(id_unnest_p1.id), ' ')
       FROM UNNEST(PUBMED_clintrial_fromabstract) AS id_unnest_p1
       ))
     END AS PUBMED_clintrial_fromabstract_idlist,
@@ -279,10 +299,10 @@ enhanced_4b AS (
     PUBMED_clintrial_fromfield,
 
     CASE
-      WHEN PUBMED_clintrial_fromfield IS NULL THEN ""
+      WHEN PUBMED_clintrial_fromfield IS NULL THEN ''
     ELSE
       TRIM((SELECT 
-      STRING_AGG(id_unnest_p2_id, " ")
+      STRING_AGG(TRIM(id_unnest_p2_id), ' ')
       FROM
       UNNEST(PUBMED_clintrial_fromfield) AS id_unnest_p2,
       UNNEST(id_unnest_p2.id) AS id_unnest_p2_id
@@ -294,7 +314,7 @@ enhanced_4b AS (
     PUBMED_opendata_fromfield,
   
     (SELECT 
-      STRING_AGG(id_unnest_p3_id, " ")
+      STRING_AGG(TRIM(id_unnest_p3_id), ' ')
       FROM
       UNNEST(PUBMED_opendata_fromfield) AS id_unnest_p3,
       UNNEST(id_unnest_p3.id) AS id_unnest_p3_id
@@ -316,18 +336,16 @@ SELECT
   TRUE, FALSE) AS ANYSOURCE_clintrial_found,
   
   ------ 6.2 Clinical Trial - combine Trial-IDs from all sources
-  -- Still need to implement de-duplicating the list
-  TRIM(REPLACE(CONCAT(
+
+  dedupe_string(TRIM(REPLACE(CONCAT(
     CROSSREF_clintrial_fromabstract_idlist, ' ',
     CROSSREF_clintrial_fromfield_idlist, ' ',
     PUBMED_clintrial_fromabstract_idlist, ' ',
     PUBMED_clintrial_fromfield_idlist
-    ),'  ',' ')) AS ANYSOURCE_clintrial_idlist,
-
-
+    ),'  ',' ')), ' ') AS ANYSOURCE_clintrial_idlist,
  ----- 6.3 UTILITY - add a variable for the script version
 var_SQL_script_name
   
 FROM enhanced_5
 
-) # End create table
+ ) # End create table
