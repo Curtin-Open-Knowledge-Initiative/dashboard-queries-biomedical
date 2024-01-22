@@ -2,34 +2,28 @@
 -- Montreal Neuro - Trial Data query 
 -- Run this 4th and cascade to "dashboard_data_orcids"
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_orcid_2023_10_06';
-DECLARE var_ORCID_Dataset_name STRING DEFAULT 'neuro_pis_orcid.csv';
-DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06_orcid';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query4_orcid_2024_01_19';
+DECLARE var_ORCID_Dataset_name STRING DEFAULT 'theneuro_orcids_20230906';
+DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1o_2024_01_19_orcid';
+
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
-
-# == FUNCTION ====================================
-CREATE TEMP FUNCTION function_cast_date(x ANY TYPE)
-AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS DATE));
-
 # == FUNCTION ====================================
 CREATE TEMP FUNCTION function_cast_string(x ANY TYPE)
 AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS STRING));
 
 # == FUNCTION ====================================
-CREATE TEMP FUNCTION function_cast_int(x ANY TYPE)
-AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS INT));
-
-# == FUNCTION ====================================
 CREATE TEMP FUNCTION function_cast_boolean(x ANY TYPE)
 AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS BOOLEAN));
 
-# == FUNCTION ====================================
-CREATE TEMP FUNCTION function_cast_datetime(x ANY TYPE)
-AS (
-   EXTRACT(DATE FROM (CAST(NULLIF(CAST(x AS STRING), "NA") AS TIMESTAMP)))
-   );
+-----------------------------------------------------------------------
+-- 0. Setup table 
+-----------------------------------------------------------------------
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid`
+ AS (
 
 -----------------------------------------------------------------------
 -- 2. PROCESS ORCID DATA
@@ -64,7 +58,9 @@ with orcid_data AS (
      ELSE "No ORCID affiliation found for researcher"
      END as is_affiliation_PRETTY,
 
-FROM `university-of-ottawa.neuro_data_raw.neuro_pis_orcid`
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+FROM `university-of-ottawa.neuro_data_processed.theneuro_orcids_20230906`
+
 ) # End of 2. SELECT orcid_data
 
 -----------------------------------------------------------------------
@@ -74,11 +70,11 @@ FROM `university-of-ottawa.neuro_data_raw.neuro_pis_orcid`
   SELECT
   orcid_data.*,
 
-  ----- 3.2 UTILITY - add a variable for the script and input data versions
+  ----- 3.2 UTILITY - add variables for the script version and data files
   var_SQL_script_name,
   var_ORCID_Dataset_name,
   var_output_table
 
   FROM orcid_data
-  
- 
+
+) # End create table
