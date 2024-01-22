@@ -5,8 +5,9 @@
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_17';
-DECLARE var_SQL_year_cutoff INT64 DEFAULT 1;
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_19';
+DECLARE var_SQL_year_cutoff INT64 DEFAULT 1; # e.g. 2000
+DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi20231217';
 
 -----------------------------------------------------------------------
 -- 0. FUNCTIONS
@@ -32,7 +33,7 @@ CREATE TEMP FUNCTION
 # 0. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_17`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19`
 AS (
 
 -----------------------------------------------------------------------
@@ -343,7 +344,8 @@ SELECT
     PUBMED_clintrial_fromabstract_idlist, ' ',
     PUBMED_clintrial_fromfield_idlist
     ),'  ',' ')), ' ') AS ANYSOURCE_clintrial_idlist,
- ----- 6.3 UTILITY - add a variable for the script version
+ ----- 6.3 UTILITY - add a variable for the script and data versions
+var_AcademicObservatory_doi,
 var_SQL_script_name
   
 FROM enhanced_5
