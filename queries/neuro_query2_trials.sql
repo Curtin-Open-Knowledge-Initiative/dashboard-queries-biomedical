@@ -1,13 +1,12 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Trial Data query 
--- Run this 2nd and cascade to "dashboard_data_trials"
+-- Run this second
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_18b';
-DECLARE var_TrialDataset_name STRING DEFAULT 'combined-ctgov-studies.csv';
-DECLARE var_PubsDataset_name STRING DEFAULT 'data20230217_theneuro_dois_20102022_distinct';
-DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1o_2024_01_18b_trialdata';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_19';
+DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231003';
+DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
   
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -39,7 +38,7 @@ AS (
 # 2. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_18b_trialdata`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_trials`
  AS (
 
 -----------------------------------------------------------------------
@@ -104,7 +103,7 @@ with d_3_contributed_trials_data AS (
   #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-FROM `university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw`
+FROM `university-of-ottawa.neuro_data_processed.theneuro_trials_20231003`
 ), # End of SELECT d_3_contributed_trials_data
 
 -----------------------------------------------------------------------
@@ -127,7 +126,7 @@ SELECT
   UPPER(TRIM(ANYSOURCE_clintrial_id_flat)) as ANYSOURCE_clintrial_id_flat  
 FROM
   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_17`,
+  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19`,
   UNNEST(SPLIT(TRIM(ANYSOURCE_clintrial_idlist)," ")) as ANYSOURCE_clintrial_id_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END SELECT d_4a_anysource_extract_flat
@@ -200,7 +199,7 @@ d_5a_pubs_data_intersect_anysource AS (
   p6.ANYSOURCE_clintrial_id_flat
   FROM
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-    `university-of-ottawa.neuro_data_processed.data20230217_theneuro_dois_20102022_distinct` as p5
+    `university-of-ottawa.neuro_data_processed.theneuro_dois_20230217` as p5
     INNER JOIN d_4a_anysource_extract_flat as p6
     ON LOWER(p5.doi) = LOWER(p6.ANYSOURCE_doi)
 ), # END OF SELECT d_5a_pubs_data_intersect_anysource
@@ -246,8 +245,8 @@ SELECT
 
   ----- UTILITY - add a variable for the script and input data versions
   var_SQL_script_name,
-  var_TrialDataset_name,
-  var_PubsDataset_name
+  var_data_trials,
+  var_data_dois
 
   FROM d_4c_trials_data_joined_to_anysource as p9
   LEFT JOIN d_5b_pubs_data_intersect_anysource as p10 
