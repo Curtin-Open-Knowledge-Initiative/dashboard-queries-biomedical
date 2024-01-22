@@ -3,17 +3,27 @@
 -- Run this 3rd and cascade to "dashboard_data_pubs"
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1n_query_pubs_2023_10_06';
-DECLARE var_PubsDataset_name STRING DEFAULT 'raw20230217_theneuro_dois_20102022_tidy_long';
-DECLARE var_output_table STRING DEFAULT 'dashboard_data_ver1n_2023_10_06';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_19';
+DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
+DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231003';
+DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20230217';
+
 -----------------------------------------------------------------------
--- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLE
+-- 0. Setup table 
+-----------------------------------------------------------------------
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+#CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_pubs`
+# AS (
+
+-----------------------------------------------------------------------
+-- 1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED TABLES
 -----------------------------------------------------------------------
 WITH
 enriched_doi_table AS (
   SELECT
     academic_observatory,
-    contributed,
+    contributed_oddpub,
     unpaywall,
     clintrial_extract,
     CASE -- This could be done below but it makes the query below more readable to do it here
@@ -21,37 +31,38 @@ enriched_doi_table AS (
       ELSE DATE(academic_observatory.crossref.published_year, academic_observatory.crossref.published_month, 1)
       END as cr_published_date,
     
-    (SELECT g.oa_date -- This needs to be done up here so it is available below but raises general questions about intermediate processing and where it should be done in the query structure
+    (SELECT g.oa_date -- This needs to be done up here so it is available below
       FROM UNNEST(unpaywall.oa_locations) as g
       WHERE g.host_type="repository"
       ORDER BY g.oa_date ASC LIMIT 1
       ) as first_green_oa_date # END OF CREATION OF enriched_doi_table
   
   ------ TABLES.
-  FROM `academic-observatory.observatory.doi20230618` as academic_observatory
+  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+  #FROM `academic-observatory.observatory.doi20231217` as academic_observatory
+  FROM `university-of-ottawa.neuro_data_processed.doi20231217_extract` as academic_observatory # extract for performance and testing
     # Contributed data is any extra data that is not in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy` as contributed
-      ON LOWER(academic_observatory.doi) = LOWER(contributed.doi)
+    LEFT JOIN `university-of-ottawa.neuro_data_processed.theneuro_oddpub_20230217` as contributed_oddpub
+      ON LOWER(academic_observatory.doi) = LOWER(contributed_oddpub.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1n_2023_10_06` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF 1. SELECT enriched_doi_table
 
 -----------------------------------------------------------------------
--- 2. PREPARE DOI SUBSET
+-- 2. PREPARE CONTRIBUTED DOI SUBSET
 -----------------------------------------------------------------------
 # target DOIs is the DOI subset of interest. Used to subset the Academic Observatory
-target_dois AS (
+contributed_dois AS (
   SELECT
   DISTINCT(doi)
   FROM
-    `university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long`
-    -- {{doi_table}} WHERE "http://ror.org/XXXXX" in (SELECT identifier FROM UNNEST(affiliations.institutions))
-    -- {{doi_table}} WHERE "10.XXXXX" in (SELECT identifier FROM UNNEST(affiliations.funders))
-), # END OF 2. SELECT target_dois
+  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+    `university-of-ottawa.neuro_data_processed.theneuro_dois_20230217`
+), # END OF 2. SELECT contributed_dois
 
 -----------------------------------------------------------------------
 -- 3. EXTRACT AND TIDY FIELDS OF INTEREST
@@ -60,7 +71,7 @@ main_select AS (
   SELECT
   ------ 3.1 DOI TABLE: Misc METADATA
   lower(enriched_doi_table.academic_observatory.doi) as doi,
-  lower(target_dois.doi) as source_doi,
+  lower(contributed_dois.doi) as source_doi,
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
@@ -78,23 +89,24 @@ main_select AS (
   END as crossref_type_PRETTY,
 
   ------ 3.3 DOI TABLE: OPEN ACCESS
-  enriched_doi_table.academic_observatory.coki.oa_coki,
+  enriched_doi_table.academic_observatory.coki.oa.coki,
+
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.publisher_only THEN "Publisher Open"
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.both THEN "Both"
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_only THEN "Other Platform Open"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.publisher_only THEN "Publisher Open"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.both THEN "Both"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_only THEN "Other Platform Open"
     ELSE "Closed"
   END as oa_coki_PRETTY,
 
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.publisher_only THEN 0
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.both THEN 1
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_only THEN 2
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.publisher_only THEN 0
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.both THEN 1
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_only THEN 2
     ELSE 3
   END as oa_coki_GRAPHORDER,
 
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.open THEN "Open"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.open THEN "Open"
     ELSE "Closed"
   END as oa_coki_open_PRETTY,
   
@@ -127,17 +139,18 @@ main_select AS (
 
   ------ 3.5 DOI TABLE: PLAN-S COMPLIANT
   CASE
-    WHEN NOT academic_observatory.coki.oa_coki.open THEN FALSE
+    WHEN NOT academic_observatory.coki.oa.coki.open THEN FALSE
     WHEN unpaywall.best_oa_location.license != "cc-by" THEN FALSE
-    WHEN academic_observatory.coki.oa_coki.publisher THEN TRUE
+    WHEN academic_observatory.coki.oa.coki.publisher THEN TRUE
+
     WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 1 then TRUE
     ELSE FALSE
   END as plans_compliant,
 
   CASE
-    WHEN NOT academic_observatory.coki.oa_coki.open THEN "Not PlanS Compliant"
+    WHEN NOT academic_observatory.coki.oa.coki.open THEN "Not PlanS Compliant"
     WHEN unpaywall.best_oa_location.license != "cc-by" THEN "Not PlanS Compliant"
-    WHEN academic_observatory.coki.oa_coki.publisher THEN "PlanS Compliant"
+    WHEN academic_observatory.coki.oa.coki.publisher THEN "PlanS Compliant"
     WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 1 then "PlanS Compliant"
     ELSE "Not PlanS Compliant"
   END as plans_compliant_PRETTY,
@@ -230,23 +243,23 @@ main_select AS (
   END AS has_cr_funder_record_PRETTY,
 
   ------ 3.10 CONTRIBUTED TABLE: PREPRINT
-  enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint as has_preprint,
+  enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint as has_preprint,
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa_coki.other_platform_categories.preprint THEN "Has a preprint"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint THEN "Has a preprint"
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
   ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
-  enriched_doi_table.contributed.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
+  enriched_doi_table.contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed.is_open_data THEN "Links to open data (via ODDPUB)"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Links to open data (via ODDPUB)"
     ELSE "No links to open data found"
   END AS has_open_data_oddpub_PRETTY,
 
   ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
-  enriched_doi_table.contributed.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
+  enriched_doi_table.contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed.is_open_code THEN "Links to open code (via ODDPUB)"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Links to open code (via ODDPUB)"
     ELSE "No links to open code found"
   END AS has_open_code_oddpub_PRETTY,
 
@@ -258,31 +271,31 @@ main_select AS (
   clintrial_extract.abstract_pubmed,
 
   ------ 3.15 PUBMED TABLE: CONCATENATED Clinical Trial Registries/Data Banks, and Accession Numbers (optional fields)
-  clintrial_extract.PUBMED_DataBankList_names_CONCAT,
+/*  clintrial_extract.PUBMED_DataBankList_names_CONCAT,
   clintrial_extract.PUBMED_DataBankList_ids_CONCAT,
-
+*/
    ------ 3.16 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
-  clintrial_extract.CROSSREF_clintrial_fromfield_registry,
-  clintrial_extract.CROSSREF_clintrial_fromfield_type,
-  clintrial_extract.CROSSREF_clintrial_fromfield_ids,
-  clintrial_extract.CROSSREF_clintrial_fromfield_found,
+#  clintrial_extract.CROSSREF_clintrial_fromfield_registry,
+#  clintrial_extract.CROSSREF_clintrial_fromfield_type,
+#  clintrial_extract.CROSSREF_clintrial_fromfield_ids,
+#  clintrial_extract.CROSSREF_clintrial_fromfield_found,
 
   ------ 3.17 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
-  clintrial_extract.CROSSREF_clintrial_fromabstract_ids,
-  clintrial_extract.CROSSREF_clintrial_fromabstract_found,
+ # clintrial_extract.CROSSREF_clintrial_fromabstract_ids,
+ # clintrial_extract.CROSSREF_clintrial_fromabstract_found,
 
   ------ 3.18 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields		
-  clintrial_extract.PUBMED_clintrial_fromfield_names,			
-  clintrial_extract.PUBMED_clintrial_fromfield_ids,		
-  clintrial_extract.PUBMED_clintrial_fromfield_found,
+  #clintrial_extract.PUBMED_clintrial_fromfield_names,			
+  #clintrial_extract.PUBMED_clintrial_fromfield_ids,		
+  #clintrial_extract.PUBMED_clintrial_fromfield_found,
 
   ------ 3.19 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
-  clintrial_extract.PUBMED_clintrial_fromabstract_ids,	
-  clintrial_extract.PUBMED_clintrial_fromabstract_found,
+  #clintrial_extract.PUBMED_clintrial_fromabstract_ids,	
+  #clintrial_extract.PUBMED_clintrial_fromabstract_found,
 
   ------ 3.20 CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL/ANY  data sources
-  clintrial_extract.ANYSOURCE_clintrial_ids,
-  clintrial_extract.ANYSOURCE_clintrial_found,
+  #clintrial_extract.ANYSOURCE_clintrial_ids,
+  #clintrial_extract.ANYSOURCE_clintrial_found,
   
   CASE
     WHEN clintrial_extract.ANYSOURCE_clintrial_found
@@ -304,9 +317,9 @@ main_select AS (
 -------- from The Neuro's publication dataset
 -----------------------------------------------------------------------
  FROM
-   target_dois
+   contributed_dois
    LEFT JOIN enriched_doi_table
-   on LOWER(target_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
+   on LOWER(contributed_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
 
@@ -314,41 +327,47 @@ main_select AS (
 
 -----------------------------------------------------------------------
 -- 4: Calc additional variables that require the previous steps
------ This include linking the DOIs from The Neuro's publications (this sheet)
+----- This include linking the DOIs from The Neuro's publications
 ----- which have Trial-IDs that are also found in the list of trials from 
------ The Neuro stored in 'dashboard_data_trials'
+----- The Neuro stored in 'dashboard_data_trials' Step #2
 -----------------------------------------------------------------------
 SELECT
   main_select.*,
 
-  ------ 4.1 Match ALL DOIs from The Neuro's publications
-  ------     which have Trial-IDs (from Crossref/Pubmed) that are on the list of 
-  -------    Trial-IDs provided for The Neuro
-  ------     Note: This is NOT the list of Trial-IDs from Pubmed/Crossref
-  ------     Note: Multiple Trial-IDs from the trial list might match each DOI,
+  --- 4.1 Match ALL DOIs from The Neuro's publications which have Trial-IDs 
+  --- (from Crossref/Pubmed) that are on the list of Trial-IDs provided for The Neuro
+  --- Note: This is NOT the list of Trial-IDs from Pubmed/Crossref
+  ---  Note: Multiple Trial-IDs from the trial list might match each DOI,
 
+  ###################
   # The Trial-IDs need to be concatenated as there may be many
-  TRIM(CONCAT(p1.nct_id, ' ')) AS TRIALDATA_trialids_CONCAT,
+  TRIM(CONCAT(contributed_trials.nct_id, ' ')) AS TRIALDATA_trialids_CONCAT,
 
   CASE
-    WHEN p1.PUBSDATA_ALL_dois_matching_trialid IS NULL
+    WHEN contributed_trials.PUBSDATA_doi_found
     THEN FALSE
     ELSE TRUE
-    END as TRIALDATA_trialids_found,
+    END as TRIALDATA_trialids_found_in_pubs,
 
   CASE
-    WHEN p1.PUBSDATA_ALL_dois_matching_trialid IS NULL 
+    WHEN contributed_trials.PUBSDATA_doi_found
     THEN "Trial dataset Trial-IDs not found The Neuro's publications"
     ELSE "Trial dataset Trial-IDs found in The Neuro's publications"
-    END as TRIALDATA_trialids_found_PRETTY,
+    END as TRIALDATA_trialids_found_in_pubs_PRETTY,
   
-  ----- 4.2 UTILITY - add a variable for the script version
+  ----- 4.2 UTILITY - add variables for the script version and data files
   var_SQL_script_name,
-  var_PubsDataset_name,
-  var_output_table
+  var_data_dois,
+  var_data_trials,
+  var_data_oddpub,
 
   FROM main_select
-  LEFT JOIN `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials` as p1
+  LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_trials` as contributed_trials
+  ############################
   # This may need to have a wildcard to capture 1:many
-  ON main_select.doi = p1.PUBSDATA_ALL_dois_matching_trialid
+  ON main_select.doi = ANYSOURCE_dois_matching_trialid
+  ############# contributed_trials.PUBSDATA_doi
+  #PUBSDATA_doi
+
+   #) # End create table
   
