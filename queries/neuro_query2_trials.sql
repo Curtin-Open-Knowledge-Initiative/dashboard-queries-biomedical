@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 -- Montreal Neuro - Trial Data query 
--- Run this second
+-- Run this second 
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
