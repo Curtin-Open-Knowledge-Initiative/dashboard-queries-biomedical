@@ -4,7 +4,7 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_23n';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_24a';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
@@ -13,7 +13,7 @@ DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_23n_pubs`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_pubs`
  AS (
 
 -----------------------------------------------------------------------
@@ -330,7 +330,7 @@ trials_matching_pub_dois_flat AS (
       PUBSDATA_doi_found
     FROM
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-    `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_23n_newdata_trials`,
+    `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_trials`,
     UNNEST(SPLIT(TRIM(PUBSDATA_doi)," ")) as PUBSDATA_doi_flat
     WHERE PUBSDATA_doi_found
     GROUP BY PUBSDATA_doi_flat, PUBSDATA_doi_found
