@@ -38,7 +38,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_trials`
  AS (
 
 -----------------------------------------------------------------------
