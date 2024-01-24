@@ -4,8 +4,8 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_23b';
-DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231003';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_23n';
+DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
   
 -----------------------------------------------------------------------
@@ -38,7 +38,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_23b_trials`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_23n_newdata_trials`
  AS (
 
 -----------------------------------------------------------------------
@@ -97,13 +97,14 @@ with d_3_contributed_trials_data AS (
   function_cast_boolean(is_summary_results_1y_cd) as is_summary_results_1y_cd,
   CASE
     WHEN function_cast_boolean(is_summary_results_1y_cd) IS TRUE THEN "Summary results reported within 1 year of trial completion"
-    ELSE "Summary results not reported within 1 year of trial completion"
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS FALSE THEN "Summary results not reported within 1 year of trial completion"
+    ELSE "No information about reporting of summary results"
     END as is_summary_results_1y_cd_PRETTY,
 
   #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
 ##---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-FROM `university-of-ottawa.neuro_data_processed.theneuro_trials_20231003`
+FROM `university-of-ottawa.neuro_data_processed.theneuro_trials_20231111`
 ), # End of d_3_contributed_trials_data
 
 -----------------------------------------------------------------------
