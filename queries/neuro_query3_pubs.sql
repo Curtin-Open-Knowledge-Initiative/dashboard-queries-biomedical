@@ -4,7 +4,7 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_24a';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_24b';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
@@ -13,7 +13,7 @@ DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_pubs`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24b_pubs`
  AS (
 
 -----------------------------------------------------------------------
@@ -198,8 +198,8 @@ main_select AS (
     WHEN unpaywall.best_oa_location.license = 'cc-by' THEN "Attribution required"
     WHEN unpaywall.best_oa_location.license = 'cc-by-sa' THEN "Share-alike"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nd' THEN "No derivatives"
-    WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN "No derivatives"
-    WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN "No derivatives"
+    WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN "Non-commercial"
+    WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN "Non-commercial" 
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN "No derivatives"
     WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN "Publisher-specific license"
     WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN "Publisher-specific license"
