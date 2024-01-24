@@ -4,7 +4,7 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_23n';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_24a';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
   
@@ -38,7 +38,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_23n_newdata_trials`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a`
  AS (
 
 -----------------------------------------------------------------------
@@ -135,10 +135,9 @@ FROM
 -----------------------------------------------------------------------
 
 -----------------------------------------------------------------------
--- 5A. To the list of Contributed trial IDs (i.e. #3), join to the flattened table of 
+-- 5A. To the list of Contributed trial IDs (ie #3), join to the flattened table of 
 -- Trial-ID/DOIs from Crossref/Pubmed (ie #4), using the trial IDs
--- to match the tables. Need to aggregate the Trial-ID/DOIs as there
--- may be more than one DOI that mentions a Trial-ID
+-- to match the tables. Also join the 
 -----------------------------------------------------------------------
 d_5a_trials_joined_to_anysource AS (
   SELECT 
@@ -228,7 +227,7 @@ d_6b_pubs_data_intersect_anysource AS (
 
 -----------------------------------------------------------------------
 -- STEP 7:
--- Fenal select and adding extra variables
+-- Final select and adding extra variables
 -- To the enhanced Trial Data join the subset of TrialIDs that 
 -- are found in the contributed PUBLICATIONS set, and add some extra fields
 -----------------------------------------------------------------------
@@ -258,5 +257,4 @@ SELECT
   ON lower(p10.nct_id) = lower(p11.nct_id)
 
   # END OF FINAL SELECT #7
- 
- ) # End create table
+)
