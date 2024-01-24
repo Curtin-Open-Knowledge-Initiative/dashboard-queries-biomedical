@@ -12,15 +12,15 @@ output: html_document
 #------------------------------------------------|
 
 # Academic Observatory - this is the version of the Academic Observatory
-VAR_COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231210"
+VAR_COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231217"
 VAR_COKI_AcademicObservatory_var1 <- "doi"
 
 # ----------------------------------------------------------------------
 
 # Contributed DATA: pubs - List of pubs/DOI of interest in the project
 # ORG_dois_YYYYMM.txt
-VAR_ORG_dois_file <- "TheNeuro_dois_2010-2022.csv"
-VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_dois_20102022_tidy_long"
+VAR_ORG_dois_file <- "theneuro_dois_20230217"
+VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_processed.theneuro_dois_20230217"
 VAR_ORG_dois_var1 <- "doi"
 
 # Contributed DATA: trials - List of actual clinical trials for the organisation
@@ -29,20 +29,20 @@ VAR_ORG_trials_file <- "NA"
 
 # Contributed DATA: ORCID - List of ORCIDs for researchers for the organisation
 # ORG_orcid_YYYYMM.txt
-VAR_ORG_orcid_file <- "neuro_pis_orcid.csv"
-VAR_ORG_orcid_table <- "university-of-ottawa.neuro_data_raw.neuro_pis_orcid"
+VAR_ORG_orcid_file <- "theneuro_orcids_20230906"
+VAR_ORG_orcid_table <- "university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid"
 VAR_ORG_orcid_var1 <- "orcid_id"
 
 # ----------------------------------------------------------------------
 # OLD Contributed DATA: Oddpub - Output from the Oddpub processing
 # NEW DATA: Project Process- Oddpub - Output from the Oddpub processing
-VAR_PROJECT_Oddpub_file <- "NEURO_oddpub_screening.csv"
-VAR_PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_raw.raw20230217_theneuro_oddpub_screening_tidy"
+VAR_PROJECT_Oddpub_file <- "theneuro_oddpub_20231017"
+VAR_PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_processed.theneuro_oddpub_20231017"
 VAR_PROJECT_Oddpub_var1 <- "doi"
 
 # NEW DATA: Project Process- Charite - Output from the Charite processing
-VAR_PROJECT_trials_file <- "combined-ctgov-studies.csv"
-VAR_PROJECT_trials_table <- "university-of-ottawa.neuro_data_raw.montreal_neuro-studies_ver2_raw"
+VAR_PROJECT_trials_file <- "theneuro_trials_20231111"
+VAR_PROJECT_trials_table <- "university-of-ottawa.neuro_data_processed.theneuro_trials_20231111"
 VAR_PROJECT_trials_var1 <- "nct_id"
 
 # ----------------------------------------------------------------------
@@ -122,7 +122,7 @@ F_export_grViz_graph2image <- function(graph2plot){
   # 2. Convert to SVG, then save as png
   tmp = DiagrammeRsvg::export_svg(tmp)
   tmp = charToRaw(tmp) # flatten
-  filename <- paste(deparse(substitute(graph2plot)), ".png", sep = "")
+  filename <- paste(tools::file_path_sans_ext(basename(rstudioapi::getSourceEditorContext()$path)),"_graph.png", sep = "")
   print(filename)
   rsvg::rsvg_png(tmp, filename) # saved graph as png in current working directory
   }
@@ -355,7 +355,7 @@ graph_biomedical_main <- "digraph {
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
     DATA_PROJECT_Oddpub_output
-      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_trials_YYYMM.txt',
+      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_oddpub_YYYMM.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
