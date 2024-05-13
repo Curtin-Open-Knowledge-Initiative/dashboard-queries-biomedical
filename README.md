@@ -113,7 +113,7 @@ The Researcher ORCID Data query SQL script and should be run fourth due to depen
 
 3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
       - The contributed Researcher ORCID data
-    - **Researcher ORCIDs** - `ORG_orcid_YYYYMM` Table containing list of researcher ORCIDs from the partner institution, eg `dashboard_data_ver1o_2024_01_19_orcid`
+      - **Researcher ORCIDs** - `ORG_orcid_YYYYMM` Table containing list of researcher ORCIDs from the partner institution, eg `dashboard_data_ver1o_2024_01_19_orcid`
 
 4. Check that the output table has a similar naming convention to the script name, eg:
     - `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid`
@@ -123,22 +123,21 @@ The Researcher ORCID Data query SQL script and should be run fourth due to depen
 6. Run the script.
 
 ### Step 3 - Update the BigQuery views with the new data
-Edit the following views to point at the tables created in Steps 2-4”. Do this by opening the view, going to the ‘Details’ tab, and clicking ‘Edit Query’. In the tab that opens, edit the query and select ‘Save View’. Back in the view, click ’Refresh’ at the top right.
+Edit the following views to point at the tables created in Steps 2-4”. Do this by opening the view, going to the ‘Details’ tab, and clicking ‘Edit Query’. In the tab that opens, edit the query and select ‘Save View’. Back in the view, click ’Refresh’ at the top right:
 
-    university-of-ottawa.neuro_dashboard_data.dashboard_data_trials
-    university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs
-    university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid
+- `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials`
+- `university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs`
+- `university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid`
 
 *Note: the *PubMed* data extract from Step 1 is not used in the dashboard
 
 ### Step 4 - Update the data connections in Looker Studio
 In LookerStudio refresh the data connections to look at the new files:
 
-    - Have the dashboard in edit mode and go to “Resource” > “Manage added data sources”
-    - For each table, refresh the link by going “Edit” then “Edit Connection”
-    - Check the correct view is still selected (it should not have changed) and click “Reconnect”
-    - For “Apply connection changes” click “Yes”, then “Done”
-
+- Have the dashboard in edit mode and go to “Resource” > “Manage added data sources”
+- For each table, refresh the link by going “Edit” then “Edit Connection”
+- Check the correct view is still selected (it should not have changed) and click “Reconnect”
+- For “Apply connection changes” click “Yes”, then “Done”
 
 ### Step 5 - QC ...
 Check all dashboard pages that everything looks OK. 
