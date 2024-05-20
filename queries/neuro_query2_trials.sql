@@ -2,12 +2,15 @@
 -- Montreal Neuro - Trial Data query 
 -- Run this second
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
+-- The in put trials data was created here: https://github.com/maia-sh/the-neuro-trials/tree/main
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query2_trials_2024_01_24a';
+
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query2_trials_2024_05_17';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-  
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query2_trials_2024_05_17';
+
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
 -----------------------------------------------------------------------
@@ -37,8 +40,8 @@ AS (
 -----------------------------------------------------------------------
 -- 2. Setup table 
 -----------------------------------------------------------------------
-####---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_trials`
+####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_17`
  AS (
 
 -----------------------------------------------------------------------
@@ -54,6 +57,7 @@ with d_3_contributed_trials_data AS (
     WHEN nct_id IS NULL THEN FALSE
     ELSE TRUE
     END as nct_id_found,
+
   CASE
     WHEN nct_id IS NULL THEN "No Trial-ID"
     ELSE "Has Trial-ID"
@@ -104,6 +108,7 @@ with d_3_contributed_trials_data AS (
   #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
 ##---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+# of the imported trials from the partner.
 FROM `university-of-ottawa.neuro_data_processed.theneuro_trials_20231111`
 ), # End of d_3_contributed_trials_data
 
@@ -121,8 +126,9 @@ SELECT
   LOWER(doi) as ANYSOURCE_doi,
   UPPER(TRIM(ANYSOURCE_clintrial_id_flat)) as ANYSOURCE_clintrial_id_flat  
 FROM
-  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-  `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19`,
+  ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION 
+  # of the all trials processed in Step 1
+  `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_17`,
   UNNEST(SPLIT(TRIM(ANYSOURCE_clintrial_idlist)," ")) as ANYSOURCE_clintrial_id_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END d_4_anysource_extract_flat
@@ -155,7 +161,7 @@ d_5a_trials_joined_to_anysource AS (
 -- 5B. Add this list of dois that contain trial IDs 
 -- (i.e. ANYSOURCE_dois_matching_trialid from #5A) to the the rest of the 
 -- contributed trial data, and add some extra calculated fields
--- They may be multiple DOIs per trial ID
+-- There may be multiple DOIs per trial ID
 -----------------------------------------------------------------------
 d_5b_trials_data_joined_to_anysource AS (
   SELECT 
@@ -201,6 +207,7 @@ d_6a_pubs_data_intersect_anysource AS (
   p7.ANYSOURCE_clintrial_id_flat
   FROM
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+    # of the imported dois from the partner.
     `university-of-ottawa.neuro_data_processed.theneuro_dois_20230217` as p6
     INNER JOIN d_4_anysource_extract_flat as p7
       ON LOWER(p6.doi) = LOWER(p7.ANYSOURCE_doi)
@@ -250,7 +257,8 @@ SELECT
   ----- UTILITY - add a variable for the script and input data versions
   var_SQL_script_name,
   var_data_trials,
-  var_data_dois
+  var_data_dois,
+  var_output_table
 
   FROM d_5b_trials_data_joined_to_anysource as p10
   LEFT JOIN d_6b_pubs_data_intersect_anysource as p11 
