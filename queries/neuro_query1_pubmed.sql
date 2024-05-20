@@ -4,10 +4,11 @@
 -- Creates a data subset of the Academic Observatory to extract Crossref 
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query1_pubmed_2024_01_19';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query1_alltrials_2024_05_17';
 DECLARE var_SQL_year_cutoff INT64 DEFAULT 1; # e.g. 2000
-DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi20231217';
+DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi20240512';
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query1_alltrials_2024_05_17';
 
 -----------------------------------------------------------------------
 -- 0. FUNCTIONS
@@ -32,8 +33,8 @@ CREATE TEMP FUNCTION
 # --------------------------------------------------
 # 0. Setup table 
 # --------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19`
+###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_17`
 AS (
 
 -----------------------------------------------------------------------
@@ -47,7 +48,7 @@ WITH main_select AS (
 
   ------ 1.2 ABSTRACTS from any sources
   academic_observatory.crossref.abstract AS abstract_CROSSREF,  
-  pubmed.MedlineCitation.Article.Abstract.AbstractText AS abstract_PUBMED,
+  academic_observatory.pubmed.MedlineCitation.Article.Abstract.AbstractText AS abstract_PUBMED,
 
   ------ 1.3 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
   CASE
@@ -121,7 +122,7 @@ WITH main_select AS (
  FROM
     ------ Crossref from Academic Observatory.
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-    `academic-observatory.observatory.doi20231217` AS academic_observatory
+    `academic-observatory.observatory.doi20240512` AS academic_observatory
     WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff
 
  ), # END OF 1. SELECT main_select
@@ -142,7 +143,7 @@ pubmed_1_clintrials AS (
 
   FROM 
    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-   `academic-observatory.observatory.doi20231217` AS academic_observatory,
+   `academic-observatory.observatory.doi20240512` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2a
 
    WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff 
@@ -167,7 +168,7 @@ pubmed_2_databanks AS (
       
   FROM 
    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-   `academic-observatory.observatory.doi20231217` AS academic_observatory,
+   `academic-observatory.observatory.doi20240512` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2b
 
    WHERE academic_observatory.crossref.published_year > var_SQL_year_cutoff AND
@@ -346,8 +347,9 @@ SELECT
     ),'  ',' ')), ' ') AS ANYSOURCE_clintrial_idlist,
  ----- 6.3 UTILITY - add a variable for the script and data versions
 var_AcademicObservatory_doi,
-var_SQL_script_name
-  
+var_SQL_script_name,
+var_output_table
+
 FROM enhanced_5
 
- ) # End create table
+) # End create table
