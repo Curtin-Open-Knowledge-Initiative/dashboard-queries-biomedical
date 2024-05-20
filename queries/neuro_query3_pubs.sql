@@ -3,17 +3,17 @@
 -- Run this 3rd and cascade to "dashboard_data_pubs"
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1o_query3_pubs_2024_01_24b';
+###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query3_pubs_2024_05_17';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query3_pubs_2024_05_17';
 
 -----------------------------------------------------------------------
 -- 0. Setup table 
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24b_pubs`
+###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query3_pubs_2024_05_17`
  AS (
 
 -----------------------------------------------------------------------
@@ -39,16 +39,17 @@ enriched_doi_table AS (
       ) as first_green_oa_date # END OF CREATION OF enriched_doi_table
   
   ------ TABLES.
-  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-  FROM `academic-observatory.observatory.doi20231217` as academic_observatory
-    # Contributed data is any extra data that is not in the Academic Observatory
+  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
+  FROM `academic-observatory.observatory.doi20240512` as academic_observatory
+    # the contributed Oddpub data from the partner.
     LEFT JOIN `university-of-ottawa.neuro_data_processed.theneuro_oddpub_20231017` as contributed_oddpub
       ON LOWER(academic_observatory.doi) = LOWER(contributed_oddpub.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
-    # Import the PubMed/Crossref extract as the required fields are not yet in the Academic Observatory
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.clintrial_extract_ver1o_2024_01_19` as clintrial_extract
+    # Import the PubMed/Crossref extract from Step 1 to reduce
+    # re-processing of data and just extract and pre-process this once.
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_17` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF #1 enriched_doi_table
 
@@ -61,6 +62,7 @@ contributed_dois AS (
   DISTINCT(doi)
   FROM
   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
+  # of the imported dois from the partner.
     `university-of-ottawa.neuro_data_processed.theneuro_dois_20230217`
 ), # END OF #2 contributed_dois
 
@@ -142,7 +144,6 @@ main_select AS (
     WHEN NOT academic_observatory.coki.oa.coki.open THEN FALSE
     WHEN unpaywall.best_oa_location.license != "cc-by" THEN FALSE
     WHEN academic_observatory.coki.oa.coki.publisher THEN TRUE
-
     WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 1 then TRUE
     ELSE FALSE
   END as plans_compliant,
@@ -252,14 +253,14 @@ main_select AS (
   ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
   enriched_doi_table.contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Links to open data (via ODDPUB)"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Links to open data"
     ELSE "No links to open data found"
   END AS has_open_data_oddpub_PRETTY,
 
   ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
   enriched_doi_table.contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Links to open code (via ODDPUB)"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Links to open code"
     ELSE "No links to open code found"
   END AS has_open_code_oddpub_PRETTY,
 
@@ -329,8 +330,9 @@ trials_matching_pub_dois_flat AS (
       TRIM(STRING_AGG(nct_id, ' ')) AS TRIALSDATA_matching_doi_CONCAT,
       PUBSDATA_doi_found
     FROM
-    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-    `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24a_trials`,
+    ###---###---###---###---###---### CHECK INPUT BELOW FOR CORRECT VERSION
+    # of the processed partner trials data from Step 2
+    `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_17`,
     UNNEST(SPLIT(TRIM(PUBSDATA_doi)," ")) as PUBSDATA_doi_flat
     WHERE PUBSDATA_doi_found
     GROUP BY PUBSDATA_doi_flat, PUBSDATA_doi_found
@@ -345,7 +347,7 @@ SELECT
   main_select.*,
 
   --- 5.1 Match ALL DOIs from The Neuro's publications that have Trial-IDs 
-  --- (from ANY source Crossref/Pubmed) that are on the list of Trial-IDs provided for The Neuro
+  --- that are on the list of Trial-IDs provided for The Neuro
   --- Note: This is NOT the list of Trial-IDs from Pubmed/Crossref
   --- Note: Multiple Trial-IDs from the trial list might match each DOI,
   --- Note: This is the reverse of a calculation that we do for in the TrialID script
@@ -366,8 +368,8 @@ SELECT
   ----- 5.2 UTILITY - add variables for the script version and data files
   var_SQL_script_name,
   var_data_dois,
-  var_data_trials,
   var_data_oddpub,
+  var_output_table
 
   FROM main_select
   LEFT JOIN `trials_matching_pub_dois_flat` as contributed_trials
