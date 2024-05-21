@@ -1,6 +1,6 @@
 # Biomedical Open Science project - Dashboard Queries
 
-*Open Science Dashboards for Biomedical Research Organisations*
+*Open Science Dashboards for Biomedical Research Organizations*
 
 ### Contacts
 coki@curtin.edu.au
@@ -12,7 +12,7 @@ Our objective is to create a digital tool that can automatically curate informat
 
 This repository contains version controlled SQL queries and processing scripts used to create data for these dashboards.
 
-![Alt text](ASSETS/2023_flowcharts_ver3e_NOLABELS_graph.png)
+![Alt text](ASSETS/2023_flowcharts_ver3f_NOLABELS_graph.png)
 
 ## How to generate data and update these dashboards
 The dashboards for this project are created in Google LookerStudio, using data stored in BigQuery and processed with SQL scripts.
@@ -33,18 +33,18 @@ If making a new dashboard version, export the dashboard as a PDF and upload to t
 ### Step 2A - Run SQL for PubMed data
 This SQL script takes a data extract from the [Academic Observatory]([https://curtinic.atlassian.net/browse/COK-249](https://github.com/The-Academic-Observatory)) of Crossref and PubMed data and creates a combined list of Clinical Trials from these. The reason for creating this data extract is that the data is reused downstream in the workflow, so it makes sense to create it once and re-use it. This SQL script is listed as being required to be run first, but if the data already exists on disc then it does not need to be re-run. If the script does need to be run to make changes or for some other reason, then do the following steps:
 
-1. In BigQuery, make a copy of the most recent SQL script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1o_query1_pubmed_2024_01_19`
+1. In BigQuery, make a copy of the most recent SQL script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query1_alltrials_2024_05_17`
 
 2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1o_query1_pubmed_2024_01_19`
+    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query1_alltrials_2024_05_17`
     - **var_SQL_year_cutoff**: earliest year that data is extracted from the Academic Observatory, eg 2000, or use 1 for all data
-    - **var_AcademicObservatory_doi**: name of the DOI table version used, eg `doi20231217`
+    - **var_AcademicObservatory_doi**: name of the DOI table version used, eg `doi20240512`
       
 3. In the script, make sure that you are happy with the version of the BigQuery input dataset, as these may have been updated since the last time that the script was run:
-    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `doi20231217`
+    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `doi20240512`
    
 5. Check that the output table has a similar naming convention to the script name, eg:
-    - `clintrial_extract_ver1o_2024_01_19`
+    - `neuro_ver1p_query1_alltrials_2024_05_17`
       
 5. Make any other changes to the SQL script and save the changes.
 
@@ -55,20 +55,20 @@ This SQL script takes a data extract from the [Academic Observatory]([https://cu
 ### Step 2B - Run SQL for Trial data
 This Trial Data query SQL script and should be run second due to dependencies between the files.
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1o_query2_trials_2024_01_24a`
+1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query2_trials_2024_05_17`
    
 2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1o_query2_trials_2024_01_24a`
-    - **var_data_trials**: Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
-    - **var_data_dois**: Table name containing DOIs from the partner institution, eg `theneuro_dois_20230217`
+    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query2_trials_2024_05_17`
+    - **var_data_trials**: `PROJ_trials_YYYYMM` Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
+    - **var_data_dois**: `ORG_dois_YYYYMM` Table name containing DOIs from the partner institution, eg `theneuro_dois_20230217`
 
 3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
     - **Charite Processing by the Project** - `PROJ_trials_YYYYMM` Table of output from the Charite processing, eg `theneuro_trials_20231111`
     - **Publication DOIs** - `ORG_dois_YYYYMM` Table containing DOIs from the partner institution, eg `theneuro_dois_20230217`
-    - **Clinical Trial data extract** - This table was created in Step 1, eg `clintrial_extract_ver1o_2024_01_19`
+    - **Clinical Trial data extract** - This table was created in Step 1, eg `neuro_ver1p_query1_alltrials_2024_05_17`
 
 5. Check that the output table has a similar naming convention to the script name, eg:
-    - `dashboard_data_ver1o_2024_01_24a_trials`
+    - `OUTPUT_ver1p_query2_trials_2024_05_17`
 
 5. Make any other changes you want to make to the script and save the changes.
 
@@ -78,23 +78,23 @@ This Trial Data query SQL script and should be run second due to dependencies be
 ### Step 2C - Run SQL for Publication data
 This is the main dashboard SQL query for The Neuro's publications and should be run third due to dependencies between the files.
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1o_query3_pubs_2024_01_24b`
+1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query3_pubs_2024_05_17`
    
 2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg  `neuro_ver1o_query3_pubs_2024_01_24b`
-    - **var_data_dois**: Table name containing DOIs from the partner institution, eg `theneuro_dois_20230217`
-    - **var_data_trials**: Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
-    - **var_data_oddpub**: name of the table of output from the Oddpub processing, eg `theneuro_oddpub_20231017`
+    - **var_SQL_script_name**: name of the SQL script, eg  `neuro_ver1p_query3_pubs_2024_05_17`
+    - **var_data_dois**: `ORG_dois_YYYYMM` Table name containing DOIs from the partner institution, eg `theneuro_dois_20230217`
+    - **var_data_trials**: `PROJ_trials_YYYYMM` Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
+    - **var_data_oddpub**: `PROJ_oddpub_YYYYMM` Table name of output from the Oddpub processing, eg `theneuro_oddpub_20231017`
 
 3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
     - **Publication DOIs** - `ORG_dois_YYYYMM` Table containing DOIs from the partner institution, `theneuro_dois_20230217`
-    - **Researcher Clinical Trials** - `ORG_trials_YYYYMM` Table containing list of clinical trials from the partner institution, eg `dashboard_data_ver1o_2024_01_24a_trials`
+    - **Institution Clinical Trials** - `ORG_trials_YYYYMM` Table containing list of clinical trials from the partner institution, eg `theneuro_trials_20231111`
     - **Oddpub Processing by the Project** - `PROJ_oddpub_YYYYMM` Table of output from the Oddpub processing, eg `theneuro_oddpub_20231017`
-    - **Clinical Trial data extract** - This table was created in Step 1, eg `clintrial_extract_ver1o_2024_01_19`
-    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `academic-observatory.observatory.doi20231217`
+    - **Clinical Trial data extract** - This table was created in Step 1, eg `neuro_ver1p_query1_alltrials_2024_05_17`
+    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `academic-observatory.observatory.doi20240512`
 
 4. Check that the output table has a similar naming convention to the script name, eg:
-    - `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_24b_pubs`
+    - `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query3_pubs_2024_05_17`
 
 6. Make any other changes you want to make to the script and save the changes.
    
@@ -104,19 +104,19 @@ This is the main dashboard SQL query for The Neuro's publications and should be 
 ### Step 2D - Run SQL for ORCID data
 The Researcher ORCID Data query SQL script and should be run fourth due to dependencies between the files.
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1o_query4_orcid_2024_01_19`
+1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query4_orcid_2024_05_17`
    
 2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1o_query4_orcid_2024_01_19`
-    - **var_ORCID_Dataset_name**: name of the input datafile, eg `theneuro_orcids_20230906`
-    - **var_output_table**: name of the output table, eg `dashboard_data_ver1o_2024_01_19_orcid`
+    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query4_orcid_2024_05_17`
+    - **var_ORCID_Dataset_name**: name of the table containing list of researcher ORCIDs from the partner institution, eg `theneuro_orcids_20230906`
+    - **var_output_table**: name of the output table, eg `OUTPUT_ver1p_query4_orcid_2024_05_17`
 
 3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
       - The contributed Researcher ORCID data
-      - **Researcher ORCIDs** - `ORG_orcid_YYYYMM` Table containing list of researcher ORCIDs from the partner institution, eg `dashboard_data_ver1o_2024_01_19_orcid`
+      - **Researcher ORCIDs** - `ORG_orcid_YYYYMM` Table containing list of researcher ORCIDs from the partner institution, eg `theneuro_orcids_20230906`
 
 4. Check that the output table has a similar naming convention to the script name, eg:
-    - `university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid`
+    - `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query4_orcid_2024_05_17`
       
 5. Make any other changes you want to make to the script and save the changes.
 
