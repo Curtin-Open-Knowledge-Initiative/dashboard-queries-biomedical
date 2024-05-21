@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver3f_WITHLABELS.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver3g_WITHLABELS.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -376,7 +376,7 @@ graph_biomedical_main <- "digraph {
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
     DATA_PROJECT_Oddpub_output
-      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_oddpub_YYYMM.txt',
+      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_oddpub_YYYYMM.txt',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
