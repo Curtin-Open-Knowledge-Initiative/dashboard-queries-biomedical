@@ -1,0 +1,485 @@
+---
+title "Exploring Flowcharts using DiagrammeR - BOS Flowcharts NO LABELS"
+author: "Rebecca Handcock"
+date: "2023-12-14"
+output: html_document
+---
+
+```{r message=TRUE, paged.print=TRUE}
+#------------------------------------------------|
+# Set BigQuery files
+# This would ideally be done programmatically, but for now is hard-coded
+#------------------------------------------------|
+
+# Academic Observatory - this is the version of the Academic Observatory
+VAR_COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231217"
+VAR_COKI_AcademicObservatory_var1 <- "doi"
+
+# ----------------------------------------------------------------------
+
+# Contributed DATA: pubs - List of pubs/DOI of interest in the project
+# ORG_dois_YYYYMM.txt
+VAR_ORG_dois_file <- "theneuro_dois_20230217"
+VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_processed.theneuro_dois_20230217"
+VAR_ORG_dois_var1 <- "doi"
+
+# Contributed DATA: trials - List of actual clinical trials for the organization
+# ORG_trials_YYYYMM.txt
+VAR_ORG_trials_file <- "NA"
+
+# Contributed DATA: ORCID - List of ORCIDs for researchers for the organization
+# ORG_orcid_YYYYMM.txt
+VAR_ORG_orcid_file <- "theneuro_orcids_20230906"
+VAR_ORG_orcid_table <- "university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid"
+VAR_ORG_orcid_var1 <- "orcid_id"
+
+# ----------------------------------------------------------------------
+# OLD Contributed DATA: Oddpub - Output from the Oddpub processing
+# NEW DATA: Project Process- Oddpub - Output from the Oddpub processing
+VAR_PROJECT_Oddpub_file <- "theneuro_oddpub_20231017"
+VAR_PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_processed.theneuro_oddpub_20231017"
+VAR_PROJECT_Oddpub_var1 <- "doi"
+
+# NEW DATA: Project Process- Charite - Output from the Charite processing
+VAR_PROJECT_trials_file <- "theneuro_trials_20231111"
+VAR_PROJECT_trials_table <- "university-of-ottawa.neuro_data_processed.theneuro_trials_20231111"
+VAR_PROJECT_trials_var1 <- "nct_id"
+
+# ----------------------------------------------------------------------
+# Note, processing Step #1 only produces an intermediate table, so is not 
+# included in the dashboard output tables
+
+# Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
+VAR_DASHBOARD_trials_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
+VAR_DASHBOARD_trials_var1 <- "nct_id"
+
+# Output dashboard data - from the SQL - Step 3 - Pubs
+VAR_DASHBOARD_pubs_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
+VAR_DASHBOARD_pubs_var1 <- "doi"
+
+# Output dashboard data - from the SQL - Step 4 - ORCID for researchers
+VAR_DASHBOARD_orcid_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
+VAR_DASHBOARD_orcid_var1 <- "orcid_id"
+
+```
+
+```{r warning=FALSE, message=FALSE, include=FALSE}
+#------------------------------------------------|
+# setup packages
+#------------------------------------------------|
+
+# Github: https://github.com/rich-iannone/DiagrammeR
+# DiagrammeR is a package within htmlwidgets for R. It is used to generate graphs using graphviz and mermaid library.
+#install.packages("DiagrammeR")
+library(DiagrammeR)
+
+# rsvg: Renders vector-based svg images into images
+library(rsvg)
+
+# helpful libraries
+library(stringr)
+library(dplyr)
+library(purrr)
+
+```
+
+```{r FUNCTION: F_export_grViz_graph2image, message=FALSE, warning=FALSE}
+#------------------------------------------------|
+# FUNCTION export grViz graph to an image file
+#------------------------------------------------|
+
+F_export_grViz_graph2image <- function(graph2plot){
+  # 1. Process the graph
+  tmp = DiagrammeR::grViz(graph2plot)
+
+  # 2. Convert to SVG, then save as png
+  tmp = DiagrammeRsvg::export_svg(tmp)
+  tmp = charToRaw(tmp) # flatten
+  
+  filename <- paste(tools::file_path_sans_ext(basename(rstudioapi::getSourceEditorContext()$path)),"_graph.png", sep = "")
+  print(filename)
+  rsvg::rsvg_png(tmp, filename) # saved graph as png in current working directory
+  }
+```
+
+
+```{r Process BigQuery files, message=TRUE, messages=TRUE, paged.print=TRUE}
+#------------------------------------------------|
+# Fetch information about BigQuery datasets
+# These values will be displayed later in the flowchart
+#------------------------------------------------|
+
+# Contributed DATA: pubs - List of pubs/DOI of interest in the project
+VAR_ORG_dois_table_short <- str_split(VAR_ORG_dois_table, "\\.")[[1]][3]
+VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
+
+# Contributed DATA: Oddpub - Output from the Oddpub processing
+VAR_PROJECT_Oddpub_table_short <- str_split(VAR_PROJECT_Oddpub_table, "\\.")[[1]][3]
+
+# Contributed DATA: trials - List of actual clinical trials for the institution
+VAR_PROJECT_trials_table_short <- str_split(VAR_PROJECT_trials_table, "\\.")[[1]][3]
+VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
+
+# Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
+VAR_ORG_orcid_table_short <- str_split(VAR_ORG_orcid_table, "\\.")[[1]][3]
+VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
+
+#----------------------------------------------------------------------
+
+# Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
+VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
+
+# Output dashboard data - from the SQL - Step 3 - Pubs
+VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
+
+# Output dashboard data - from the SQL - Step 4 - ORCID for researchers
+VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
+
+# Academic Observatory - this is the version of the Academic Observatory
+VAR_COKI_AcademicObservatory_table_short <- str_split(VAR_COKI_AcademicObservatory_table, "\\.")[[1]][3]
+```
+
+```{r graph_biomedical_main, fig.show='show', warning=TRUE, messages=TRUE}
+#------------------------------------------------|
+# Main
+#------------------------------------------------|
+graph_biomedical_main <- "digraph {
+  # ---------------------------------------------------------
+  # --- Set default attributes
+  # ---------------------------------------------------------
+  layout = dot;
+  compound=TRUE;
+  rankdir =TB;
+
+  node [shape = rectangle, fixedsize=FALSE, height=0.02, width=0.5, margin=0.2,
+      style='filled, rounded', fillcolor=white, penwidth=1.5
+      fontname = Helvetica, fontsize=18]
+  edge [color=black, arrowhead=normal, arrowsize=1.5, penwidth=2.5,
+     fontname = Helvetica, fontsize=18]
+
+  # ---------------------------------------------------------
+  # DATASETS: Raw from Institution
+  # ---------------------------------------------------------
+  
+  subgraph cluster_ORG_raw {
+     label='Datasets provided by the Organization'; 
+     fontsize=24; fontname='Helvetica-Bold';
+     style='filled, rounded'; fillcolor='#E2D9FB';
+     #rank = min;
+     #rankdir =LR;
+
+    # ------------------- NODES
+     NODE_ORG_dois_raw[label = 'Publication DOIs\\n ORG_dois_YYYYMM.txt',
+        fillcolor='#AC94F4']
+
+     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials\\n ORG_trials_YYYYMM.txt',
+        fillcolor='#AC94F4']
+
+     NODE_ORG_orcid_raw[label = 'Researcher ORCIDs\\n ORG_orcid_YYYYMM.txt',
+        fillcolor='#AC94F4']   
+      
+  } # END cluster_ORG_raw
+  
+  # ---------------------------------------------------------
+  # DATASETS: ACADEMIC OBSERVATORY
+  # ---------------------------------------------------------
+  
+  subgraph cluster_AcademicObservatory {
+     label='Academic Observatory'; fontsize=24; fontname = 'Helvetica-Bold';
+     style='filled, rounded'; fillcolor='#FFF0E9';
+
+     # ------------------- NODES
+     DATA_AcademicObservatory[label = 'Academic Observatory',fillcolor='#ff671c']
+
+     DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
+     DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
+     DATA_CrossrefEvents[label='Crossref \\nEvents',fillcolor=white]
+     DATA_OpenAlex[label='Open \\nAlex',fillcolor='#FFA376']
+     DATA_Unpaywall[label='Unpaywall',fillcolor='#FFA376']
+     DATA_ROR[label= 'Research \\nOrganization \\nRegistry',fillcolor=white]
+     DATA_OpenCit[label='Open \\nCitations',fillcolor=white]
+     DATA_Pubmed[label='PubMed',fillcolor='#FFA376']
+
+     # ------------------- LINKS
+     DATA_CrossrefMeta   -> DATA_AcademicObservatory
+     DATA_CrossrefFunder -> DATA_AcademicObservatory 
+     DATA_CrossrefEvents -> DATA_AcademicObservatory
+     DATA_OpenAlex       -> DATA_AcademicObservatory
+     DATA_Unpaywall      -> DATA_AcademicObservatory
+     DATA_ROR            -> DATA_AcademicObservatory
+     DATA_OpenCit        -> DATA_AcademicObservatory
+     DATA_Pubmed         -> DATA_AcademicObservatory
+    
+     # ------------------- INVISIBLE LINKS for ordering
+     {
+       edge [color = transparent];
+       rank = same;
+
+       DATA_CrossrefMeta   -> DATA_CrossrefFunder 
+       DATA_CrossrefFunder -> DATA_CrossrefEvents 
+       DATA_CrossrefEvents -> DATA_OpenAlex
+       DATA_OpenAlex       -> DATA_Unpaywall
+       DATA_Unpaywall      -> DATA_ROR
+       DATA_ROR            -> DATA_OpenCit
+       DATA_OpenCit        -> DATA_Pubmed
+     }
+
+  } # END cluster_AcademicObservatory
+
+  # ---------------------------------------------------------
+  # PROCESS #0_Charite - Charite clinical trial processing
+  # ---------------------------------------------------------
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  NODE_ORG_trials_raw -> PROCESS_0_Charite
+     [ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+
+  # ------------------- CLUSTER
+  subgraph cluster_0_Charite {
+    label='Charite Processing\\n by the project'; 
+    fontsize=24; fontname='Helvetica-Bold';
+    style='filled, rounded'; fillcolor='#E9FAFA';
+      
+    # ------------------- NODES
+    PROCESS_0_Charite[label = 'Charite processing of clinical trial data', 
+        shape=rectangle, style='filled, dashed', fillcolor=white]
+    
+    DATA_PROJECT_charite_trials_output
+      [label = 'Output from Charite clinical trial processing\\n PROJ_trials_YYYYMM.txt',
+      fillcolor='#2CCCD3']
+      
+    # ------------------- LINKS
+    PROCESS_0_Charite -> DATA_PROJECT_charite_trials_output
+    
+    } # END cluster_0_Charite
+    
+  # ---------------------------------------------------------
+  # PROCESS #0_Oddpub - Oddpub processing
+  # ---------------------------------------------------------
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  
+  NODE_ORG_dois_raw -> PROCESS_0_Oddpub
+    [ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+
+  # ------------------- CLUSTER
+  subgraph cluster_0_Oddpub {
+    label='Oddpub Processing\\n by the project'; 
+       fontsize=24; fontname='Helvetica-Bold';
+       style='filled, rounded'; fillcolor='#E9FAFA';
+
+    # ------------------- NODES
+    PROCESS_0_Oddpub[label = 'Oddpub processing of open data and open software',
+        shape=rectangle, style='filled, dashed', fillcolor=white]
+        
+    DATA_PROJECT_Oddpub_output
+      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_oddpub_YYYMM.txt',
+      fillcolor='#2CCCD3']
+      
+    # ------------------- LINKS
+
+    PROCESS_0_Oddpub -> DATA_PROJECT_Oddpub_output
+    
+     } # END cluster_P0_Oddpub
+  
+  # ---------------------------------------------------------
+  # PROCESS #1 - From the AO, create meta list of clinical trial numbers
+  # associated with DOIs
+  # ---------------------------------------------------------
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+
+  DATA_AcademicObservatory ->  PROCESS_1
+    [ltail = cluster_AcademicObservatory, lhead = cluster_1] 
+    
+  # ------------------- CLUSTER
+  
+  subgraph cluster_1 {
+    label='SQL process A - Clinical Trial Pre-processing\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
+ 
+    # ------------------- NODES
+
+    PROCESS_1 [label = 'Create meta-list of clinical trial numbers associated with 
+    DOIs using Crossref & PubMed fields and abstract search', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+  
+  
+    Intermediate_Table_1 [label = 'Intermediate Table
+      All Clinical Trial Numbers found for DOIs in Crossref & Pubmed',
+      fillcolor='#9DD8A1']
+      
+    # ------------------- LINKS
+
+    PROCESS_1 -> Intermediate_Table_1
+    
+    } # END cluster_1
+  
+  # ---------------------------------------------------------
+  # PROCESS #2 - SQL to combine the contributed clinical trial data
+  # with the meta-list of clinical trial numbers
+  # ---------------------------------------------------------
+
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  Intermediate_Table_1 -> NODE_Imported_trials
+    [ltail = cluster_1, lhead = cluster_2]
+    
+  DATA_PROJECT_charite_trials_output -> NODE_Imported_trials
+    [ltail = cluster_0_Charite, lhead = cluster_2, maxlen=4]
+
+  # ------------------- CLUSTER
+  
+  subgraph cluster_2 {
+    label='SQL process B - Clinical Trials\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
+      
+    # ------------------- NODES
+
+    NODE_Imported_trials[label = 'Import output from Charite Clinical Trial processing',
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+      
+    PROCESS_2[label = 'Match the contributed clinical trial data to 
+      the meta-list of clinical trial numbers from 
+      PubMed and Crossref, and to the contributed DOIs', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+  
+    # ------------------- LINKS
+    
+    NODE_Imported_trials -> PROCESS_2
+
+    PROCESS_2 -> NODE_Dashboard_trials
+    
+    } # END cluster_2
+
+  # ---------------------------------------------------------
+  # PROCESS #3 - SQL to process the ORCID data for the dashboard
+  # ---------------------------------------------------------
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  NODE_ORG_orcid_raw -> NODE_Processed_orcid
+    [ltail = cluster_ORG_raw, lhead = cluster_3]
+
+  # ------------------- CLUSTER
+  subgraph cluster_3 {
+    label='SQL process D - ORCIDs\\n by COKI'; 
+      fontsize=24; fontname='Helvetica-Bold';
+      style='filled, rounded'; fillcolor='#D7EFD9';
+
+    # ------------------- NODES
+    NODE_Processed_orcid[label = 'Import Researcher ORCIDs',
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+      
+    PROCESS_3[label = 'Process the ORCID data', 
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+
+    # ------------------- LINKS
+    NODE_Processed_orcid -> PROCESS_3
+    PROCESS_3 -> NODE_Dashboard_orcid
+    
+    } # END cluster_3
+
+  # ---------------------------------------------------------
+  # PROCESS #4 - Main SQL to process the Publication and Oddpub data for the dashboard
+  # ---------------------------------------------------------
+  
+  # ------------------- LINKS BETWEEN-CLUSTERS
+  DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4
+      [ltail = cluster_0_Oddpub, lhead = cluster_4]
+
+  NODE_ORG_dois_raw -> NODE_Imported_dois_to_Process_4
+      [ltail = cluster_ORG_raw, lhead = cluster_4]
+
+  Intermediate_Table_1 -> NODE_Imported_dois_to_Process_4
+      [ltail = cluster_1, lhead = cluster_4]
+  
+  # ------------------- CLUSTER
+  subgraph cluster_4 {
+    label='SQL process C - Publications & Oddpub\\n by COKI'; 
+    fontsize=24; fontname='Helvetica-Bold';
+    style='filled, rounded'; fillcolor='#D7EFD9';
+
+    # ------------------- NODES
+
+    NODE_Imported_dois_to_Process_4[label = 'Import Target publication DOIs',
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+      
+    NODE_Imported_oddpub[label = 'Import Oddpub output',
+      shape=rectangle, style='filled, dashed', fillcolor=white]
+      
+    process_4[label = 'Process the Publication and Oddpub data', 
+      fontsize=24, shape=rectangle, style='filled, dashed', fillcolor=white]
+
+    # ------------------- LINKS
+
+    NODE_Imported_oddpub -> process_4
+
+    NODE_Imported_dois_to_Process_4 -> process_4
+    
+    process_4 -> NODE_Dashboard_pubs
+      
+  } # END cluster_4
+
+  # ---------------------------------------------------------
+  # Main dashboard
+  # ---------------------------------------------------------
+
+  # ------------------- NODES
+  
+  NODE_Dashboard_pubs[label = 'Dashboard data\\n Publications',
+      shape=rectangle, fillcolor='#9DD8A1']
+      
+  NODE_Dashboard_trials[label = 'Dashboard data\\n Clinical Trials',
+      shape=rectangle, fillcolor='#9DD8A1']
+
+  NODE_Dashboard_orcid[label = 'Dashboard data\\n Researcher ORCIDs',
+      shape=rectangle, fillcolor='#9DD8A1']
+      
+  NODE_Dashboard_MAIN[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=24,
+      shape=filled, fillcolor='#3BB143']
+     
+  # ------------------- LINKS BETWEEN-CLUSTERS
+   NODE_Dashboard_trials -> NODE_Dashboard_MAIN
+
+    NODE_Dashboard_orcid -> NODE_Dashboard_MAIN
+
+    NODE_Dashboard_pubs -> NODE_Dashboard_MAIN
+
+  # ---------------------------------------------------------
+  # ------ Add footnotes 
+  # ---------------------------------------------------------
+  
+  }
+  "
+   
+# Plot to graph to the screen / HTML
+DiagrammeR::grViz(graph_biomedical_main)
+
+# Export the graph as a PNG image file
+F_export_grViz_graph2image(graph_biomedical_main)
+
+# --------------------------------------
+### HOW TO RANK rank=same {NODE_Imported_dois, DATA_AcademicObservatory}
+### HOW TO LABEL LINES DATA_AcademicObservatory -> P1_Combined_AO_and_Contributed[label = ' @@2 DOIs']
+### HOW TO HAVE FOLDER ICONS: data2 [label = 'Dataset 2', shape = folder, fillcolor = Beige]
+### HOW TO Include a quote in a label, e.g.   \\' 
+### HOW TO:   A cluster is a subgraph placed in its own distinct rectangle of the layout. A subgraph is recognized as a cluster ### when its name has the prefix cluster
+### subgraph cluster_A {
+### AAAA [label = 'Testing AAA']
+### BBBB
+#   https://graphviz.org/doc/info/shapes.html
+
+
+# DiagrammeR Package: https://cran.r-project.org/web/packages/DiagrammeR/DiagrammeR.pdf
+# DiagrammeR Reference: https://rich-iannone.github.io/DiagrammeR/reference/index.html
+# DiagrammeR Node aesthetics: https://rich-iannone.github.io/DiagrammeR/reference/node_aes.html
+# DiagrammeR Edge aesthetics: https://rich-iannone.github.io/DiagrammeR/reference/edge_aes.html
+# library(DiagrammeRsvg) #https://cran.r-project.org/web/packages/DiagrammeRsvg/index.html
+
+# Tutorial: https://epirhandbook.com/en/diagrams-and-charts.html
+# Tutorial: https://builtin.com/data-science/diagrammer
+
+# Graphviz Reference; https://graphviz.org/pdf/dotguide.pdf
+
+```
