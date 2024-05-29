@@ -3,9 +3,9 @@
 -- Run this 4th and cascade to "dashboard_data_orcids"
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query4_orcid_2024_05_17';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query4_orcid_2024_05_29';
 DECLARE var_ORCID_Dataset_name STRING DEFAULT 'theneuro_orcids_20230906';
-DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query4_orcid_2024_05_17';
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query4_orcid_2024_05_29';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -22,7 +22,7 @@ AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS BOOLEAN));
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query4_orcid_2024_05_17`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query4_orcid_2024_05_29`
  AS (
 
 -----------------------------------------------------------------------
