@@ -47,7 +47,7 @@ enriched_doi_table AS (
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
-    # Import the PubMed/Crossref extract from Step 1 to reduce
+    # Import the PubMed/Crossref extract from Step 1 (query1) to reduce
     # re-processing of data and just extract and pre-process this once.
     LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_29` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
@@ -342,8 +342,8 @@ trials_matching_pub_dois_flat AS (
       PUBSDATA_doi_found
     FROM
     ###---###---###---###---###---### CHECK INPUT BELOW FOR CORRECT VERSION
-    # of the processed partner trials data from Step 2
-    `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_17`,
+    # of the processed partner trials data from Step 2 (query2)
+    `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_29`,
     UNNEST(SPLIT(TRIM(PUBSDATA_doi)," ")) as PUBSDATA_doi_flat
     WHERE PUBSDATA_doi_found
     GROUP BY PUBSDATA_doi_flat, PUBSDATA_doi_found
