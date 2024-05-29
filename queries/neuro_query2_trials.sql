@@ -6,10 +6,10 @@
 -----------------------------------------------------------------------
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query2_trials_2024_05_17';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query2_trials_2024_05_29';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query2_trials_2024_05_17';
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query2_trials_2024_05_29';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -41,7 +41,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_17`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query2_trials_2024_05_29`
  AS (
 
 -----------------------------------------------------------------------
@@ -128,7 +128,7 @@ SELECT
 FROM
   ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION 
   # of the all trials processed in Step 1
-  `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_17`,
+  `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_29`,
   UNNEST(SPLIT(TRIM(ANYSOURCE_clintrial_idlist)," ")) as ANYSOURCE_clintrial_id_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END d_4_anysource_extract_flat
