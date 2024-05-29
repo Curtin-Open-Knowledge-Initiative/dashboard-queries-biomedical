@@ -4,16 +4,16 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query3_pubs_2024_05_17';
+DECLARE var_SQL_script_name STRING DEFAULT 'neuro_ver1p_query3_pubs_2024_05_29';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
-DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query3_pubs_2024_05_17';
+DECLARE var_output_table STRING DEFAULT 'OUTPUT_ver1p_query3_pubs_2024_05_29';
 
 -----------------------------------------------------------------------
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query3_pubs_2024_05_17`
+CREATE TABLE `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query3_pubs_2024_05_29`
  AS (
 
 -----------------------------------------------------------------------
@@ -49,7 +49,7 @@ enriched_doi_table AS (
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract from Step 1 to reduce
     # re-processing of data and just extract and pre-process this once.
-    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_17` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query1_alltrials_2024_05_29` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF #1 enriched_doi_table
 
@@ -77,6 +77,7 @@ main_select AS (
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
+  ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.title, " ") as title_concat,
 
   ------ 3.2 DOI TABLE: CROSSREF TYPE
   enriched_doi_table.academic_observatory.crossref.type as crossref_type,
@@ -94,10 +95,10 @@ main_select AS (
   enriched_doi_table.academic_observatory.coki.oa.coki,
 
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.publisher_only THEN "Publisher Open"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.publisher_only THEN "Publisher Open Access"
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.both THEN "Both"
-    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_only THEN "Other Platform Open"
-    ELSE "Closed"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_only THEN "Other Platform Open Access"
+    ELSE "Closed Access"
   END as oa_coki_PRETTY,
 
   CASE
@@ -108,22 +109,32 @@ main_select AS (
   END as oa_coki_GRAPHORDER,
 
   CASE
-    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.open THEN "Open"
-    ELSE "Closed"
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.open THEN "Open Access"
+    ELSE "Closed Access"
   END as oa_coki_open_PRETTY,
-  
+
+  # Calc extra fields to help in table creation on the dashboard
+    CASE
+    WHEN enriched_doi_table.academic_observatory.coki.oa.coki.open THEN 1
+    ELSE 0
+  END as oa_coki_OA_open,
+    CASE
+    WHEN NOT enriched_doi_table.academic_observatory.coki.oa.coki.open THEN 1
+    ELSE 0
+  END as oa_coki_OA_closed,
+
   ------ 3.4 DOI TABLE: MADE AVAILABLE DATE / EMBARGO
   first_green_oa_date,
   cr_published_date,
   DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) as embargo,
 
  CASE
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 0 then "Green OA prior to published date"
+    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 0 then "Green Open Access prior to published date"
     WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 3 then "Immediately available"
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 8 then "Open before six months"
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 14 then "Open before twelve months"
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 26 then "Open before two years"
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) >= 26 then "Open after two years"
+    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 8 then "Open Access before six months"
+    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 14 then "Open Access before twelve months"
+    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 26 then "Open Access before two years"
+    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) >= 26 then "Open Access after two years"
     WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) is null then "Insufficient Data"
    ELSE "Insufficient Data"
   END as embargo_PRETTY,
@@ -253,15 +264,15 @@ main_select AS (
   ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
   enriched_doi_table.contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Links to open data"
-    ELSE "No links to open data found"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Contains reference to Open data"
+    ELSE "No reference to Open data found"
   END AS has_open_data_oddpub_PRETTY,
 
   ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
   enriched_doi_table.contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Links to open code"
-    ELSE "No links to open code found"
+    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Contains reference to Open code"
+    ELSE "No reference to Open code found"
   END AS has_open_code_oddpub_PRETTY,
 
   ------ 3.13 URLs for FULL TEXT
