@@ -150,5 +150,7 @@ Back-up the scripts to Github
 
 ---
 ### Internal project resources
+_The following sites require authentication to access_
+
 [Jira ticket](https://curtinic.atlassian.net/browse/COK-249) and [GoogleDrive folder](https://drive.google.com/drive/folders/1I5uPFBWe0pQQT2myRHaCeAgU_xwAAVpg?usp=sharing)
 
