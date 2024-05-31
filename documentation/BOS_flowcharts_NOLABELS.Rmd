@@ -5,64 +5,6 @@ date: "2023-12-14"
 output: html_document
 ---
 
-```{r message=TRUE, paged.print=TRUE}
-#------------------------------------------------|
-# Set BigQuery files
-# This would ideally be done programmatically, but for now is hard-coded
-#------------------------------------------------|
-
-# Academic Observatory - this is the version of the Academic Observatory
-VAR_COKI_AcademicObservatory_table <- "academic-observatory.observatory.doi20231217"
-VAR_COKI_AcademicObservatory_var1 <- "doi"
-
-# ----------------------------------------------------------------------
-
-# Contributed DATA: pubs - List of pubs/DOI of interest in the project
-# ORG_dois_YYYYMM.txt
-VAR_ORG_dois_file <- "theneuro_dois_20230217"
-VAR_ORG_dois_table <- "university-of-ottawa.neuro_data_processed.theneuro_dois_20230217"
-VAR_ORG_dois_var1 <- "doi"
-
-# Contributed DATA: trials - List of actual clinical trials for the organization
-# ORG_trials_YYYYMM.txt
-VAR_ORG_trials_file <- "NA"
-
-# Contributed DATA: ORCID - List of ORCIDs for researchers for the organization
-# ORG_orcid_YYYYMM.txt
-VAR_ORG_orcid_file <- "theneuro_orcids_20230906"
-VAR_ORG_orcid_table <- "university-of-ottawa.neuro_dashboard_data_archive.dashboard_data_ver1o_2024_01_19_orcid"
-VAR_ORG_orcid_var1 <- "orcid_id"
-
-# ----------------------------------------------------------------------
-# OLD Contributed DATA: Oddpub - Output from the Oddpub processing
-# NEW DATA: Project Process- Oddpub - Output from the Oddpub processing
-VAR_PROJECT_Oddpub_file <- "theneuro_oddpub_20231017"
-VAR_PROJECT_Oddpub_table <- "university-of-ottawa.neuro_data_processed.theneuro_oddpub_20231017"
-VAR_PROJECT_Oddpub_var1 <- "doi"
-
-# NEW DATA: Project Process- Charite - Output from the Charite processing
-VAR_PROJECT_trials_file <- "theneuro_trials_20231111"
-VAR_PROJECT_trials_table <- "university-of-ottawa.neuro_data_processed.theneuro_trials_20231111"
-VAR_PROJECT_trials_var1 <- "nct_id"
-
-# ----------------------------------------------------------------------
-# Note, processing Step #1 only produces an intermediate table, so is not 
-# included in the dashboard output tables
-
-# Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-VAR_DASHBOARD_trials_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_trials"
-VAR_DASHBOARD_trials_var1 <- "nct_id"
-
-# Output dashboard data - from the SQL - Step 3 - Pubs
-VAR_DASHBOARD_pubs_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs"
-VAR_DASHBOARD_pubs_var1 <- "doi"
-
-# Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-VAR_DASHBOARD_orcid_table <- "university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid"
-VAR_DASHBOARD_orcid_var1 <- "orcid_id"
-
-```
-
 ```{r warning=FALSE, message=FALSE, include=FALSE}
 #------------------------------------------------|
 # setup packages
@@ -102,42 +44,6 @@ F_export_grViz_graph2image <- function(graph2plot){
   }
 ```
 
-
-```{r Process BigQuery files, message=TRUE, messages=TRUE, paged.print=TRUE}
-#------------------------------------------------|
-# Fetch information about BigQuery datasets
-# These values will be displayed later in the flowchart
-#------------------------------------------------|
-
-# Contributed DATA: pubs - List of pubs/DOI of interest in the project
-VAR_ORG_dois_table_short <- str_split(VAR_ORG_dois_table, "\\.")[[1]][3]
-VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
-
-# Contributed DATA: Oddpub - Output from the Oddpub processing
-VAR_PROJECT_Oddpub_table_short <- str_split(VAR_PROJECT_Oddpub_table, "\\.")[[1]][3]
-
-# Contributed DATA: trials - List of actual clinical trials for the institution
-VAR_PROJECT_trials_table_short <- str_split(VAR_PROJECT_trials_table, "\\.")[[1]][3]
-VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
-
-# Contributed DATA: ORCID - List of ORCIDs for researchers for the institution
-VAR_ORG_orcid_table_short <- str_split(VAR_ORG_orcid_table, "\\.")[[1]][3]
-VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
-
-#----------------------------------------------------------------------
-
-# Output dashboard data - from the SQL - Step 2 - Clinical Trial data for institution
-VAR_DASHBOARD_trials_table_short <- str_split(VAR_DASHBOARD_trials_table, "\\.")[[1]][3]
-
-# Output dashboard data - from the SQL - Step 3 - Pubs
-VAR_DASHBOARD_pubs_table_short <- str_split(VAR_DASHBOARD_pubs_table, "\\.")[[1]][3]
-
-# Output dashboard data - from the SQL - Step 4 - ORCID for researchers
-VAR_DASHBOARD_orcid_table_short <- str_split(VAR_DASHBOARD_orcid_table, "\\.")[[1]][3]
-
-# Academic Observatory - this is the version of the Academic Observatory
-VAR_COKI_AcademicObservatory_table_short <- str_split(VAR_COKI_AcademicObservatory_table, "\\.")[[1]][3]
-```
 
 ```{r graph_biomedical_main, fig.show='show', warning=TRUE, messages=TRUE}
 #------------------------------------------------|
@@ -409,7 +315,7 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
     process_4[label = 'Process the Publication and Oddpub data', 
-      fontsize=24, shape=rectangle, style='filled, dashed', fillcolor=white]
+      shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
 
