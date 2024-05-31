@@ -488,7 +488,7 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   
   # ------------------- LINKS BETWEEN-CLUSTERS
-  DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4 [label='  @@8 \\n has @@9 DDDD rows', labeljust=l]
+  DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4 [label='  @@8 \\n has @@9 rows', labeljust=l]
       [ltail = cluster_0_Oddpub, lhead = cluster_4]
 
   NODE_ORG_dois_raw -> NODE_Imported_dois_to_Process_4  [label='  @@10 \\n has @@11 rows', labeljust=l]
@@ -512,7 +512,7 @@ graph_biomedical_main <- "digraph {
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
     process_4[label = 'Process the Publication and Oddpub data', 
-      fontsize=24, shape=rectangle, style='filled, dashed', fillcolor=white]
+      shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
 
