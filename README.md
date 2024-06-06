@@ -1,6 +1,6 @@
-# Biomedical Open Science project - Dashboard Queries
+# Biomedical Open Science - Dashboard Data Dorkflows
 
-*Open Science Dashboards for Biomedical Research Organizations*
+*Data Workflows for Open Science Dashboards for Biomedical Research Organizations*
 
 ### Contacts
 coki@curtin.edu.au
