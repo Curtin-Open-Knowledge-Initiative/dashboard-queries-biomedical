@@ -1,4 +1,4 @@
-# Biomedical Open Science - dashboard data workflows
+# Biomedical Open Science - Workflows for Dashboard Data
 
 *Data Workflows for Open Science Dashboards for Biomedical Research Organizations*
 
