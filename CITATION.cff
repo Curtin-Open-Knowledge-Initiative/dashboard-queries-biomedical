@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "Biomedical Open Science - Dashboard Data Dorkflows"
+title: "Biomedical Open Science - Workflows for Dashboard Data"
 url: "https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical"
 doi: 
 license: Apache-2.0 License
