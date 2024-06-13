@@ -19,7 +19,7 @@
       "name": "Cameron Neylon"
     }
   ],
-  "description": "<p>Workflows for the Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices.</p>",
+  "description": "Workflow for the Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices.<br><br>The Biomedical Open Science data-processing workflow combines datasets from various source, and the resulting output data is displayed in the dashboard.<br><br>The publication data used in this dashboard is a subset of the larger Academic Observatory dataset from the Curtin Open Knowledge Initiative (COKI). The list of Digital Object Identifiers (DOIs) used to subject the Academic Observatory dataset was provide by the partner institution.<br><br>The Biomedical Open Science project team provided data on whether the DOIs of interest contain references to open access data and software, based on running the ODDPub text-mining algorithm.<br><br>The partner institution additionally provided both a list of Research ORCDIs, and also Trial-IDs for their clinical trials, which were further processed by the Biomedical Open Science project team through the Charite data workflow. <br><br> <strong>Contributors</strong> <br> Conceptualization: Cameron Neylon. <br> Data curation: Rebecca N. Handcock and Cameron Neylon. <br> Formal analysis: Rebecca N. Handcock and Cameron Neylon.<br> Funding acquisition: Cameron Neylon. <br> Investigation: Rebecca N. Handcock and Cameron Neylon. <br>  Methodology: Rebecca N. Handcock and Cameron Neylon. <br> Project administration: Kathryn R. Napier and Cameron Neylon. <br> Resources: Kathryn R. Napier and Cameron Neylon. <br> Software: Rebecca N. Handcock and Cameron Neylon. <br> Supervision: Kathryn R. Napier and Cameron Neylon. <br> Validation: Rebecca N. Handcock and Cameron Neylon. <br> Visualization: Rebecca N. Handcock. <br> Writing - original draft: Rebecca N. Handcock and Cameron Neylon. <br> Writing - review and editing: Rebecca N. Handcock, Kathryn R. Napier, and Cameron Neylon.",
   "license": "Apache-2.0",
   "keywords": [
     "open-science",
@@ -32,6 +32,5 @@
   ],
   "notes": "The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z)",
   "communities": [{ "identifier": "coki" }],
-  "version": "1.p",
   "language": "eng"
 }
