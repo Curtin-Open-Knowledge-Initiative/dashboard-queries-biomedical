@@ -149,6 +149,12 @@ Refresh the data extract for the Publications output that is made available the 
 Back-up the scripts to Github
 
 ---
+### Funding
+The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z). The results of the Delphi in step one were [published](https://doi.org/10.1371/journal.pbio.3001949) in PloS Biology. 
+
+Please contact, Dr. Kelly Cobey (kcobey@ottawaheart.ca), the Primary Investigator, with additional questions. 
+
+---
 ### Internal project resources
 _The following sites require authentication to access_
 
