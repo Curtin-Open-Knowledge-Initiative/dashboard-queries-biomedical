@@ -1,39 +1,37 @@
 {
-  "title": "Workflows for the Biomedical Open Science Dashboards project",
-  "description": "Workflows for the Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices.",  
-  "notes": "The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z).",
-  "communities": [
+  "upload_type": "software",
+  "publication_date": "2024-06-13",
+  "title": "Workflows for Biomedical Open Science Dashboards project",
+  "creators": [
     {
-      "identifier": "coki"
+      "orcid": "0000-0001-5903-6620",
+      "affiliation": "Curtin Institute for Data Science, Curtin University",
+      "name": "Rebecca N. Handcock"
+    },
+    {
+      "orcid": "0000-0003-1202-7238",
+      "affiliation": "Curtin Institute for Data Science, Curtin University",
+      "name": "Kathryn R. Napier"
+    },
+    {
+      "orcid": "0000-0002-0068-716X",
+      "affiliation": "Centre for Culture and Technology, Curtin University",
+      "name": "Cameron Neylon"
     }
   ],
+  "description": "<p>Workflows for the Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices.</p>",
+  "license": "Apache-2.0",
   "keywords": [
     "open-science",
-    "science",
+    "COKI",
     "workflow",
     "data",
     "BigQuery",
     "SQL",
     "R"
   ],
-  "license": {
-    "id": "Apache-2.0"
-  },
-  "creators": [
-    {
-      "orcid": "0000-0001-5903-6620",
-      "affiliation": "Curtin Institute for Data Science, Curtin University",
-      "name": "Handcock, Rebecca N"
-    },
-    {
-      "orcid": "0000-0003-1202-7238",
-      "affiliation": "Curtin Institute for Data Science, Curtin University",
-      "name": "Napier, Kathryn R"
-    },
-    {
-      "orcid": "0000-0002-0068-716X",
-      "affiliation": "Centre for Culture and Technology, Curtin University",
-      "name": "Neylon, Cameron"
-    }
-  ]
+  "notes": "The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z)",
+  "communities": [{ "identifier": "coki" }],
+  "version": "1.p",
+  "language": "eng"
 }
