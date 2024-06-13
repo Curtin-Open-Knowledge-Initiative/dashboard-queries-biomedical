@@ -1,0 +1,39 @@
+{
+  "title": "Workflows for Biomedical Open Science Dashboards project",
+  "description": "<p>Workflows for Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices</p> The Biomedical Open Science data-processing workflow combines datasets from various source, and the resulting output data is displayed in the dashboard. </p> The publication data used in this dashboard is a subset of the larger Academic Observatory dataset from the Curtin Open Knowledge Initiative (COKI). The data subset is from 2011 onwards. The list of Digital Object Identifiers (DOIs) used to subject the Academic Observatory dataset was provide by the partner institution. </p> The Biomedical Open Science project team provided data on whether the DOIs of interest contain references to open access data and software, based on running the ODDPub text-mining algorithm. </p> The partner institution additionally provided both a list of Research ORCDIs, and also Trial-IDs for their clinical trials, which were further processed by the Biomedical Open Science project team through the Charite data workflow.</p><p><strong>Contributors</strong><br>Conceptualization: Cameron Neylon.<br> Data curation: Rebecca N. Handcock and Cameron Neylon. <br>Formal analysis: Rebecca N. Handcock and Cameron Neylon.<br>Funding acquisition: Cameron Neylon. <br>Investigation: Rebecca N. Handcock and Cameron Neylon. <br> Methodology: Rebecca N. Handcock and Cameron Neylon. <br>Project administration: Kathryn R. Napier and Cameron Neylon. <br>Resources: Kathryn R. Napier and Cameron Neylon. <br>Software: Rebecca N. Handcock and Cameron Neylon. <br>Supervision: Kathryn R. Napier and Cameron Neylon. <br>Validation: Rebecca N. Handcock and Cameron Neylon. <br>Visualization: Rebecca N. Handcock. <br>Writing - original draft: Rebecca N. Handcock and Cameron Neylon. <br>Writing - review &amp; editing: Rebecca N. Handcock, Kathryn R. Napier, and Cameron Neylon. </p>,
+  "notes": "The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z). The results of the Delphi in step one were published in PloS Biology. ",
+  "communities": [
+    {
+      "identifier": "coki"
+    },
+  ],
+  "keywords": [
+     "open-science"
+    "science",
+    "workflow",
+    "data",
+    "BigQuery",
+    "SQL",
+    "R"
+  ],
+  "license": {
+    "id": "Apache-2.0"
+  },
+  "creators": [
+    {
+      "orcid": "0000-0001-5903-6620",
+      "affiliation": "Curtin Institute for Data Science, Curtin University",
+      "name": "Handcock, Rebecca N"
+    },
+    {
+      "orcid": "0000-0003-1202-7238",
+      "affiliation": "Curtin Institute for Data Science, Curtin University",
+      "name": "Napier, Kathryn R"
+    },
+    {
+      "orcid": "0000-0002-0068-716X",
+      "affiliation": "Centre for Culture and Technology, Curtin University",
+      "name": "Neylon, Cameron"
+    }
+  ]
+}
