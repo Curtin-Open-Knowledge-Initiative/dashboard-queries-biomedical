@@ -1,14 +1,9 @@
-cff-version: 1.2.0
+cff-version: 1.1.0
 message: "If you use this software, please cite it as below."
-title: "XXXX"
-url: "XXXX"
-doi: XXX
-license: Apache-2.0 License
 authors:
-  - given-names: "Rebecca N"
-    family-names: "Handcock"
-  - given-names: "Kathryn R"
-    family-names: "Napier"
-  - given-names: "Cameron"
-    family-names: "Neylon"
-    
+- family-names: Xxxx
+  given-names: Xxxxx
+orcid: https://orcid.org/0000-0000-0000-0000
+title: XXX
+version: ver1.p
+date-released: 2024-06-14
