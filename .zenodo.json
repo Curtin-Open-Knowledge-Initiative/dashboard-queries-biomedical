@@ -1,36 +1,39 @@
 {
-  "upload_type": "software",
-  "publication_date": "2024-06-13",
-  "title": "Workflows for Biomedical Open Science Dashboards project",
+  "title": "XXX Title XXX",
+  "description": "XXX Description XXX",
+  "notes": "TXXX Notes XXX",
+  "communities": [
+    {
+      "identifier": "coki"
+    }
+  ],
+  "keywords": [
+    "science",
+    "workflow",
+    "data",
+    "XXX",
+    "academic",
+    "XXX",
+    "XXX"
+  ],
+  "license": {
+    "id": "Apache-2.0"
+  },
   "creators": [
     {
       "orcid": "0000-0001-5903-6620",
       "affiliation": "Curtin Institute for Data Science, Curtin University",
-      "name": "Rebecca N. Handcock"
+      "name": "Handcock, Rebecca N"
     },
     {
       "orcid": "0000-0003-1202-7238",
       "affiliation": "Curtin Institute for Data Science, Curtin University",
-      "name": "Kathryn R. Napier"
+      "name": "Napier, Kathryn R"
     },
     {
       "orcid": "0000-0002-0068-716X",
       "affiliation": "Centre for Culture and Technology, Curtin University",
-      "name": "Cameron Neylon"
+      "name": "Neylon, Cameron"
     }
-  ],
-  "description": "Workflow for the Biomedical Open Science Dashboards project for fetching, processing and displaying data about biomedical open science practices.<br><br>The Biomedical Open Science data-processing workflow combines datasets from various source, and the resulting output data is displayed in the dashboard.<br><br>The publication data used in this dashboard is a subset of the larger Academic Observatory dataset from the Curtin Open Knowledge Initiative (COKI). The list of Digital Object Identifiers (DOIs) used to subject the Academic Observatory dataset was provide by the partner institution.<br><br>The Biomedical Open Science project team provided data on whether the DOIs of interest contain references to open access data and software, based on running the ODDPub text-mining algorithm.<br><br>The partner institution additionally provided both a list of Research ORCDIs, and also Trial-IDs for their clinical trials, which were further processed by the Biomedical Open Science project team through the Charite data workflow. <br><br> <strong>Contributors</strong> <br> Conceptualization: Cameron Neylon. <br> Data curation: Rebecca N. Handcock and Cameron Neylon. <br> Formal analysis: Rebecca N. Handcock and Cameron Neylon.<br> Funding acquisition: Cameron Neylon. <br> Investigation: Rebecca N. Handcock and Cameron Neylon. <br>  Methodology: Rebecca N. Handcock and Cameron Neylon. <br> Project administration: Kathryn R. Napier and Cameron Neylon. <br> Resources: Kathryn R. Napier and Cameron Neylon. <br> Software: Rebecca N. Handcock and Cameron Neylon. <br> Supervision: Kathryn R. Napier and Cameron Neylon. <br> Validation: Rebecca N. Handcock and Cameron Neylon. <br> Visualization: Rebecca N. Handcock. <br> Writing - original draft: Rebecca N. Handcock and Cameron Neylon. <br> Writing - review and editing: Rebecca N. Handcock, Kathryn R. Napier, and Cameron Neylon.",
-  "license": "Apache-2.0",
-  "keywords": [
-    "open-science",
-    "COKI",
-    "workflow",
-    "data",
-    "BigQuery",
-    "SQL",
-    "R"
-  ],
-  "notes": "The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z)",
-  "communities": [{ "identifier": "coki" }],
-  "language": "eng"
+  ]
 }
