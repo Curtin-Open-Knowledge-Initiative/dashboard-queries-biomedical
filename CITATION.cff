@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "XXXX"
+url: "XXXX"
+doi: XXX
+license: Apache-2.0 License
+authors:
+  - given-names: "Rebecca N"
+    family-names: "Handcock"
+  - given-names: "Kathryn R"
+    family-names: "Napier"
+  - given-names: "Cameron"
+    family-names: "Neylon"
+    
