@@ -6,10 +6,12 @@
 -----------------------------------------------------------------------
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query2_trials_20250225';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query2_trials_20250305';
+DECLARE var_output_table STRING DEFAULT 'p01_trials_20250305';
+
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2b_trials_20250225b';
+DECLARE var_institution_id STRING DEFAULT 'p01_theneuro';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -41,7 +43,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2b_trials_20250225b`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_trials_20250305`
  AS (
 
 -----------------------------------------------------------------------
@@ -64,28 +66,11 @@ with d_3_contributed_trials_data AS (
     END as nct_id_found_PRETTY,
 
   -----------------------------------------------------------------------
-  # The following comemnted out variables are extract columns in the input data that are not used upstream
+  # Not all columns in the input data are imported or used upstream
 
-  #function_cast_string(source) as source,
-  #function_cast_date(last_update_submitted_date) as last_update_submitted_date,
   function_cast_date(registration_date) as registration_date,
-  #function_cast_date(summary_results_date) as summary_results_date,
-  #function_cast_string(study_type) as study_type,
-  #function_cast_string(phase) as phase,
-  #function_cast_int(enrollment) as enrollment,
-  #function_cast_string(recruitment_status) as recruitment_status,
-  #function_cast_string(title) as title,
   function_cast_datetime(start_date) as start_date,
   function_cast_datetime(completion_date) as completion_date,
-  #function_cast_datetime(primary_completion_date) as primary_completion_date,
-  #function_cast_boolean(has_summary_results) as has_summary_results,
-  #function_cast_string(allocation) as allocation,
-  #function_cast_string(masking) as masking,
-  #function_cast_string(main_sponsor) as main_sponsor,
-  #function_cast_boolean(is_multicentric) as is_multicentric,
-  #function_cast_int(registration_year) as registration_year,
-  #function_cast_int(start_year) as start_year,
-  #function_cast_int(completion_year) as completion_year,
 
   # ==== Metric name on dashboard: # Prospective registrations 
   function_cast_boolean(is_prospective) as is_prospective,
@@ -105,7 +90,6 @@ with d_3_contributed_trials_data AS (
     END as results_due_PRETTY,
 
   function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
-  #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
   # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
   lower(function_cast_string(summary_results_reporting)) as summary_results_reporting,
@@ -157,7 +141,7 @@ SELECT
 FROM
   ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION 
   # of the all trials processed in Step 1 - query1
-  `university-of-ottawa.p01_neuro_data.p01_ver2a_alltrials_20250218`,
+  `university-of-ottawa.p01_neuro_data.p01_alltrials_20250305`,
   UNNEST(SPLIT(TRIM(ANYSOURCE_clintrial_idlist)," ")) as ANYSOURCE_clintrial_id_flat
   WHERE ANYSOURCE_clintrial_found
 ), # END d_4_anysource_extract_flat
@@ -287,7 +271,8 @@ SELECT
   var_SQL_script_name,
   var_data_trials,
   var_data_dois,
-  var_output_table
+  var_output_table,
+  var_institution_id
 
   FROM d_5b_trials_data_joined_to_anysource as p10
   LEFT JOIN d_6b_pubs_data_intersect_anysource as p11 
