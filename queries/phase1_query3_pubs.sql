@@ -386,5 +386,5 @@ SELECT
   LEFT JOIN `trials_matching_pub_dois_flat` as contributed_trials
   ON lower(main_select.doi_academicobservatory) = lower(contributed_trials.PUBSDATA_doi_flat)
 
-) # End create table 
+) # End create table
 
