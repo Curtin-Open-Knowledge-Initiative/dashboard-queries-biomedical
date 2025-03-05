@@ -5,10 +5,12 @@
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query1_alltrials_20250218';
-DECLARE var_SQL_year_cutoff INT64 DEFAULT 1; # e.g. 2000
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query1_alltrials_20250305';
+DECLARE var_output_table STRING DEFAULT 'p01_alltrials_20250305';
+
 DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi20250207';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2a_alltrials_20250218';
+DECLARE var_SQL_year_cutoff INT64 DEFAULT 1; # e.g. 2000
+DECLARE var_institution_id STRING DEFAULT 'p01_theneuro'; 
 
 -----------------------------------------------------------------------
 -- 0. FUNCTIONS
@@ -34,7 +36,7 @@ CREATE TEMP FUNCTION
 # 0. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_alltrials_20250218`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_alltrials_20250305`
 AS (
 
 -----------------------------------------------------------------------
@@ -348,7 +350,8 @@ SELECT
  ----- 6.3 UTILITY - add a variable for the script and data versions
 var_AcademicObservatory_doi,
 var_SQL_script_name,
-var_output_table
+var_output_table,
+var_institution_id
 
 FROM enhanced_5
 
