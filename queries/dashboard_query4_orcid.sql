@@ -3,9 +3,11 @@
 -- Run this 4th 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query4_orcid_20250218';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query4_orcid_20250305';
+DECLARE var_output_table STRING DEFAULT 'p01_orcid_20250305';
+
 DECLARE var_ORCID_Dataset_name STRING DEFAULT 'theneuro_orcids_20230906';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2a_orcid_20250218';
+DECLARE var_institution_id STRING DEFAULT 'p01_theneuro';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -22,7 +24,7 @@ AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS BOOLEAN));
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_orcid_20250218`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_orcid_20250305`
  AS (
 
 -----------------------------------------------------------------------
@@ -79,7 +81,8 @@ FROM `university-of-ottawa.p01_neuro_from_partners.theneuro_orcid_20230906`
   ----- 3.2 UTILITY - add variables for the script version and data files
   var_SQL_script_name,
   var_ORCID_Dataset_name,
-  var_output_table
+  var_output_table,
+  var_institution_id
 
   FROM orcid_data
 
