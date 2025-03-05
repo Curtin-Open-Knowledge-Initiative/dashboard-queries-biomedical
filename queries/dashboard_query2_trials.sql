@@ -6,10 +6,10 @@
 -----------------------------------------------------------------------
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query2_trials_20250225';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query2_trials_20250218';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2b_trials_20250225b';
+DECLARE var_output_table STRING DEFAULT 'p01_ver2a_trials_20250218';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -41,7 +41,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2b_trials_20250225b`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_trials_20250218`
  AS (
 
 -----------------------------------------------------------------------
@@ -93,52 +93,23 @@ with d_3_contributed_trials_data AS (
     WHEN function_cast_boolean(is_prospective) IS TRUE THEN "Registered before enrollment started"
     ELSE "Registered after enrollment started"
     END as is_prospective_PRETTY,
- 
-  #function_cast_date(registry_download_date) as registry_download_date, # New field for Phase 2
-  #function_cast_date(results_due_date) as results_due_date, # New field for Phase 2
-  
-  # ==== Metric name on dashboard: # Results Due 
-  function_cast_boolean(results_due) as results_due, # New field for Phase 2
-  CASE
-    WHEN function_cast_boolean(results_due) IS TRUE THEN "Trial results are due"
-    ELSE "Trial results are not yet due"
-    END as results_due_PRETTY,
 
-  function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
-  #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
+  #function_cast_int(days_cd_to_summary) as days_cd_to_summary,
+  #function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
 
   # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
-  lower(function_cast_string(summary_results_reporting)) as summary_results_reporting,
+  function_cast_boolean(is_summary_results_1y_cd) as is_summary_results_1y_cd,
   CASE
-    WHEN summary_results_reporting = "results_timely" THEN "Trial reported summary results on time"
-    WHEN summary_results_reporting = "results_due_late" THEN "Trial reported summary results late"
-    WHEN summary_results_reporting = "results_due_missing" THEN "Trial summary results due but not reported"
-    WHEN summary_results_reporting = "results_not_due" THEN "Trial not yet due to report results"
-    ELSE ""
-    END as summary_results_reporting_PRETTY,
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS TRUE THEN "Summary results reported within 1 year of trial completion"
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS FALSE THEN "Summary results not reported within 1 year of trial completion"
+    ELSE "No information about reporting of summary results"
+    END as is_summary_results_1y_cd_PRETTY,
 
-  CASE
-    # 1 (turquoise): Trials  reported summary results on time i.e., within 1 year of primary completion (whether due or not) 
-    WHEN summary_results_reporting = "results_timely" THEN 1
-    # Category 2 (orange): Due trials that reported summary results late i.e., after 1 year of primary completion 
-    WHEN summary_results_reporting = "results_due_late" THEN 2
-    # Category 3 (another color to indicate bad): “Due trials that did not report summary results”.  
-    WHEN summary_results_reporting = "results_due_missing" THEN 3
-    # Category 4 (grey): Trials not yet due to report results  
-    WHEN summary_results_reporting = "results_not_due" THEN 4
-    ELSE 99
-    END as summary_results_reporting_GRAPHORDER,
-
-   # ==== Metric name on dashboard: # Linked References in clintrials.gov
-  function_cast_boolean(has_linked_reference) as has_linked_reference,# New field for Phase 2
-  CASE
-    WHEN function_cast_boolean(has_linked_reference) IS TRUE THEN "Trial has a linked reference"
-    ELSE "Trial does not have a linked reference"
-    END as has_linked_reference_PRETTY,
+  #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
 ##---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
 # of the imported trials from the partner.
-FROM `university-of-ottawa.p01_neuro_from_partners.theneuro_trials_aact_20250221`
+FROM `university-of-ottawa.p01_neuro_from_partners.theneuro_trials_aact_20231111`
 ), # End of d_3_contributed_trials_data
 
 -----------------------------------------------------------------------
