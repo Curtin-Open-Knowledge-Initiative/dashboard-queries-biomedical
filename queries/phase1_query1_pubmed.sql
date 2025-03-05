@@ -352,4 +352,4 @@ var_output_table
 
 FROM enhanced_5
 
-) # End create table
+) # End create table 
