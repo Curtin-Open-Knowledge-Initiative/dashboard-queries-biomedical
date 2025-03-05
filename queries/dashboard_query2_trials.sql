@@ -6,10 +6,10 @@
 -----------------------------------------------------------------------
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query2_trials_20250218';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query2_trials_20250219';
 DECLARE var_data_trials STRING DEFAULT 'theneuro_trials_20231111';
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2a_trials_20250218';
+DECLARE var_output_table STRING DEFAULT 'p01_ver2a_trials_20250219';
 
 -----------------------------------------------------------------------
 -- 1. FUNCTIONS
@@ -41,7 +41,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_trials_20250218`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_trials_20250219`
  AS (
 
 -----------------------------------------------------------------------
@@ -98,13 +98,19 @@ with d_3_contributed_trials_data AS (
   #function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
 
   # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
+  ############## NOTE FOR NEW CATEGORIES ONCE WE HAVE THE NEW DATA ##############
+  # Category 1 (turquoise): Trials that reported summary results on time i.e., within 1 year of primary completion (whether due or not) 
+  # Category 2 (orange): Due trials that reported summary results late i.e., after 1 year of primary completion 
+  # Category 3 (another color to indicate bad, e.g., red, if colorblind safe in your scheme): “Due trials that did not report summary results”.  
+  # Category 4 (grey): Trials not yet due to report results  
+
   function_cast_boolean(is_summary_results_1y_cd) as is_summary_results_1y_cd,
   CASE
-    WHEN function_cast_boolean(is_summary_results_1y_cd) IS TRUE THEN "Summary results reported within 1 year of trial completion"
-    WHEN function_cast_boolean(is_summary_results_1y_cd) IS FALSE THEN "Summary results not reported within 1 year of trial completion"
-    ELSE "No information about reporting of summary results"
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS TRUE THEN "Trials that reported summary results on time i.e., within 1 year of primary completion (whether due or not)"
+    WHEN function_cast_boolean(is_summary_results_1y_cd) IS FALSE THEN "Due trials that reported summary results late i.e., after 1 year of primary completion"
+    ELSE "Due trials that did not report summary results"
     END as is_summary_results_1y_cd_PRETTY,
-
+    
   #function_cast_boolean(is_summary_results_1y_pcd) as is_summary_results_1y_pcd,
 
 ##---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
