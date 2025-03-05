@@ -4,16 +4,18 @@
 -- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2a_query3_pubs_20250218';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query3_pubs_20250305';
+DECLARE var_output_table STRING DEFAULT 'p01_pubs_20250305';
+
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
-DECLARE var_output_table STRING DEFAULT 'p01_ver2a_pubs_20250218';
+DECLARE var_institution_id STRING DEFAULT 'p01_theneuro';
 
 -----------------------------------------------------------------------
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_ver2a_pubs_20250218`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_pubs_20250305`
  AS (
 
 -----------------------------------------------------------------------
@@ -49,7 +51,7 @@ enriched_doi_table AS (
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract from Step 1 (query1) to reduce
     # re-processing of data and just extract and pre-process this once.
-    LEFT JOIN `university-of-ottawa.p01_neuro_data.p01_ver2a_alltrials_20250218` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.p01_neuro_data.p01_alltrials_20250305` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF #1 enriched_doi_table
 
@@ -363,7 +365,8 @@ SELECT
   var_SQL_script_name,
   var_data_dois,
   var_data_oddpub,
-  var_output_table
+  var_output_table,
+  var_institution_id
 
   FROM main_select
   #####REMOVE LEFT JOIN `trials_matching_pub_dois_flat` as contributed_trials
