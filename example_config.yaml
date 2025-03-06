@@ -1,0 +1,9 @@
+context:
+  dryrun: True
+  project: my-dashboards-project
+  keyfile: .keyfile.json
+  output_dir: .output
+  doi_version: 20201231
+partners:
+  - name: my-partner
+  - name: my-other-partner
