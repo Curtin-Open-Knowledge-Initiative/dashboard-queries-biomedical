@@ -1,0 +1,59 @@
+import os
+from typing import List
+
+
+class Partner:
+    def __init__(self, name: str):
+        self.name = name
+
+    @staticmethod
+    def from_dict(partner: dict):
+        """Constructs a partner object from a dictionary. Checks that it is valid"""
+
+        errors: List[str] = []
+
+        if not partner.get("name"):
+            errors.append("Partner construction missing attribute: name")
+
+        if errors:
+            msg: str = "\n".join(errors) + f"\nSupplied dict: {partner}"
+            raise RuntimeError(f"Encountered error(s) in partner construction: {msg}")
+        return Partner(name=partner["name"])
+
+
+class Config:
+    def __init__(self, partners: List[Partner], dryrun: bool, keyfile: str, output_dir: str):
+        self.partners = partners
+        self.dryrun = dryrun
+        self.keyfile = keyfile
+        self.output_dir = output_dir
+
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    @staticmethod
+    def from_dict(cfg: dict):
+        """Checks that the config is valid then constructs the Config object from the dictionary"""
+
+        errors: List[str] = []
+        if cfg.get("dryrun") == False:
+            if not cfg.get("keyfile"):
+                errors.append("No keyfile provided.")
+            elif not os.path.exists(cfg.get("keyfile")):
+                errors.append(f"Keyfile: {cfg['keyfile']} does not exist.")
+
+        if not cfg.get("output_dir"):
+            errors.append("No output directory (output_dir) provided.")
+        if not cfg.get("partners"):
+            errors.append("No partners provided.")
+
+        if errors:
+            msg = "\n".join(errors)
+            raise RuntimeError(f"Encountered error(s) in config construction: {msg}")
+
+        partners = [Partner.from_dict(p) for p in cfg["partners"]]
+        return Config(
+            partners=partners,
+            dryrun=cfg.get("dryrun"),
+            keyfile=cfg.get("keyfile"),
+            output_dir=cfg.get("output_dir"),
+        )
