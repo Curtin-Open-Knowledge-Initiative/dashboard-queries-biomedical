@@ -1,12 +1,14 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Run this first
--- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
--- Creates a data subset of the Academic Observatory to extract Crossref 
+-- Biomedical Open Science Dashboard Processing - Pre Processing of Pubmed/Crossref data
+-- RUN THIS FIRST
+-- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
+-- 
+-- This code creates a data subset of the Academic Observatory to extract Crossref 
 -- and Pubmed data and make a combined list of Clinical trials from these datasets
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query1_alltrials_20250305';
-DECLARE var_output_table STRING DEFAULT 'p01_alltrials_20250305';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query1_alltrials_20250310';
+DECLARE var_output_table STRING DEFAULT 'p01_alltrials_20250310';
 
 DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi20250207';
 DECLARE var_SQL_year_cutoff INT64 DEFAULT 1; # e.g. 2000
@@ -36,7 +38,7 @@ CREATE TEMP FUNCTION
 # 0. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_alltrials_20250305`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_alltrials_20250310`
 AS (
 
 -----------------------------------------------------------------------
