@@ -1,11 +1,11 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Dashboard query for The Neuro's publications
--- Run this 3rd 
--- See instructions at https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
+-- Biomedical Open Science Dashboard Processing - Process Publication data
+-- RUN THIS THIRD
+-- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query3_pubs_20250305';
-DECLARE var_output_table STRING DEFAULT 'p01_pubs_20250305';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query3_pubs_20250310';
+DECLARE var_output_table STRING DEFAULT 'p01_pubs_20250310';
 
 DECLARE var_data_dois STRING DEFAULT 'theneuro_dois_20230217';
 DECLARE var_data_oddpub STRING DEFAULT 'theneuro_oddpub_20231017';
@@ -15,7 +15,7 @@ DECLARE var_institution_id STRING DEFAULT 'p01_theneuro';
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_pubs_20250305`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_pubs_20250310`
  AS (
 
 -----------------------------------------------------------------------
@@ -43,15 +43,15 @@ enriched_doi_table AS (
   ------ TABLES.
   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
   FROM `academic-observatory.observatory.doi20250207` as academic_observatory
-    # the contributed Oddpub data from the partner.
-    LEFT JOIN `university-of-ottawa.p01_neuro_from_partners.theneuro_oddpub_20231017` as contributed_oddpub
+    # the contributed Oddpub data  processed by the BOS project team
+    LEFT JOIN `university-of-ottawa.p01_neuro_from_partners.p01_theneuro_oddpub_20231017` as contributed_oddpub
       ON LOWER(academic_observatory.doi) = LOWER(contributed_oddpub.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
     # Import the PubMed/Crossref extract from Step 1 (query1) to reduce
     # re-processing of data and just extract and pre-process this once.
-    LEFT JOIN `university-of-ottawa.p01_neuro_data.p01_alltrials_20250305` as clintrial_extract
+    LEFT JOIN `university-of-ottawa.p01_neuro_data.p01_alltrials_20250310` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
 ), # END OF #1 enriched_doi_table
 
@@ -64,8 +64,8 @@ contributed_dois AS (
   DISTINCT(doi)
   FROM
   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-  # of the imported dois from the partner.
-    `university-of-ottawa.p01_neuro_from_partners.theneuro_dois_20230217`
+  # of the imported DOIs from the partner institution
+    `university-of-ottawa.p01_neuro_from_partners.p01_theneuro_dois_20230217`
 ), # END OF #2 contributed_dois
 
 -----------------------------------------------------------------------
@@ -152,22 +152,7 @@ main_select AS (
    ELSE 99
   END as embargo_GRAPHORDER,
 
-  ------ 3.5 DOI TABLE: PLAN-S COMPLIANT
-  CASE
-    WHEN NOT academic_observatory.coki.oa.coki.open THEN FALSE
-    WHEN unpaywall.best_oa_location.license != "cc-by" THEN FALSE
-    WHEN academic_observatory.coki.oa.coki.publisher THEN TRUE
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 1 then TRUE
-    ELSE FALSE
-  END as plans_compliant,
-
-  CASE
-    WHEN NOT academic_observatory.coki.oa.coki.open THEN "Not PlanS Compliant"
-    WHEN unpaywall.best_oa_location.license != "cc-by" THEN "Not PlanS Compliant"
-    WHEN academic_observatory.coki.oa.coki.publisher THEN "PlanS Compliant"
-    WHEN DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) < 1 then "PlanS Compliant"
-    ELSE "Not PlanS Compliant"
-  END as plans_compliant_PRETTY,
+  ------ NOTE: Sections 3.5 removed as project developed.
 
   ------ 3.6 DOI TABLE: LICENSE
   unpaywall.best_oa_location.license as license,
@@ -177,10 +162,10 @@ main_select AS (
     WHEN unpaywall.best_oa_location.license = 'cc0' THEN "CC0"
     WHEN unpaywall.best_oa_location.license = 'cc-by' THEN "CC-BY"
     WHEN unpaywall.best_oa_location.license = 'cc-by-sa' THEN "CC-BY-SA"
-    WHEN unpaywall.best_oa_location.license = 'cc-by-nd' THEN "CC BY-ND"
+    WHEN unpaywall.best_oa_location.license = 'cc-by-nd' THEN "CC-BY-ND"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN "CC-BY-NC"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN "CC-BY-NC-SA"
-    WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN "CC BY-NC-ND"
+    WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN "CC-BY-NC-ND"
     WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN "ACS-specific: Author-choice/Editor's-choice Usage Agreement"
     WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN "Elsevier-specific: OA User License"
     WHEN unpaywall.best_oa_location.license = 'publisher-specific, author manuscript' THEN "Publisher-specific: Author Manuscript"
@@ -283,45 +268,11 @@ main_select AS (
   ------ 3.14 ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   clintrial_extract.abstract_pubmed,
-
-   ------ 3.15 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF - contained in fields
-  clintrial_extract.CROSSREF_clintrial_fromfield_found,
-  clintrial_extract.CROSSREF_clintrial_fromfield_idlist,
-
-  ------ 3.16 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - CROSSREF Abstract search for trial numbers
-  clintrial_extract.CROSSREF_clintrial_fromabstract_found,
-  clintrial_extract.CROSSREF_clintrial_fromabstract_idlist,
   
-  ------ 3.17 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - contained in fields		
-  clintrial_extract.PUBMED_clintrial_fromfield_found,
-  clintrial_extract.PUBMED_clintrial_fromfield_idlist,
-
-  ------ 3.18 CLINICAL TRIAL NUMBERS ASSOCIATED WITH PUBLICATIONS - PUBMED - Abstract search for trial numbers
-  clintrial_extract.PUBMED_clintrial_fromabstract_found,
-  clintrial_extract.PUBMED_clintrial_fromabstract_idlist,
-
-  ------ 3.19 CLINICAL TRIAL NUMBERS ASSOCIATED WITH ALL/ANY  data sources
-  clintrial_extract.ANYSOURCE_clintrial_found,
-  clintrial_extract.ANYSOURCE_clintrial_idlist,
-
-  CASE
-    WHEN clintrial_extract.ANYSOURCE_clintrial_found
-    THEN "Trial-ID found in any publication in Pubmed or Crossref"
-    ELSE "No Trial-ID found in any publication in Pubmed or Crossref"
-    END as ANYSOURCE_clintrial_found_PRETTY,
-
-  ------ 3.20 PUBMED TABLE: Databank names - details
-  clintrial_extract.PUBMED_opendata_fromfield_found,
-  clintrial_extract.PUBMED_opendata_fromfield_idlist,
-  CASE
-    WHEN clintrial_extract.PUBMED_opendata_fromfield_found
-    THEN "Databank-ID found in Pubmed"
-    ELSE "No Databank-ID number found in Pubmed"
-    END as PUBMED_opendata_fromfield_found_PRETTY,
-
+  ------ NOTE: Sections 3.15 to 3.20 removed as project developed.
   -----------------------------------------------------------------------
   -- 3.21: Join the enriched and tidied DOI table to the target DOIs 
-  -------- from The Neuro's publication dataset
+  -------- from the institution's publication dataset
   -----------------------------------------------------------------------
  FROM
    contributed_dois
@@ -332,29 +283,10 @@ main_select AS (
 
  ) # END OF #3 main_select
 
-#####REMOVE-----------------------------------------------------------------------
-#####REMOVE--- 4: Extract the The Neuro's publication DOIs that have Trial-IDs that are 
-#####REMOVE--- found in the The Neuro's list of trials. This can be re-used from the
-#####REMOVE--- file 'dashboard_data_trials' Step #2
-#####REMOVE-----------------------------------------------------------------------
-#####REMOVE trials_matching_pub_dois_flat AS (
-#####REMOVE   SELECT 
-#####REMOVE      PUBSDATA_doi_flat,
-#####REMOVE      TRIM(STRING_AGG(nct_id, ' ')) AS TRIALSDATA_matching_doi_CONCAT,
-#####REMOVE      PUBSDATA_doi_found
-#####REMOVE    FROM
-#####REMOVE    ###---###---###---###---###---### CHECK INPUT BELOW FOR CORRECT VERSION
-#####REMOVE    # of the processed partner trials data from Step 2 (query2)
-#####REMOVE    `university-of-ottawa.p01_neuro_data.p01_ver2a_trials_20250218`,
-#####REMOVE    UNNEST(SPLIT(TRIM(PUBSDATA_doi)," ")) as PUBSDATA_doi_flat
-#####REMOVE    WHERE PUBSDATA_doi_found
-#####REMOVE    GROUP BY PUBSDATA_doi_flat, PUBSDATA_doi_found
-#####REMOVE    ) # END #4 trials_matching_pub_dois_flat
-
 -----------------------------------------------------------------------
 --- 5: Calc additional variables that require the previous steps
---- This include linking The Neuro's publication DOIs that have Trial-IDs that are 
---- found in the The Neuro's list of trials, which was flatted in Step 4
+--- This include linking the institution's publication DOIs that have Trial-IDs that are 
+--- found in the institution's list of trials, which was flatted in Step 4
 -----------------------------------------------------------------------
 SELECT
   main_select.*,
@@ -369,8 +301,7 @@ SELECT
   var_institution_id
 
   FROM main_select
-  #####REMOVE LEFT JOIN `trials_matching_pub_dois_flat` as contributed_trials
-  #####REMOVE ON lower(main_select.doi_academicobservatory) = lower(contributed_trials.PUBSDATA_doi_flat)
+
 
 ) # End create table
 
