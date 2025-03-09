@@ -1,10 +1,11 @@
 -----------------------------------------------------------------------
--- Montreal Neuro - Trial Data query 
--- Run this 4th 
+-- Biomedical Open Science Dashboard Processing - Process ORCID data
+-- Run this FOUTH
+-- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query4_orcid_20250305';
-DECLARE var_output_table STRING DEFAULT 'p01_orcid_20250305';
+DECLARE var_SQL_script_name STRING DEFAULT 'p01_ver2b_query4_orcid_20250310';
+DECLARE var_output_table STRING DEFAULT 'p01_orcid_20250310';
 
 DECLARE var_ORCID_Dataset_name STRING DEFAULT 'theneuro_orcids_20230906';
 DECLARE var_institution_id STRING DEFAULT 'p01_theneuro';
@@ -24,7 +25,7 @@ AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS BOOLEAN));
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_orcid_20250305`
+CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_orcid_20250310`
  AS (
 
 -----------------------------------------------------------------------
@@ -32,11 +33,7 @@ CREATE TABLE `university-of-ottawa.p01_neuro_data.p01_orcid_20250305`
 -----------------------------------------------------------------------
 with orcid_data AS (
   SELECT
-   #function_cast_string(name_from_list) as name_from_list,
-   #function_cast_string(orcid_first_name) as orcid_first_name,
-   #function_cast_string(orcid_last_name) as orcid_last_name,
-   #function_cast_string(orcid_affiliation) as orcid_affiliation,
-
+  
    # ---------- orcid_id
    function_cast_string(orcid_id) as orcid_id_raw,
 
@@ -66,8 +63,8 @@ with orcid_data AS (
      END as is_affiliation_PRETTY,
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-# of the contributed ORCID data from the partner.
-FROM `university-of-ottawa.p01_neuro_from_partners.theneuro_orcid_20230906`
+# of the contributed ORCID data from the partner institution
+FROM `university-of-ottawa.p01_neuro_from_partners.p01_theneuro_orcid_20230906`
 
 ) # End of 2. SELECT orcid_data
 
