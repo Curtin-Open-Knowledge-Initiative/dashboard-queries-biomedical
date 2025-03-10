@@ -2,6 +2,7 @@ import argparse
 import yaml
 
 from biomed.gcp import gcp_set_auth, bq_run_query
+from biomed.partner_workflow import partner_workflow
 from biomed.config import Config, Partner, Context
 
 
@@ -20,10 +21,6 @@ def workflow(config: Config):
     #     rows = bq_run_query(query=query)
     # for row in rows:
     #     print(row)
-
-
-def partner_workflow(partner: Partner, context: Context):
-    print(partner.name)
 
 
 def main():

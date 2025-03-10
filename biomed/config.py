@@ -1,13 +1,37 @@
 import os
 from datetime import datetime, date
-from typing import List
+from typing import List, Optional, Union
+
+from git import Repo
 
 
 class Partner:
-    """A single partner's configuration for the workflow"""
+    """A single partner's configuration for the workflow
 
-    def __init__(self, *, name: str):
-        self.name = name
+    :param institution_id: The internal ID given to this partner.
+    :param orcid_table_name: The name of the partner input orcid table.
+    :param trials_aact_table_name: The name of the partner input trials aact table.
+    :param dois_table_name: The name of the partner input doi table.
+    :param oddpub_table_name: The name of the partner input oddpub table.
+    :param year_cutoff: The cutoff publication year for this partner.
+    """
+
+    def __init__(
+        self,
+        *,
+        institution_id: str,
+        orcid_table_name: str,
+        dois_table_name: str,
+        trials_aact_table_name: str,
+        oddpub_table_name: str,
+        year_cutoff: Union[int, str],
+    ):
+        self.institution_id = institution_id
+        self.orcid_table_name = orcid_table_name
+        self.dois_table_name = dois_table_name
+        self.trials_aact_table_name = trials_aact_table_name
+        self.oddpub_table_name = oddpub_table_name
+        self.year_cutoff = year_cutoff
 
     @staticmethod
     def from_dict(partner: dict):
@@ -15,23 +39,63 @@ class Partner:
 
         errors: List[str] = []
 
-        if not partner.get("name"):
-            errors.append("Partner construction missing attribute: name")
+        if not partner.get("institution_id"):
+            errors.append("Partner construction missing attribute: institution_id")
+        if not partner.get("orcid_table_name"):
+            errors.append("Partner construction missing attribute: orcid_table_name")
+        if not partner.get("dois_table_name"):
+            errors.append("Partner construction missing attribute: dois_table_name")
+        if not partner.get("trials_aact_table_name"):
+            errors.append("Partner construction missing attribute: trials_aact_table_name")
+        if not partner.get("oddpub_table_name"):
+            errors.append("Partner construction missing attribute: oddpub_table_name")
+        if not partner.get("year_cutoff"):
+            errors.append("Partner construction missing attribute: year_cutoff")
 
         if errors:
             msg: str = "\n".join(errors) + f"\nSupplied dict: {partner}"
             raise RuntimeError(f"Encountered error(s) in partner construction: {msg}")
-        return Partner(name=partner["name"])
+        return Partner(
+            institution_id=partner["institution_id"],
+            orcid_table_name=partner["orcid_table_name"],
+            dois_table_name=partner["dois_table_name"],
+            trials_aact_table_name=partner["trials_aact_table_name"],
+            oddpub_table_name=partner["oddpub_table_name"],
+            year_cutoff=partner["year_cutoff"],
+        )
+
+    def to_dict(self) -> dict:
+        return dict(
+            institution_id=self.institution_id,
+            orcid_table_name=self.orcid_table_name,
+            dois_table_name=self.dois_table_name,
+            trials_aact_table_name=self.trials_aact_table_name,
+            oddpub_table_name=self.oddpub_table_name,
+            year_cutoff=self.year_cutoff,
+        )
 
 
 class Context:
-    """Contains the contextual information of the workflow configuration"""
+    """Contains the contextual information of the workflow configuration
 
-    def __init__(self, *, dryrun: bool, keyfile: str, output_dir: str, doi_version: date):
+    :param dryrun: Whether to execute the created queries or not
+    :param project: The GCP project to work in
+    :param keyfile: The location of the keyfile credentials file
+    :param output_dir: The output directory location
+    :param run_version: The version to use as a table shard
+    :param doi_version: The version of the DOI table to use
+    """
+
+    def __init__(
+        self, *, dryrun: bool, project: str, keyfile: str, output_dir: str, run_version: date, doi_version: date
+    ):
         self.dryrun = dryrun
+        self.project = project
         self.keyfile = keyfile
         self.output_dir = output_dir
+        self.run_version = run_version
         self.doi_version = doi_version
+        self.workflow_hash = Repo(search_parent_directories=True).head.object.hexsha
 
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -51,13 +115,25 @@ class Context:
             elif not os.path.exists(cfg.get("keyfile")):
                 errors.append(f"Keyfile: {cfg['keyfile']} does not exist.")
 
+        if not cfg.get("project"):
+            errors.append("No GCP project (project) provided.")
+
         if not cfg.get("output_dir"):
             errors.append("No output directory (output_dir) provided.")
+
         if not cfg.get("doi_version"):
-            errors.append("No output directory (output_dir) provided.")
+            errors.append("DOI table version (doi_version) not provided.")
         else:
             try:
                 doi_version = datetime.strptime(str(cfg["doi_version"]), "%Y%m%d").date()
+            except Exception as e:
+                errors.append(e.__str__())
+
+        if not cfg.get("run_version"):
+            errors.append("Run version (run_version) not provided.")
+        else:
+            try:
+                run_version = datetime.strptime(str(cfg["run_version"]), "%Y%m%d").date()
             except Exception as e:
                 errors.append(e.__str__())
 
@@ -66,10 +142,23 @@ class Context:
             raise RuntimeError(f"Encountered error(s) in config construction: {msg}")
 
         return Context(
-            dryrun=cfg.get("dryrun"),
-            keyfile=cfg.get("keyfile"),
-            output_dir=cfg.get("output_dir"),
+            project=cfg["project"],
+            dryrun=cfg["dryrun"],
+            keyfile=cfg["keyfile"],
+            output_dir=cfg["output_dir"],
+            run_version=run_version,
             doi_version=doi_version,
+        )
+
+    def to_dict(self) -> dict:
+        return dict(
+            dryrun=self.dryrun,
+            project=self.project,
+            keyfile=self.keyfile,
+            output_dir=self.output_dir,
+            run_version=self.run_version,
+            doi_version=self.doi_version,
+            workflow_hash=self.workflow_hash,
         )
 
 

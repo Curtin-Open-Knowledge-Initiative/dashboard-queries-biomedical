@@ -8,7 +8,7 @@ from google.cloud.bigquery.table import RowIterator
 def gcp_set_auth(keyfile: str) -> None:
     """Sets the Google Cloud Project authentication environment variable using the provided keyfile"""
     if not os.path.exists(keyfile):
-        raise (f"Provided keyfile does not exist: {keyfile}")
+        raise RuntimeError(f"Provided keyfile does not exist: {keyfile}")
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = keyfile
 
 
