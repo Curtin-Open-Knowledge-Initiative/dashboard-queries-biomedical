@@ -1,20 +1,11 @@
 -----------------------------------------------------------------------
 -- Biomedical Open Science Dashboard Processing - Process ORCID data
--- Run this FOUTH
+-- RUN THIS FOURTH
 -- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-{% if project is not defined %}{% raise "Error: 'project' is required!" %}{% endif %}
-{% if workflow_hash is not defined %}{% raise "Error: 'workflow_hash' is required!" %}{% endif %}
-{% if doi_version is not defined %}{% raise "Error: 'doi_version' is required!" %}{% endif %}
-{% if institution_id is not defined %}{% raise "Error: 'institution_id' is required!" %}{% endif %}
-{% if run_version is not defined %}{% raise "Error: 'run_version' is required!" %}{% endif %}
-{% if orcid_table_name is not defined %}{% raise "Error: 'orcid_table_name' is required!" %}{% endif %}
-
-
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi{{ doi_version }}';
-DECLARE var_SQL_year_cutoff INT64 DEFAULT {{ year_cutoff|default(1) }}; # e.g. 2000
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}'; 
 DECLARE var_ORCID_Table_name STRING DEFAULT '{{ orcid_table_name }}';
 
@@ -84,9 +75,8 @@ FROM `{{ project }}.{{ institution_id }}_from_partners.{{ orcid_table_name }}`
   orcid_data.*,
 
   ----- 3.2 UTILITY - add variables for the script version and data files
-  var_SQL_script_name,
+  var_SQL_workflow_version,
   var_ORCID_Table_name,
-  var_output_table,
   var_institution_id
 
   FROM orcid_data

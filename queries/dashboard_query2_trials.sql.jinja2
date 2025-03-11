@@ -5,15 +5,6 @@
 -----------------------------------------------------------------------
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-{% if project is not defined %}{% raise "Error: 'project' is required!" %}{% endif %}
-{% if workflow_hash is not defined %}{% raise "Error: 'workflow_hash' is required!" %}{% endif %}
-{% if doi_version is not defined %}{% raise "Error: 'doi_version' is required!" %}{% endif %}
-{% if institution_id is not defined %}{% raise "Error: 'institution_id' is required!" %}{% endif %}
-{% if run_version is not defined %}{% raise "Error: 'run_version' is required!" %}{% endif %}
-{% if trials_aact_table_name is not defined %}{% raise "Error: 'trials_aact_table_name' is required!" %}{% endif %}
-{% if dois_table_name is not defined %}{% raise "Error: 'dois_table_name' is required!" %}{% endif %}
-
-
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_data_trials STRING DEFAULT '{{ trials_aact_table_name }}';
 DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
@@ -252,7 +243,6 @@ SELECT
   var_SQL_workflow_version,
   var_data_trials,
   var_data_dois,
-  var_output_table,
   var_institution_id,
 
   FROM d_5b_trials_data_joined_to_anysource as p10

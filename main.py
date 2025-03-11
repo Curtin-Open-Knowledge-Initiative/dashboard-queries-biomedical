@@ -1,26 +1,38 @@
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+import os
+import traceback
 import yaml
 
-from biomed.gcp import gcp_set_auth, bq_run_query
+from biomed.config import Config
+from biomed.gcp import gcp_set_auth
 from biomed.partner_workflow import partner_workflow
-from biomed.config import Config, Partner, Context
 
 
 def workflow(config: Config):
+    """Does all of the things."""
+
     gcp_set_auth(config.context.keyfile)
-    query = """
-    SELECT name, SUM(number) as total_people
-    FROM `bigquery-public-data.usa_names.usa_1910_2013`
-    WHERE state = 'TX'
-    GROUP BY name, state
-    ORDER BY total_people DESC
-    LIMIT 20
-"""
-    for partner in config.partners:
-        partner_workflow(partner, config.context)
-    #     rows = bq_run_query(query=query)
-    # for row in rows:
-    #     print(row)
+    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+        futures = {}
+        for partner in config.partners:
+            futures[partner.institution_id] = executor.submit(partner_workflow, partner, config.context)
+
+    errors = {}
+    for id, f in futures.items():
+        try:
+            f.result()
+        except Exception:
+            errors[id] = traceback.format_exc()
+
+    if errors:
+        msg = ""
+        for id, err in errors.items():
+            msg += f"\n---------------------------- {id} ----------------------------\n"
+            msg += err
+        print("\n")
+        print("-----------------------------------------------------------------")
+        raise RuntimeError(f"The following errors occurred during the workflow: \n\t{msg}")
 
 
 def main():

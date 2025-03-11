@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, date
-from typing import List, Optional, Union
+from typing import List, Union
 
 from git import Repo
 
@@ -33,6 +33,34 @@ class Partner:
         self.oddpub_table_name = oddpub_table_name
         self.year_cutoff = year_cutoff
 
+    @property
+    def output_dataset(self):
+        return f"{self.institution_id}_data"
+
+    @property
+    def latest_dataset(self):
+        return f"{self.institution_id}_data_latest"
+
+    @property
+    def static_dataset(self):
+        return f"{self.institution_id}_from_partners"
+
+    @property
+    def alltrials_query_fname(self):
+        return f"{self.institution_id}_alltrials.sql"
+
+    @property
+    def trials_query_fname(self):
+        return f"{self.institution_id}_trials.sql"
+
+    @property
+    def pubs_query_fname(self):
+        return f"{self.institution_id}_pubs.sql"
+
+    @property
+    def orcid_query_fname(self):
+        return f"{self.institution_id}_orcid.sql"
+
     @staticmethod
     def from_dict(partner: dict):
         """Constructs a partner object from a dictionary. Checks that it is valid"""
@@ -49,8 +77,8 @@ class Partner:
             errors.append("Partner construction missing attribute: trials_aact_table_name")
         if not partner.get("oddpub_table_name"):
             errors.append("Partner construction missing attribute: oddpub_table_name")
-        if not partner.get("year_cutoff"):
-            errors.append("Partner construction missing attribute: year_cutoff")
+        # if not partner.get("year_cutoff"):
+        #     errors.append("Partner construction missing attribute: year_cutoff")
 
         if errors:
             msg: str = "\n".join(errors) + f"\nSupplied dict: {partner}"
@@ -61,7 +89,7 @@ class Partner:
             dois_table_name=partner["dois_table_name"],
             trials_aact_table_name=partner["trials_aact_table_name"],
             oddpub_table_name=partner["oddpub_table_name"],
-            year_cutoff=partner["year_cutoff"],
+            year_cutoff=partner.get("year_cutoff"),
         )
 
     def to_dict(self) -> dict:

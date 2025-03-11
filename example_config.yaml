@@ -1,9 +1,19 @@
 context:
   dryrun: True
-  project: my-dashboards-project
+  project: keegan-dev
   keyfile: .keyfile.json
-  output_dir: .output
-  doi_version: 20201231
+  output_dir: .out
+  run_version: 20250310
+  doi_version: 20240512
 partners:
-  - name: my-partner
-  - name: my-other-partner
+  - institution_id: my-partner
+    dois_table_name: dois_20230217
+    oddpub_table_name: oddpub_20230217
+    orcid_table_name: orcid_20230906
+    trials_aact_table_name: trials_aact_20250221
+    year_cutoff: 1 # Optional - can be excluded
+  - institution_id: my-other-partner
+    dois_table_name: dois_20230101
+    oddpub_table_name: oddpub_20230101
+    orcid_table_name: orcid_20230101
+    trials_aact_table_name: trials_aact_20250101

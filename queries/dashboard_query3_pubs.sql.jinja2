@@ -4,15 +4,6 @@
 -- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
-{% if project is not defined %}{% raise "Error: 'project' is required!" %}{% endif %}
-{% if workflow_hash is not defined %}{% raise "Error: 'workflow_hash' is required!" %}{% endif %}
-{% if doi_version is not defined %}{% raise "Error: 'doi_version' is required!" %}{% endif %}
-{% if institution_id is not defined %}{% raise "Error: 'institution_id' is required!" %}{% endif %}
-{% if run_version is not defined %}{% raise "Error: 'run_version' is required!" %}{% endif %}
-{% if oddpub_table_name is not defined %}{% raise "Error: 'oddpub_table_name' is required!" %}{% endif %}
-{% if dois_table_name is not defined %}{% raise "Error: 'dois_table_name' is required!" %}{% endif %}
-
-
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
 DECLARE var_data_oddpub STRING DEFAULT '{{ oddpub_table_name }}';
@@ -305,7 +296,6 @@ SELECT
   var_SQL_workflow_version,
   var_data_dois,
   var_data_oddpub,
-  var_output_table,
   var_institution_id
 
   FROM main_select
