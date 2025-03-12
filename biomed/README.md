@@ -30,7 +30,7 @@ There is no reason these two projects can't be the same if you wish.
 
 
 ### Config
-The workflow requires a config file to be setup. The config file describes all of the workflow run parameters. See the `example_config.yaml` file for more infromation.
+The workflow requires a config file to be setup. The config file describes all of the workflow run parameters. See the [example config file](/example_config.yaml) for more infromation.
 
 Create your own config file with your required configuration.
 
@@ -48,12 +48,11 @@ pip install .
 ````
 
 ## Running 
-Once the wokflow has been installed, you can run it with 
+Once the wokflow has been installed, you can run it from the repository root with
 ```bash
 biomed MY_CONFIG
 ```
-
-Where MY_CONFIG is your config file
+Where MY_CONFIG is your config file.
 
 ## Features
 - Dryrun: Can be run in dryrun mode, which will simply generate the queries without running them. Useful for development/troubleshooting.
