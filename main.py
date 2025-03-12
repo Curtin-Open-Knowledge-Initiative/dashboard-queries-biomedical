@@ -12,7 +12,10 @@ from biomed.partner_workflow import partner_workflow
 def workflow(config: Config):
     """Does all of the things."""
 
-    gcp_set_auth(config.context.keyfile)
+    if config.context.dryrun == False:
+        gcp_set_auth(config.context.keyfile)
+        print("Set authentication with GCP")
+
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         futures = {}
         for partner in config.partners:
