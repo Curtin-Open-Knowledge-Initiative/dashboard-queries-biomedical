@@ -10,7 +10,7 @@
 
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_AcademicObservatory_doi STRING DEFAULT 'doi{{ doi_version }}';
-DECLARE var_SQL_year_cutoff INT64 DEFAULT {{ year_cutoff|default(1) }}; # e.g. 2000
+DECLARE var_SQL_year_cutoff INT64 DEFAULT {{ year_cutoff }}; # e.g. 2000
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}'; 
 
 -----------------------------------------------------------------------
@@ -37,7 +37,7 @@ CREATE TEMP FUNCTION
 # 0. Setup table 
 # --------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `{{ project }}.{{ institution_id }}.alltrials{{ run_version }}`
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.alltrials{{ run_version }}`
 AS (
 
 -----------------------------------------------------------------------

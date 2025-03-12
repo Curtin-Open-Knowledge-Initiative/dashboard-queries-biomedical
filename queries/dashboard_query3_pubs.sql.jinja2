@@ -14,7 +14,7 @@ DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `{{ project }}.{{ institution_id }}.pubs{{ run_version }}`
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.pubs{{ run_version }}`
  AS (
 
 -----------------------------------------------------------------------

@@ -40,7 +40,7 @@ AS (
 -- 2. Setup table 
 -----------------------------------------------------------------------
 ####---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `{{ project }}.{{ institution_id }}.trials{{ run_version }}`
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.trials{{ run_version }}`
  AS (
 
 -----------------------------------------------------------------------

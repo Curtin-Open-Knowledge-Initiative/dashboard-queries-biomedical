@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, date
+from datetime import datetime
 from typing import List, Union
 
 from git import Repo
@@ -61,6 +61,18 @@ class Partner:
     def orcid_query_fname(self):
         return f"{self.institution_id}_orcid.sql"
 
+    @property
+    def trials_latest_fname(self):
+        return f"{self.institution_id}_trials_latest.sql"
+
+    @property
+    def pubs_latest_fname(self):
+        return f"{self.institution_id}_pubs_latest.sql"
+
+    @property
+    def orcid_latest_fname(self):
+        return f"{self.institution_id}_orcid_latest.sql"
+
     @staticmethod
     def from_dict(partner: dict):
         """Constructs a partner object from a dictionary. Checks that it is valid"""
@@ -77,8 +89,6 @@ class Partner:
             errors.append("Partner construction missing attribute: trials_aact_table_name")
         if not partner.get("oddpub_table_name"):
             errors.append("Partner construction missing attribute: oddpub_table_name")
-        # if not partner.get("year_cutoff"):
-        #     errors.append("Partner construction missing attribute: year_cutoff")
 
         if errors:
             msg: str = "\n".join(errors) + f"\nSupplied dict: {partner}"
@@ -89,7 +99,7 @@ class Partner:
             dois_table_name=partner["dois_table_name"],
             trials_aact_table_name=partner["trials_aact_table_name"],
             oddpub_table_name=partner["oddpub_table_name"],
-            year_cutoff=partner.get("year_cutoff"),
+            year_cutoff=partner.get("year_cutoff", 1),  # Default to 1 if not provided (all years)
         )
 
     def to_dict(self) -> dict:
@@ -115,7 +125,7 @@ class Context:
     """
 
     def __init__(
-        self, *, dryrun: bool, project: str, keyfile: str, output_dir: str, run_version: date, doi_version: date
+        self, *, dryrun: bool, project: str, keyfile: str, output_dir: str, run_version: str, doi_version: str
     ):
         self.dryrun = dryrun
         self.project = project
@@ -145,23 +155,22 @@ class Context:
 
         if not cfg.get("project"):
             errors.append("No GCP project (project) provided.")
-
         if not cfg.get("output_dir"):
             errors.append("No output directory (output_dir) provided.")
-
-        if not cfg.get("doi_version"):
-            errors.append("DOI table version (doi_version) not provided.")
-        else:
-            try:
-                doi_version = datetime.strptime(str(cfg["doi_version"]), "%Y%m%d").date()
-            except Exception as e:
-                errors.append(e.__str__())
 
         if not cfg.get("run_version"):
             errors.append("Run version (run_version) not provided.")
         else:
             try:
-                run_version = datetime.strptime(str(cfg["run_version"]), "%Y%m%d").date()
+                datetime.strptime(str(cfg["run_version"]), "%Y%m%d").date()
+            except Exception as e:
+                errors.append(e.__str__())
+
+        if not cfg.get("doi_version"):
+            errors.append("DOI table version (doi_version) not provided.")
+        else:
+            try:
+                datetime.strptime(str(cfg["doi_version"]), "%Y%m%d").date()
             except Exception as e:
                 errors.append(e.__str__())
 
@@ -172,10 +181,10 @@ class Context:
         return Context(
             project=cfg["project"],
             dryrun=cfg["dryrun"],
-            keyfile=cfg["keyfile"],
+            keyfile=cfg.get("keyfile"),
             output_dir=cfg["output_dir"],
-            run_version=run_version,
-            doi_version=doi_version,
+            run_version=cfg["run_version"],
+            doi_version=cfg["doi_version"],
         )
 
     def to_dict(self) -> dict:

@@ -24,7 +24,7 @@ AS (CAST(NULLIF(CAST(x AS STRING), "NA") AS BOOLEAN));
 -- 0. Setup table 
 -----------------------------------------------------------------------
 ###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE TABLE `{{ project }}.{{ institution_id }}.orcid{{ run_version }}`
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.orcid{{ run_version }}`
  AS (
 
 -----------------------------------------------------------------------
