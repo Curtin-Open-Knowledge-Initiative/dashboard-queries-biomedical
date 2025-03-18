@@ -13,7 +13,7 @@ The workflow is written in Python3, specifically Python 3.11. So it needs to be 
 
 It is recommended to create a new virtual environment for the biomed workflow with the following command:
 ```bash
-python3 -m venv venv_biomed && source venv_biomed/bin/activate
+python3.11 -m venv venv_biomed && source venv_biomed/bin/activate
 ```
 This will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
 
