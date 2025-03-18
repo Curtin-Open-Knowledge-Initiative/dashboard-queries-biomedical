@@ -8,8 +8,44 @@ An automated workflow that does the following for each configured partner:
 - Checks that the latest views are up to date.
 
 ## Quickstart Setup
-### GCP Setup
+### Installation
+The workflow is written in Python3, specifically Python 3.11. So it needs to be installed to run.
+
+It is recommended to create a new virtual environment for the biomed workflow with the following command:
+```bash
+python3 -m venv venv_biomed && source venv_biomed/bin/activate
+```
+This will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
+
+Install with pip
+```bash
+pip install .
+````
+
+### GCP User Setup
 Running the workflow requires an authenticated Google Cloud service account with the appropriate permissions.
+
+Your user account will require the following roles in the Biomedical Project:
+- Bigquery Admin
+- Create Service Accounts
+- Project IAM Admin
+- Role Administrator
+- Service Account Key Admin
+
+And also the following roles in the Academic-Observatory Project:
+- Project IAM Admin
+- Role Administrator
+
+If it is not desirable to grant this level of access to the user for the Academic-Observatory, a privileged user can instead run the following:
+```bash
+gcloud projects add-iam-policy-binding academic-observatory \
+    --member=serviceAccount:$sa_full_name \
+    --role=projects/academic-observatory/roles/BiomedWorkflow \
+```
+Where `$sa_full_name` is the name of the service account that the user creates in the gcp_setup.sh step. 
+This grants the service account the necessary access to the Academic Observatory in order to run the Biomedical Workflow.
+
+### GCP Service Account Setup
 
 For ease of setup, there is a setup file `gcp_setup.sh` that will do all of the hard work.
 
@@ -28,25 +64,18 @@ bash gcp_setup.sh [MY_PROJECT] [BIOMED_PROJECT]
 ```
 There is no reason these two projects can't be the same if you wish.
 
+If you do not have the necessary privileges for the Academic Observatory (as described in the previous step), add the `--skip-ao` flag.
+
+The setup script has a few more useful run options. You can view them by running:
+```bash
+bash gcp_setup.sh --help
+```
 
 ### Config
 The workflow requires a config file to be setup. The config file describes all of the workflow run parameters. See the [example config file](/example_config.yaml) for more infromation.
 
 Create your own config file with your required configuration.
 
-### Installation
-The workflow is written in Python3, so it needs to be installed to run.
-
-It is recommended to create a new virtual environment for the biomed workflow with the following command:
-```bash
-python3 -m venv venv_biomed && source venv_biomed/bin/activate
-```
-This will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
-
-Install with pip
-```bash
-pip install .
-````
 
 ## Running 
 Once the wokflow has been installed, you can run it from the repository root with
