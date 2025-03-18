@@ -37,10 +37,11 @@ Create your own config file with your required configuration.
 ### Installation
 The workflow is written in Python3, so it needs to be installed to run.
 
-It is recommended to create a new virtual environment for the biomed workflow.
+It is recommended to create a new virtual environment for the biomed workflow with the following command:
 ```bash
 python3 -m venv venv_biomed && source venv_biomed/bin/activate
 ```
+This will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
 
 Install with pip
 ```bash

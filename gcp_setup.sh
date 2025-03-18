@@ -30,13 +30,13 @@ else
 fi
 
 # Create service account if it doesn't exist
-if gcloud iam service-accounts list --filter="email:${sa_full_name}" --format="value(email)"; then
-    echo "Service account ${sa_full_name} already exists. Will not recreate."
-else
+if [[ -z $(gcloud iam service-accounts list --filter="email:${sa_full_name}" --format="value(email)") ]]; then
     gcloud iam service-accounts create biomed --project=${biomed_project} \
         --description="Service account for Biomed workflows" \
         --display-name="biomed"
     echo "Service account ${sa_full_name} created"
+else
+    echo "Service account ${sa_full_name} already exists. Will not recreate."
 fi
 
 
