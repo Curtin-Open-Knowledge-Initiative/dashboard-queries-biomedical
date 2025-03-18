@@ -2,6 +2,7 @@
 [project]
 name = "biomedical-dashboards"
 version = "0.1.0"
+requires-python=">=3.11, <3.12"
 description = ""
 authors = [{ name = "Keegan", email = "keegan.smith@curtin.edu.au" }]
 readme = "README.md"
