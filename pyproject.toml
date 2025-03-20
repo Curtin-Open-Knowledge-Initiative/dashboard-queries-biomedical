@@ -21,6 +21,6 @@ build-backend = "setuptools.build_meta"
 packages = ["biomed", "queries"]
 
 [project.scripts]
-biomed = "main:main"
+biomed = "biomed.main:main"
 
 
