@@ -57,10 +57,10 @@ Once gcloud is installed, authenticate with
 gcloud auth login
 ```
 
-Then run the setup command, providing your working project and the project that will be written to.
+Then run the setup command, providing your working project (AUTH_PROJECT - the project you use to authenticate with) and the project that will be written to (BIOMED_PROJECT).
 
 ```bash
-bash gcp_setup.sh [MY_PROJECT] [BIOMED_PROJECT]
+bash gcp_setup.sh [AUTH_PROJECT] [BIOMED_PROJECT]
 ```
 There is no reason these two projects can't be the same if you wish.
 

@@ -3,13 +3,13 @@
 # Function to display usage
 usage() {
     cat <<EOF
-Usage: $(basename "$0") MY_PROJECT BIOMED_PROJECT [OPTIONS]
+Usage: $(basename "$0") AUTH_PROJECT BIOMED_PROJECT [OPTIONS]
 
 Creates a service account and gives it the necessary permissions to create tables in the given project.
 Creates a keyfile (.keyfile.json by default) for accessing the service account.
 
 Commands:
-    MY_PROJECT                  The name of the project that the user will invoke
+    AUTH_PROJECT                The name of the project that the user will invoke
     BIOMED_PROJECT              The name of the biomedical project that the tables will be written to
 
 Options:
@@ -30,11 +30,11 @@ if [ "$#" -le 1 ]; then
 fi
 
 # Assign arguments to variables
-MY_PROJECT=$1
+AUTH_PROJECT=$1
 shift
 BIOMED_PROJECT=$1
 shift
-SA_FULL_NAME="biomed@${MY_PROJECT}.iam.gserviceaccount.com"
+SA_FULL_NAME="biomed@${AUTH_PROJECT}.iam.gserviceaccount.com"
 SKIP_AO=false
 KEYFILE=".keyfile.json"
 OVERWRITE=false
@@ -64,8 +64,8 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-echo "Institution Biomed project: $MY_PROJECT"
 echo "Service account name: $SA_FULL_NAME"
+echo "Institution Biomed project: $BIOMED_PROJECT"
 
 # Check if the user is logged in
 if gcloud auth list --filter="status:ACTIVE" --format="value(account)" | grep -q '@'; then
