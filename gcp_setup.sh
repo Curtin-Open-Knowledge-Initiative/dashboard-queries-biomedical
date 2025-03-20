@@ -25,7 +25,7 @@ EOF
 }
 
 # Check if the number of arguments is at least 2
-if [ "$#" -le 2 ]; then
+if [ "$#" -le 1 ]; then
     usage
 fi
 

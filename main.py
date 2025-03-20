@@ -52,3 +52,7 @@ def main():
         yaml_cfg = yaml.safe_load(f)
     config: Config = Config.from_dict(yaml_cfg)
     workflow(config)
+
+
+if __name__ == "__main__":
+    main()
