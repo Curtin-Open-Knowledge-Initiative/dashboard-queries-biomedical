@@ -84,6 +84,11 @@ biomed MY_CONFIG
 ```
 Where MY_CONFIG is your config file.
 
+Depending on your operating system, this may produce an import issue with the `main` module. If this happens, the workflow can instead be run with:
+```bash
+python3 main.py MY_CONFIG
+```
+
 ## Features
 - Dryrun: Can be run in dryrun mode, which will simply generate the queries without running them. Useful for development/troubleshooting.
 - Concurrency: Most of the runtime is waiting for queries to finish, so partner workflows run concurrently. This means performance is not greatly inhibited by scaling.
