@@ -1,0 +1,19 @@
+context:
+  dryrun: True # If true, will not interact with GCP resources
+  project: my-project # The name of the output project
+  keyfile: .keyfile.json # The location of the service account keyfile that will be used to authenticate. Can be left as-is
+  output_dir: .out # The directory to write outputs to. Can be left as-is
+  run_version: 20250310 # The date identitifer. Output tables will be sharded with this date
+  doi_version: 20240512 # The doi table version to use
+partners:
+  - institution_id: my-partner # Name of the partner. Will determine the name of the output dataset. Static dataset (_from_partners data) must be formattetd with this prefix
+    dois_table_name: dois_20230217 # The static dois partner table name
+    oddpub_table_name: oddpub_20230217 # The static oddpub partner table name
+    orcid_table_name: orcid_20230906 # The static orcid partner table name
+    trials_aact_table_name: trials_aact_20250221 # The static trials_aact table name
+    year_cutoff: 2020 # Cutoff year for publications. Optional - can be excluded (defaults to 1)
+  - institution_id: my-other-partner # Define any number of other partners.
+    dois_table_name: dois_20230101
+    oddpub_table_name: oddpub_20230101
+    orcid_table_name: orcid_20230101
+    trials_aact_table_name: trials_aact_20250101
