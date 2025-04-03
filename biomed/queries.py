@@ -60,24 +60,6 @@ def query_pubs(**kwargs) -> str:
     return query
 
 
-def query_orcid(**kwargs) -> str:
-    """Creates the orcid query from its template
-
-    The template expects the following as kwargs:
-    :param run_version: The version as a string (YYYYMM) for sharding
-    :param doi_version: The doi table version as a string (YYYYMM) for sharding
-    :param institution_id: The internal identifier of the institution
-    :workflow_hash: A string identifier for the version of the script used to make the query
-    :param orcid_table_name: The name of the static partner orcid table
-    :return: The templated query
-    """
-    with resources.open_text("queries", "dashboard_query4_orcid.sql.jinja2") as f:
-        query_template = f.read()
-
-    query = Environment(loader=BaseLoader(), undefined=StrictUndefined).from_string(query_template).render(**kwargs)
-    return query
-
-
 def query_latest_view(**kwargs) -> str:
     """Creates a latest table view
 
