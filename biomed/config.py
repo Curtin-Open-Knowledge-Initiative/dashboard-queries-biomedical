@@ -9,7 +9,6 @@ class Partner:
     """A single partner's configuration for the workflow
 
     :param institution_id: The internal ID given to this partner.
-    :param orcid_table_name: The name of the partner input orcid table.
     :param trials_aact_table_name: The name of the partner input trials aact table.
     :param dois_table_name: The name of the partner input doi table.
     :param oddpub_table_name: The name of the partner input oddpub table.
@@ -20,14 +19,12 @@ class Partner:
         self,
         *,
         institution_id: str,
-        orcid_table_name: str,
         dois_table_name: str,
         trials_aact_table_name: str,
         oddpub_table_name: str,
         year_cutoff: Union[int, str],
     ):
         self.institution_id = institution_id
-        self.orcid_table_name = orcid_table_name
         self.dois_table_name = dois_table_name
         self.trials_aact_table_name = trials_aact_table_name
         self.oddpub_table_name = oddpub_table_name
@@ -58,20 +55,12 @@ class Partner:
         return f"{self.institution_id}_pubs.sql"
 
     @property
-    def orcid_query_fname(self):
-        return f"{self.institution_id}_orcid.sql"
-
-    @property
     def trials_latest_fname(self):
         return f"{self.institution_id}_trials_latest.sql"
 
     @property
     def pubs_latest_fname(self):
         return f"{self.institution_id}_pubs_latest.sql"
-
-    @property
-    def orcid_latest_fname(self):
-        return f"{self.institution_id}_orcid_latest.sql"
 
     @staticmethod
     def from_dict(partner: dict):
@@ -81,8 +70,6 @@ class Partner:
 
         if not partner.get("institution_id"):
             errors.append("Partner construction missing attribute: institution_id")
-        if not partner.get("orcid_table_name"):
-            errors.append("Partner construction missing attribute: orcid_table_name")
         if not partner.get("dois_table_name"):
             errors.append("Partner construction missing attribute: dois_table_name")
         if not partner.get("trials_aact_table_name"):
@@ -95,7 +82,6 @@ class Partner:
             raise RuntimeError(f"Encountered error(s) in partner construction: {msg}")
         return Partner(
             institution_id=partner["institution_id"],
-            orcid_table_name=partner["orcid_table_name"],
             dois_table_name=partner["dois_table_name"],
             trials_aact_table_name=partner["trials_aact_table_name"],
             oddpub_table_name=partner["oddpub_table_name"],
@@ -105,7 +91,6 @@ class Partner:
     def to_dict(self) -> dict:
         return dict(
             institution_id=self.institution_id,
-            orcid_table_name=self.orcid_table_name,
             dois_table_name=self.dois_table_name,
             trials_aact_table_name=self.trials_aact_table_name,
             oddpub_table_name=self.oddpub_table_name,
