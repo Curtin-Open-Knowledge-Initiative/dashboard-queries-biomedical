@@ -17,7 +17,7 @@ python3.11 -m venv venv_biomed && source venv_biomed/bin/activate
 ```
 This will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
 
-Install with pip
+Install with pip from the repository's root directory (where `pyproject.toml` is located):
 ```bash
 pip install .
 ````
@@ -88,6 +88,7 @@ Depending on your operating system, this may produce an import issue with the `m
 ```bash
 python3 main.py MY_CONFIG
 ```
+Or you can run it via Docker... see below.
 
 ## Containerisation
 The package can also be built and run as a container using Docker. 
@@ -100,7 +101,11 @@ docker build -t biomed:latest .
 You should now have a `biomed:latest` image. To run the image, we need to mount the required files (config file and keyfile) to the container and run the biomed command:
 
 ```bash
-docker run -v ./config.yaml:/app/config.yaml -v ./.keyfile.json:/app/.keyfile.json biomed:latest biomed /app/config.yaml
+docker run \
+    -v ./config.yaml:/app/config.yaml \
+    -v ./.keyfile.json:/app/.keyfile.json \
+    --entrypoint biomed \
+    biomed:latest /app/config.yaml
 ```
 ## Features
 - Dryrun: Can be run in dryrun mode, which will simply generate the queries without running them. Useful for development/troubleshooting.
