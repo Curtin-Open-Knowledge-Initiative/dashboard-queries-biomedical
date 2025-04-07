@@ -15,7 +15,9 @@ def query_alltrials(**kwargs) -> str:
     :return: The templated query
     """
 
-    with resources.open_text("queries", "dashboard_query1_alltrials.sql.jinja2") as f:
+    query_file = resources.files("biomedical_dashboards.queries").joinpath("dashboard_query1_alltrials.sql.jinja2")
+    print(query_file)
+    with resources.open_text("biomedical_dashboards.queries", "dashboard_query1_alltrials.sql.jinja2") as f:
         query_template = f.read()
 
     query = Environment(loader=BaseLoader(), undefined=StrictUndefined).from_string(query_template).render(**kwargs)
@@ -34,7 +36,7 @@ def query_trials(**kwargs) -> str:
     :param dois_table_name: The name of the static partner dois table
     :return: The templated query
     """
-    with resources.open_text("queries", "dashboard_query2_trials.sql.jinja2") as f:
+    with resources.open_text("biomedical_dashboards.queries", "dashboard_query2_trials.sql.jinja2") as f:
         query_template = f.read()
 
     query = Environment(loader=BaseLoader(), undefined=StrictUndefined).from_string(query_template).render(**kwargs)
@@ -53,7 +55,7 @@ def query_pubs(**kwargs) -> str:
     :param oddpub_table_name: The name of the static partner oddpub table
     :return: The templated query
     """
-    with resources.open_text("queries", "dashboard_query3_pubs.sql.jinja2") as f:
+    with resources.open_text("biomedical_dashboards.queries", "dashboard_query3_pubs.sql.jinja2") as f:
         query_template = f.read()
 
     query = Environment(loader=BaseLoader(), undefined=StrictUndefined).from_string(query_template).render(**kwargs)
@@ -69,7 +71,7 @@ def query_latest_view(**kwargs) -> str:
     :param table_name: The name of the table (without shard) to create a latest view of
     :return: The templated query
     """
-    with resources.open_text("queries", "dashboard_view_latest.sql.jinja2") as f:
+    with resources.open_text("biomedical_dashboards.queries", "dashboard_view_latest.sql.jinja2") as f:
         query_template = f.read()
 
     query = Environment(loader=BaseLoader(), undefined=StrictUndefined).from_string(query_template).render(**kwargs)

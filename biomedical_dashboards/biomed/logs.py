@@ -1,4 +1,4 @@
-from biomed.config import Partner
+from biomedical_dashboards.biomed.config import Partner
 
 
 def bioprint(partner: Partner, log: str):

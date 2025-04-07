@@ -4,8 +4,8 @@ import os
 
 import google
 
-from biomed.config import Partner, Context
-from biomed.gcp import (
+from biomedical_dashboards.biomed.config import Partner, Context
+from biomedical_dashboards.biomed.gcp import (
     bq_check_table_exists,
     bq_create_dataset,
     bq_run_query,
@@ -13,8 +13,8 @@ from biomed.gcp import (
     bq_delete_table,
     bq_create_view,
 )
-from biomed.logs import bioprint
-from biomed.queries import query_alltrials, query_trials, query_pubs, query_latest_view
+from biomedical_dashboards.biomed.logs import bioprint
+from biomedical_dashboards.biomed.queries import query_alltrials, query_trials, query_pubs, query_latest_view
 
 
 def partner_workflow(partner: Partner, context: Context) -> None:
