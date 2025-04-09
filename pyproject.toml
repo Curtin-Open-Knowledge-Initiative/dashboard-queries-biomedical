@@ -1,4 +1,3 @@
-
 [project]
 name = "biomedical-dashboards"
 version = "0.1.0"
@@ -18,9 +17,17 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["biomed", "queries"]
+include-package-data = true
+# packages = ["biomedical_dashboards"]
+
+[tool.setuptools.package-data]
+"biomedical_dashboards.queries" = ["*.sql", "*.sql.jinja2"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["biomedical_dashboards", "biomedical_dashboards.*"]
 
 [project.scripts]
-biomed = "biomed.main:main"
+biomed = "biomedical_dashboards.biomed.main:main"
 
 

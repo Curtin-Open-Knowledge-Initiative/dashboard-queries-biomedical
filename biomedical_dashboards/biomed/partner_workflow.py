@@ -4,8 +4,8 @@ import os
 
 import google
 
-from biomed.config import Partner, Context
-from biomed.gcp import (
+from biomedical_dashboards.biomed.config import Partner, Context
+from biomedical_dashboards.biomed.gcp import (
     bq_check_table_exists,
     bq_create_dataset,
     bq_run_query,
@@ -13,8 +13,8 @@ from biomed.gcp import (
     bq_delete_table,
     bq_create_view,
 )
-from biomed.logs import bioprint
-from biomed.queries import query_alltrials, query_trials, query_pubs, query_orcid, query_latest_view
+from biomedical_dashboards.biomed.logs import bioprint
+from biomedical_dashboards.biomed.queries import query_alltrials, query_trials, query_pubs, query_latest_view
 
 
 def partner_workflow(partner: Partner, context: Context) -> None:
@@ -69,7 +69,6 @@ def check_tables_exist(partner: Partner, context: Context):
         partner.trials_aact_table_name,
         partner.dois_table_name,
         partner.oddpub_table_name,
-        partner.orcid_table_name,
     ]
     futures = []
     with ThreadPoolExecutor(max_workers=4) as executor:
@@ -92,7 +91,6 @@ def generate_queries(partner: Partner, context: Context) -> None:
     alltrials = query_alltrials(**partner.to_dict(), **context.to_dict())
     trials = query_trials(**partner.to_dict(), **context.to_dict())
     pubs = query_pubs(**partner.to_dict(), **context.to_dict())
-    orcid = query_orcid(**partner.to_dict(), **context.to_dict())
 
     # Save queries to file
     path = os.path.join(context.output_dir, partner.alltrials_query_fname)
@@ -104,9 +102,6 @@ def generate_queries(partner: Partner, context: Context) -> None:
     path = os.path.join(context.output_dir, partner.pubs_query_fname)
     save_query(pubs, path)
     bioprint(partner, f"Query written to file: {path}")
-    path = os.path.join(context.output_dir, partner.orcid_query_fname)
-    save_query(orcid, path)
-    bioprint(partner, f"Query written to file: {path}")
 
 
 def generate_views(partner: Partner, context: Context) -> None:
@@ -114,7 +109,6 @@ def generate_views(partner: Partner, context: Context) -> None:
     # Create views
     trials = query_latest_view(**partner.to_dict(), **context.to_dict(), table_name="trials")
     pubs = query_latest_view(**partner.to_dict(), **context.to_dict(), table_name="pubs")
-    orcid = query_latest_view(**partner.to_dict(), **context.to_dict(), table_name="orcid")
 
     # Save views to file
     path = os.path.join(context.output_dir, partner.trials_latest_fname)
@@ -122,9 +116,6 @@ def generate_views(partner: Partner, context: Context) -> None:
     bioprint(partner, f"Query written to file: {path}")
     path = os.path.join(context.output_dir, partner.pubs_latest_fname)
     save_query(pubs, path)
-    bioprint(partner, f"Query written to file: {path}")
-    path = os.path.join(context.output_dir, partner.orcid_latest_fname)
-    save_query(orcid, path)
     bioprint(partner, f"Query written to file: {path}")
 
 
@@ -134,7 +125,6 @@ def run_queries(partner: Partner, context: Context) -> None:
         partner.alltrials_query_fname,
         partner.trials_query_fname,
         partner.pubs_query_fname,
-        partner.orcid_query_fname,
     ]:
         path = os.path.join(context.output_dir, query_fname)
         with open(path) as f:
@@ -145,11 +135,7 @@ def run_queries(partner: Partner, context: Context) -> None:
 
 def create_views(partner: Partner, context: Context) -> None:
     """Creates the views if they do not already exist. Will update the views if they change."""
-    for view_name, view_fname in [
-        ("trials", partner.trials_latest_fname),
-        ("pubs", partner.pubs_latest_fname),
-        ("orcid", partner.orcid_latest_fname),
-    ]:
+    for view_name, view_fname in [("trials", partner.trials_latest_fname), ("pubs", partner.pubs_latest_fname)]:
         path = os.path.join(context.output_dir, view_fname)
         with open(path) as f:
             view_content = f.read()

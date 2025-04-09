@@ -4,9 +4,9 @@ import os
 import traceback
 import yaml
 
-from biomed.config import Config
-from biomed.gcp import gcp_set_auth
-from biomed.partner_workflow import partner_workflow
+from biomedical_dashboards.biomed.config import Config
+from biomedical_dashboards.biomed.gcp import gcp_set_auth
+from biomedical_dashboards.biomed.partner_workflow import partner_workflow
 
 
 def workflow(config: Config):
