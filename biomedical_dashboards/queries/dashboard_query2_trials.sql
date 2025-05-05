@@ -65,6 +65,7 @@ with d_3_contributed_trials_data AS (
   -----------------------------------------------------------------------
   # Not all columns in the input data are imported or used upstream
 
+  function_cast_date(registry_query_date) as registry_query_date,
   function_cast_date(registration_date) as registration_date,
   function_cast_datetime(start_date) as start_date,
   function_cast_datetime(completion_date) as completion_date,
@@ -76,8 +77,6 @@ with d_3_contributed_trials_data AS (
     ELSE "Registered after enrollment started"
     END as is_prospective_PRETTY,
  
-  function_cast_int(days_pcd_to_summary) as days_pcd_to_summary,
-
   # ==== Metric name on dashboard: # Trial results in a registry < 1 year post completion 
   lower(function_cast_string(summary_results_reporting)) as summary_results_reporting,
   CASE
