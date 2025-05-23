@@ -25,7 +25,6 @@ WITH
 enriched_doi_table AS (
   SELECT
     academic_observatory,
-    contributed_oddpub,
     unpaywall,
     clintrial_extract,
     CASE -- This could be done below but it makes the query below more readable to do it here
@@ -42,9 +41,6 @@ enriched_doi_table AS (
   ------ TABLES.
   ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
   FROM `academic-observatory.observatory.doi{{ doi_version }}` as academic_observatory
-    # the contributed Oddpub data  processed by the BOS project team
-    LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.{{ oddpub_table_name }}` as contributed_oddpub
-      ON LOWER(academic_observatory.doi) = LOWER(contributed_oddpub.doi)
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)
@@ -75,6 +71,11 @@ main_select AS (
   ------ 3.1 DOI TABLE: Misc METADATA
   lower(contributed_dois.doi) as doi,
   lower(enriched_doi_table.academic_observatory.doi) as doi_academicobservatory,
+  CASE 
+    WHEN  enriched_doi_table.academic_observatory.doi IS NULL then "No"
+    ELSE "Yes"
+    END as doi_in_academicobservatory_PRETTY,
+
   enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
   CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
@@ -99,6 +100,7 @@ main_select AS (
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.publisher_only THEN "Publisher Open Access"
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.both THEN "Both"
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_only THEN "Other Platform Open Access"
+    WHEN NULL THEN NULL
     ELSE "Closed Access"
   END as oa_coki_PRETTY,
 
@@ -111,7 +113,8 @@ main_select AS (
 
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.open THEN "Open Access"
-    ELSE "Closed Access"
+    WHEN NOT enriched_doi_table.academic_observatory.coki.oa.coki.open THEN "Closed Access"
+    ELSE "Unknown"
   END as oa_coki_open_PRETTY,
 
   # Calc extra fields to help in table creation on the dashboard
@@ -165,10 +168,14 @@ main_select AS (
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN "CC-BY-NC"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN "CC-BY-NC-SA"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN "CC-BY-NC-ND"
+    WHEN unpaywall.best_oa_location.license = 'publisher-specific-oa' THEN "Publisher-specific: OA license"
     WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN "ACS-specific: Author-choice/Editor's-choice Usage Agreement"
     WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN "Elsevier-specific: OA User License"
     WHEN unpaywall.best_oa_location.license = 'publisher-specific, author manuscript' THEN "Publisher-specific: Author Manuscript"
+    WHEN unpaywall.best_oa_location.license = 'other-oa' THEN "Other OA license"
     WHEN unpaywall.best_oa_location.license = 'implied-oa' THEN "Free to read (no identified license)"
+    WHEN unpaywall.best_oa_location.license = 'unspecified-oa' THEN "Unspecified OA license"
+    WHEN unpaywall.best_oa_location.license = 'mit' THEN "MIT License"
     WHEN unpaywall.best_oa_location.license is null THEN "No licence info"
     ELSE "No licence info"
   END as license_PRETTY,
@@ -182,10 +189,14 @@ main_select AS (
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN 6
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN 7
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN 8
-    WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN 9
-    WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN 10
-    WHEN unpaywall.best_oa_location.license = 'publisher-specific, author manuscript' THEN 11
-    WHEN unpaywall.best_oa_location.license = 'implied-oa' THEN 12
+    WHEN unpaywall.best_oa_location.license = 'publisher-specific-oa' THEN 9
+    WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN 10
+    WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN 11
+    WHEN unpaywall.best_oa_location.license = 'publisher-specific, author manuscript' THEN 12
+    WHEN unpaywall.best_oa_location.license = 'other-oa' THEN 13
+    WHEN unpaywall.best_oa_location.license = 'implied-oa' THEN 14
+    WHEN unpaywall.best_oa_location.license = 'unspecified-oa' THEN 15
+    WHEN unpaywall.best_oa_location.license = 'mit' THEN 16
     WHEN unpaywall.best_oa_location.license is null THEN 99
    ELSE 99 
   END as license_GRAPHORDER,
@@ -199,10 +210,14 @@ main_select AS (
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc' THEN "Non-commercial"
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-sa' THEN "Non-commercial" 
     WHEN unpaywall.best_oa_location.license = 'cc-by-nc-nd' THEN "No derivatives"
+    WHEN unpaywall.best_oa_location.license = 'publisher-specific-oa' THEN "Publisher-specific license"
     WHEN unpaywall.best_oa_location.license = 'acs-specific: authorchoice/editors choice usage agreement' THEN "Publisher-specific license"
     WHEN unpaywall.best_oa_location.license = 'elsevier-specific: oa user license' THEN "Publisher-specific license"
     WHEN unpaywall.best_oa_location.license = 'publisher-specific, author manuscript' THEN "Publisher-specific license"
+    WHEN unpaywall.best_oa_location.license = 'other-oa' THEN "Miscellaneous open license"
     WHEN unpaywall.best_oa_location.license = 'implied-oa' THEN "Free to read"
+    WHEN unpaywall.best_oa_location.license = 'unspecified-oa' THEN "Free to read (license unclear)"
+    WHEN unpaywall.best_oa_location.license = 'mit' THEN "Software/open-source license"
     WHEN unpaywall.best_oa_location.license is null THEN "No licence info"
     ELSE "No licence info" 
   END as license_GROUP,
@@ -215,6 +230,7 @@ main_select AS (
   
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN "Has publisher ORCID"
+    WHEN NULL THEN NULL
     ELSE "Does not have publisher ORCID"
   END AS has_publisher_orcid_PRETTY,
   
@@ -226,6 +242,7 @@ main_select AS (
 
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.authors) as authors where authors.identifier is not null) > 0 THEN "In an ORCID record"
+    WHEN NULL THEN NULL
     ELSE "Not in any ORCID record"
   END AS in_orcid_record_PRETTY,
 
@@ -237,6 +254,7 @@ main_select AS (
 
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.funders) as funders where funders.identifier is not null) > 0 THEN "Has funder acknowledgement"
+    WHEN NULL THEN NULL
     ELSE "No funder acknowledgement"
   END AS has_cr_funder_record_PRETTY,
 
@@ -244,20 +262,28 @@ main_select AS (
   enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint as has_preprint,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint THEN "Has a preprint"
+    WHEN NULL THEN NULL
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
   ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
-  enriched_doi_table.contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_data THEN "Contains reference to Open data"
+    WHEN contributed_oddpub.is_open_data IS NOT NULL THEN TRUE
+    ELSE FALSE
+  END AS has_oddpub_processing,
+
+  contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
+  
+  CASE
+    WHEN contributed_oddpub.is_open_data THEN "Contains reference to Open data"
     ELSE "No reference to Open data found"
   END AS has_open_data_oddpub_PRETTY,
 
   ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
-  enriched_doi_table.contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
+  contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
+ 
   CASE
-    WHEN enriched_doi_table.contributed_oddpub.is_open_code THEN "Contains reference to Open code"
+    WHEN contributed_oddpub.is_open_code THEN "Contains reference to Open code"
     ELSE "No reference to Open code found"
   END AS has_open_code_oddpub_PRETTY,
 
@@ -276,7 +302,11 @@ main_select AS (
  FROM
    contributed_dois
    LEFT JOIN enriched_doi_table
-   on LOWER(contributed_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
+     ON LOWER(contributed_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
+
+   # the contributed Oddpub data  processed by the BOS project team
+   LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.{{ oddpub_table_name }}` as contributed_oddpub
+     ON LOWER(contributed_dois.doi) = LOWER(contributed_oddpub.doi)
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
 
