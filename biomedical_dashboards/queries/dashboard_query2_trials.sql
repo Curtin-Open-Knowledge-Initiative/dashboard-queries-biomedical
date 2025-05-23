@@ -100,7 +100,7 @@ with d_3_contributed_trials_data AS (
     END as summary_results_reporting_GRAPHORDER,
 
    # ==== Metric name on dashboard: # Trials with linked references
-  function_cast_boolean(has_linked_reference) as has_linked_reference,# New field for Phase 2
+  function_cast_boolean(has_linked_reference) as has_linked_reference, # New field for Phase 2
   CASE
     WHEN function_cast_boolean(has_linked_reference) IS TRUE THEN "Trial has a linked reference"
     ELSE "Trial does not have a linked reference"
@@ -113,7 +113,7 @@ FROM `university-of-ottawa.p01_neuro_from_partners.p01_theneuro_trials_aact_2025
 
 -----------------------------------------------------------------------
 -- 4. This group of steps are to get a list of ANY publications that mention 
--- the imported Trials. his extract will be used in multiple script sections.
+-- the imported Trials. this extract will be used in multiple script sections.
 -----------------------------------------------------------------------
 -- Extract and flatten the DOIs (1) and Trial-IDs (MANY)
 -- associated with ANY SOURCE (ie from Crossref or Pubmed), reulting in a
