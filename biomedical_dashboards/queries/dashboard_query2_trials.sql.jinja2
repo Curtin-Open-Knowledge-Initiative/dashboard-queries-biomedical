@@ -130,46 +130,7 @@ FROM
   WHERE ANYSOURCE_clintrial_found
 ), # END d_4_anysource_extract_flat
 
------------------------------------------------------------------------
--- STEP 5:
--- These next steps are to get the data that inthe dashboard this will go 
--- into the section on linking the institutions trial dataset to the institutions publications
--- Data from Crossref and PubMed is used to link the two datasets
------------------------------------------------------------------------
-
------------------------------------------------------------------------
--- 5A. To the list of Contributed trial IDs (ie #3), join to the flattened table of 
--- Trial-ID/DOIs from Crossref/Pubmed (ie #4), using the trial IDs
--- to match the tables. 
------------------------------------------------------------------------
-d_5a_trials_joined_to_anysource AS (
-  SELECT 
-  p1.nct_id,
-  TRIM(STRING_AGG(LOWER(p2.ANYSOURCE_doi), ' ')) AS ANYSOURCE_dois_matching_trialid
-
-  FROM d_3_contributed_trials_data as p1
-  INNER JOIN d_4_anysource_extract_flat as p2
-    ON lower(p1.nct_id) = lower(p2.ANYSOURCE_clintrial_id_flat)
-  GROUP BY p1.nct_id
-  # END OF  d_5a_trials_joined_to_anysource
-),
-
------------------------------------------------------------------------
--- 5B. Add this list of dois that contain trial IDs 
--- (i.e. ANYSOURCE_dois_matching_trialid from #5A) to the the rest of the 
--- contributed trial data, and add some extra calculated fields
--- There may be multiple DOIs per trial ID
------------------------------------------------------------------------
-d_5b_trials_data_joined_to_anysource AS (
-  SELECT 
-  p4.*,
-  p5.ANYSOURCE_dois_matching_trialid
-
-FROM d_3_contributed_trials_data as p4
-LEFT JOIN d_5a_trials_joined_to_anysource as p5
-  ON lower(p4.nct_id) = lower(p5.nct_id)  
-# END OF d_5b_trials_data_joined_to_anysource
-),
+# STEP 5 removed in Phase 2
 
 -----------------------------------------------------------------------
 -- STEP 6:
@@ -244,7 +205,8 @@ SELECT
   var_data_dois,
   var_institution_id,
 
-  FROM d_5b_trials_data_joined_to_anysource as p10
+  #FROM d_5b_trials_data_joined_to_anysource as p10
+  FROM d_3_contributed_trials_data as p10
   LEFT JOIN d_6b_pubs_data_intersect_anysource as p11 
   ON lower(p10.nct_id) = lower(p11.nct_id)
 
