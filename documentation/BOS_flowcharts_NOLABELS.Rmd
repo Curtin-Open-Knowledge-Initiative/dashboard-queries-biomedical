@@ -1,5 +1,5 @@
 ---
-title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_ver3g_NOLABELS.Rmd"
+title "Exploring Flowcharts using DiagrammeR - 2023_flowcharts_verXX_NOLABELS.Rmd"
 author: "Rebecca Handcock"
 date: "2023-12-14"
 output: html_document
@@ -53,10 +53,25 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   # --- Set default attributes
   # ---------------------------------------------------------
-  layout = dot;
-  compound=TRUE;
-  rankdir =TB;
-
+  # See: https://graphviz.org/pdf/dotguide.pdf
+  
+  layout = dot
+  compound=TRUE
+  
+  # rankdir: Default (TB) is that ranks go from the top (highest) to the bottom
+  #          BT is useful for upward-directed graphs, LR= left to right etc. 
+  rankdir =TB
+  
+  # nodesep: minimum distance, in inches between adjacent nodes on same rank.
+  # This is the sideways spacing of nodes
+  nodesep = 0.35
+  
+  # ranksep: rank separation, minimum vertical space between the bottoms of nodes in 
+  #      one rank and the tops of nodes in the next. Can have ranksep=equally
+  # This number also influences the spacing within compound shape.
+  ranksep = 0.35
+  
+  # Default specs for nodes
   node [shape = rectangle, fixedsize=FALSE, height=0.02, width=0.5, margin=0.2,
       style='filled, rounded', fillcolor=white, penwidth=1.5
       fontname = Helvetica, fontsize=18]
@@ -68,31 +83,33 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   
   subgraph cluster_ORG_raw {
-     label='Datasets provided by the Organization'; 
-     fontsize=24; fontname='Helvetica-Bold';
-     style='filled, rounded'; fillcolor='#E2D9FB';
-     #rank = min;
-     #rankdir =LR;
+     label='Datasets provided by the Organization'
+     fontsize=24
+     fontname='Helvetica-Bold'
+     style='filled, rounded'
+     fillcolor='#E2D9FB'
+     margin = 15
+
 
     # ------------------- NODES
-     NODE_ORG_dois_raw[label = 'Publication DOIs\\n ORG_dois_YYYYMM.txt',
+     NODE_ORG_dois_raw[label = 'Publication DOIs',
         fillcolor='#AC94F4']
 
-     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials\\n ORG_trials_YYYYMM.txt',
+     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials',
         fillcolor='#AC94F4']
-
-     NODE_ORG_orcid_raw[label = 'Researcher ORCIDs\\n ORG_orcid_YYYYMM.txt',
-        fillcolor='#AC94F4']   
       
   } # END cluster_ORG_raw
-  
+
   # ---------------------------------------------------------
   # DATASETS: ACADEMIC OBSERVATORY
   # ---------------------------------------------------------
   
   subgraph cluster_AcademicObservatory {
-     label='Academic Observatory'; fontsize=24; fontname = 'Helvetica-Bold';
-     style='filled, rounded'; fillcolor='#FFF0E9';
+     label='Academic Observatory dataset'
+     fontsize=24
+     fontname = 'Helvetica-Bold'
+     style='filled, rounded'
+     fillcolor='#FFF0E9'
 
      # ------------------- NODES
      DATA_AcademicObservatory[label = 'Academic Observatory',fillcolor='#ff671c']
@@ -118,8 +135,8 @@ graph_biomedical_main <- "digraph {
     
      # ------------------- INVISIBLE LINKS for ordering
      {
-       edge [color = transparent];
-       rank = same;
+       edge [color = transparent]
+       rank = same
 
        DATA_CrossrefMeta   -> DATA_CrossrefFunder 
        DATA_CrossrefFunder -> DATA_CrossrefEvents 
@@ -133,53 +150,69 @@ graph_biomedical_main <- "digraph {
   } # END cluster_AcademicObservatory
 
   # ---------------------------------------------------------
-  # PROCESS #0_Charite - Charite clinical trial processing
+  # PROCESS #0_AACT - AACT clinical trial processing
+  # This dataset is the output from Results of running customized scripts for the
+  # institution (https://github.com/maia-sh/the-neuro-trials ). The scripts take 
+  # the list  of clinical trials provided by the partner and searches for them in
+  # http://ClinicalTrials.gov  via the Aggregate Analysis of
+  # http://ClinicalTrials.gov  (AACT) Database and aactr (RRID:SCR_026245).
   # ---------------------------------------------------------
   
   # ------------------- LINKS BETWEEN-CLUSTERS
-  NODE_ORG_trials_raw -> PROCESS_0_Charite
-     [ltail = cluster_ORG_raw, lhead = cluster_0_Charite]
+  NODE_ORG_trials_raw -> PROCESS_0_AACT
+     [ltail = NODE_ORG_trials_raw, lhead = cluster_0_AACT]
 
+  # ------------------- INVISIBLE LINKS for ordering
+  { edge [color = transparent]
+   NODE_ORG_trials_raw -> BLANK_1 -> PROCESS_0_AACT }
+   
   # ------------------- CLUSTER
-  subgraph cluster_0_Charite {
-    label='Charite Processing\\n by the project'; 
-    fontsize=24; fontname='Helvetica-Bold';
-    style='filled, rounded'; fillcolor='#E9FAFA';
-      
+  subgraph cluster_0_AACT {
+    label='AACT processing'
+    fontsize=24
+    fontname='Helvetica-Bold'
+    style='filled, rounded'
+    fillcolor='#E9FAFA'
+
     # ------------------- NODES
-    PROCESS_0_Charite[label = 'Charite processing of clinical trial data', 
+    PROCESS_0_AACT[label = 'AACT processing of clinical trial data', 
         shape=rectangle, style='filled, dashed', fillcolor=white]
     
-    DATA_PROJECT_charite_trials_output
-      [label = 'Output from Charite clinical trial processing\\n PROJ_trials_YYYYMM.txt',
+    DATA_PROJECT_AACT_trials_output
+      [label = 'Output from AACT clinical trial processing',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
-    PROCESS_0_Charite -> DATA_PROJECT_charite_trials_output
+    PROCESS_0_AACT -> DATA_PROJECT_AACT_trials_output
     
-    } # END cluster_0_Charite
+    } # END cluster_0_AACT
     
   # ---------------------------------------------------------
   # PROCESS #0_Oddpub - Oddpub processing
   # ---------------------------------------------------------
   
   # ------------------- LINKS BETWEEN-CLUSTERS
-  
   NODE_ORG_dois_raw -> PROCESS_0_Oddpub
-    [ltail = cluster_ORG_raw, lhead = cluster_0_Oddpub]
+    [ltail = NODE_ORG_dois_raw, lhead = cluster_0_Oddpub]
 
+    # ------------------- INVISIBLE LINKS for ordering
+    { edge [color = transparent]
+    NODE_ORG_dois_raw -> BLANK_5 -> PROCESS_0_Oddpub }
+    
   # ------------------- CLUSTER
   subgraph cluster_0_Oddpub {
-    label='Oddpub Processing\\n by the project'; 
-       fontsize=24; fontname='Helvetica-Bold';
-       style='filled, rounded'; fillcolor='#E9FAFA';
+    label='Oddpub processing'
+    fontsize=24
+    fontname='Helvetica-Bold'
+    style='filled, rounded'
+    fillcolor='#E9FAFA'
 
     # ------------------- NODES
     PROCESS_0_Oddpub[label = 'Oddpub processing of open data and open software',
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
     DATA_PROJECT_Oddpub_output
-      [label = 'Output from Oddpub processing - Data and Software\\n PROJ_oddpub_YYYYMM.txt',
+      [label = 'Output from Oddpub processing - Data and Software',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
@@ -198,13 +231,19 @@ graph_biomedical_main <- "digraph {
   DATA_AcademicObservatory ->  PROCESS_1
     [ltail = cluster_AcademicObservatory, lhead = cluster_1] 
     
+  # ------------------- INVISIBLE LINKS for ordering
+    { edge [color = transparent]
+    DATA_AcademicObservatory -> BLANK_2 -> PROCESS_1 }
+    
   # ------------------- CLUSTER
   
   subgraph cluster_1 {
-    label='SQL process A - Clinical Trial Pre-processing\\n by COKI'; 
-      fontsize=24; fontname='Helvetica-Bold';
-      style='filled, rounded'; fillcolor='#D7EFD9';
- 
+    label='Clinical Trial pre-processing\n by the BOS workflow' 
+    fontsize=24
+    fontname='Helvetica-Bold'
+    style='filled, rounded'
+    fillcolor='#D7EFD9'
+
     # ------------------- NODES
 
     PROCESS_1 [label = 'Create meta-list of clinical trial numbers associated with 
@@ -217,7 +256,6 @@ graph_biomedical_main <- "digraph {
       fillcolor='#9DD8A1']
       
     # ------------------- LINKS
-
     PROCESS_1 -> Intermediate_Table_1
     
     } # END cluster_1
@@ -231,19 +269,28 @@ graph_biomedical_main <- "digraph {
   Intermediate_Table_1 -> NODE_Imported_trials
     [ltail = cluster_1, lhead = cluster_2]
     
-  DATA_PROJECT_charite_trials_output -> NODE_Imported_trials
-    [ltail = cluster_0_Charite, lhead = cluster_2, maxlen=4]
+    { # Invisible NODES 
+      edge [color = transparent]
+      Intermediate_Table_1 -> BLANK_4 -> NODE_Imported_trials }
+    
+  DATA_PROJECT_AACT_trials_output -> NODE_Imported_trials
+    [ltail = cluster_0_AACT, lhead = cluster_2, maxlen=4]
 
+    { # Invisible NODES 
+      edge [color = transparent]
+      DATA_PROJECT_AACT_trials_output -> BLANK_6 -> NODE_Imported_trials }
   # ------------------- CLUSTER
   
   subgraph cluster_2 {
-    label='SQL process B - Clinical Trials\\n by COKI'; 
-      fontsize=24; fontname='Helvetica-Bold';
-      style='filled, rounded'; fillcolor='#D7EFD9';
-      
+    label='Clinical Trials processing\n by the BOS workflow'
+    fontsize=24
+    fontname='Helvetica-Bold'
+    style='filled, rounded'
+    fillcolor='#D7EFD9'
+
     # ------------------- NODES
 
-    NODE_Imported_trials[label = 'Import output from Charite Clinical Trial processing',
+    NODE_Imported_trials[label = 'Import output from AACT Clinical Trial processing',
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
     PROCESS_2[label = 'Match the contributed clinical trial data to 
@@ -256,35 +303,8 @@ graph_biomedical_main <- "digraph {
     NODE_Imported_trials -> PROCESS_2
 
     PROCESS_2 -> NODE_Dashboard_trials
-    
-    } # END cluster_2
-
-  # ---------------------------------------------------------
-  # PROCESS #3 - SQL to process the ORCID data for the dashboard
-  # ---------------------------------------------------------
   
-  # ------------------- LINKS BETWEEN-CLUSTERS
-  NODE_ORG_orcid_raw -> NODE_Processed_orcid
-    [ltail = cluster_ORG_raw, lhead = cluster_3]
-
-  # ------------------- CLUSTER
-  subgraph cluster_3 {
-    label='SQL process D - ORCIDs\\n by COKI'; 
-      fontsize=24; fontname='Helvetica-Bold';
-      style='filled, rounded'; fillcolor='#D7EFD9';
-
-    # ------------------- NODES
-    NODE_Processed_orcid[label = 'Import Researcher ORCIDs',
-      shape=rectangle, style='filled, dashed', fillcolor=white]
-      
-    PROCESS_3[label = 'Process the ORCID data', 
-      shape=rectangle, style='filled, dashed', fillcolor=white]
-
-    # ------------------- LINKS
-    NODE_Processed_orcid -> PROCESS_3
-    PROCESS_3 -> NODE_Dashboard_orcid
-    
-    } # END cluster_3
+    } # END cluster_2
 
   # ---------------------------------------------------------
   # PROCESS #4 - Main SQL to process the Publication and Oddpub data for the dashboard
@@ -293,18 +313,24 @@ graph_biomedical_main <- "digraph {
   # ------------------- LINKS BETWEEN-CLUSTERS
   DATA_PROJECT_Oddpub_output -> NODE_Imported_dois_to_Process_4
       [ltail = cluster_0_Oddpub, lhead = cluster_4]
+  
+    { # Invisible NODES 
+      edge [color = transparent]
+      DATA_PROJECT_Oddpub_output -> BLANK_3 -> NODE_Imported_dois_to_Process_4 }
 
   NODE_ORG_dois_raw -> NODE_Imported_dois_to_Process_4
-      [ltail = cluster_ORG_raw, lhead = cluster_4]
-
+      [ltail = NODE_ORG_dois_raw, lhead = cluster_4]
+      
   Intermediate_Table_1 -> NODE_Imported_dois_to_Process_4
       [ltail = cluster_1, lhead = cluster_4]
   
   # ------------------- CLUSTER
   subgraph cluster_4 {
-    label='SQL process C - Publications & Oddpub\\n by COKI'; 
-    fontsize=24; fontname='Helvetica-Bold';
-    style='filled, rounded'; fillcolor='#D7EFD9';
+    label='Publications processing\\n by the BOS workflow' 
+    fontsize=24
+    fontname='Helvetica-Bold'
+    style='filled, rounded'
+    fillcolor='#D7EFD9'
 
     # ------------------- NODES
 
@@ -339,18 +365,21 @@ graph_biomedical_main <- "digraph {
   NODE_Dashboard_trials[label = 'Dashboard data\\n Clinical Trials',
       shape=rectangle, fillcolor='#9DD8A1']
 
-  NODE_Dashboard_orcid[label = 'Dashboard data\\n Researcher ORCIDs',
-      shape=rectangle, fillcolor='#9DD8A1']
-      
-  NODE_Dashboard_MAIN[label = 'Dashboard', fontname='Helvetica-Bold', fontsize=24,
+  NODE_Dashboard_MAIN[label = 'BOS Dashboard', fontname='Helvetica-Bold', fontsize=24,
       shape=filled, fillcolor='#3BB143']
-     
+  
+  # ------------------- INVISIBLE NODES for ordering
+  BLANK_1[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+  BLANK_2[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+  BLANK_3[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+  BLANK_4[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+  BLANK_5[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+  BLANK_6[label = 'x', style = invis, height=0.01, width=0.01, margin=0.01]
+
   # ------------------- LINKS BETWEEN-CLUSTERS
    NODE_Dashboard_trials -> NODE_Dashboard_MAIN
 
-    NODE_Dashboard_orcid -> NODE_Dashboard_MAIN
-
-    NODE_Dashboard_pubs -> NODE_Dashboard_MAIN
+   NODE_Dashboard_pubs -> NODE_Dashboard_MAIN
 
   # ---------------------------------------------------------
   # ------ Add footnotes 
@@ -359,7 +388,8 @@ graph_biomedical_main <- "digraph {
   }
   "
    
-# Plot to graph to the screen / HTML
+# The final step is to use the "grViz" function in "DiagrammeR" to plot
+# the graph to the screen / HTML
 DiagrammeR::grViz(graph_biomedical_main)
 
 # Export the graph as a PNG image file
@@ -386,6 +416,6 @@ F_export_grViz_graph2image(graph_biomedical_main)
 # Tutorial: https://epirhandbook.com/en/diagrams-and-charts.html
 # Tutorial: https://builtin.com/data-science/diagrammer
 
-# Graphviz Reference; https://graphviz.org/pdf/dotguide.pdf
+# Graphviz Reference: https://graphviz.org/pdf/dotguide.pdf
 
 ```
