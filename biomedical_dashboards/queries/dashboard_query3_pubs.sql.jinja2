@@ -266,24 +266,26 @@ main_select AS (
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
-  ------ 3.11 CONTRIBUTED TABLE: OPEN DATA
+  ------ 3.11a CONTRIBUTED TABLE: ODDPub processing
   CASE
-    WHEN contributed_oddpub.is_open_data IS NOT NULL THEN TRUE
-    ELSE FALSE
+    WHEN contributed_oddpub.doi IS NULL THEN FALSE
+    ELSE TRUE
   END AS has_oddpub_processing,
 
-  contributed_oddpub.is_open_data as has_open_data_oddpub, -- pulled from enriched data BOOL
+  ------ 3.11b CONTRIBUTED TABLE: OPEN DATA
+
+  COALESCE(contributed_oddpub.is_open_data,FALSE) as has_open_data_oddpub, -- pulled from enriched data BOOL
   
   CASE
-    WHEN contributed_oddpub.is_open_data THEN "Contains reference to Open data"
+    WHEN COALESCE(contributed_oddpub.is_open_data,FALSE) THEN "Contains reference to Open data"
     ELSE "No reference to Open data found"
   END AS has_open_data_oddpub_PRETTY,
 
   ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
-  contributed_oddpub.is_open_code as has_open_code_oddpub, -- pulled from enriched data BOOL
+  COALESCE(contributed_oddpub.is_open_code,FALSE) as has_open_code_oddpub, -- pulled from enriched data BOOL
  
   CASE
-    WHEN contributed_oddpub.is_open_code THEN "Contains reference to Open code"
+    WHEN COALESCE(contributed_oddpub.is_open_code,FALSE) THEN "Contains reference to Open code"
     ELSE "No reference to Open code found"
   END AS has_open_code_oddpub_PRETTY,
 
