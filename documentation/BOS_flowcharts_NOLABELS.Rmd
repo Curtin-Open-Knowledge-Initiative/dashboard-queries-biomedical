@@ -83,7 +83,7 @@ graph_biomedical_main <- "digraph {
   # ---------------------------------------------------------
   
   subgraph cluster_ORG_raw {
-     label='Datasets provided by the Organization'
+     label='Data from the institution'
      fontsize=24
      fontname='Helvetica-Bold'
      style='filled, rounded'
@@ -95,7 +95,7 @@ graph_biomedical_main <- "digraph {
      NODE_ORG_dois_raw[label = 'Publication DOIs',
         fillcolor='#AC94F4']
 
-     NODE_ORG_trials_raw[label = 'Researcher Clinical Trials',
+     NODE_ORG_trials_raw[label = 'Clinical Trial IDs',
         fillcolor='#AC94F4']
       
   } # END cluster_ORG_raw
@@ -112,7 +112,7 @@ graph_biomedical_main <- "digraph {
      fillcolor='#FFF0E9'
 
      # ------------------- NODES
-     DATA_AcademicObservatory[label = 'Academic Observatory',fillcolor='#ff671c']
+     DATA_AcademicObservatory[label = 'Academic Observatory', fillcolor='#ff671c']
 
      DATA_CrossrefMeta[label='Crossref \\nMetadata',fillcolor='#FFA376']
      DATA_CrossrefFunder[label='Crossref \\nFunder \\nRegistry',fillcolor='#FFA376']
@@ -175,7 +175,12 @@ graph_biomedical_main <- "digraph {
     fillcolor='#E9FAFA'
 
     # ------------------- NODES
-    PROCESS_0_AACT[label = 'AACT processing of clinical trial data', 
+    PROCESS_0_AACT[label = 'AACT processing of clinical trial data and 
+    the output from customized scripts that search 
+    for the clinical trials in ClinicalTrials.gov 
+    via the Aggregate Analysis of 
+    ClinicalTrials.gov (AACT) Database and 
+    aactr (RRID:SCR_026245).', 
         shape=rectangle, style='filled, dashed', fillcolor=white]
     
     DATA_PROJECT_AACT_trials_output
@@ -208,11 +213,15 @@ graph_biomedical_main <- "digraph {
     fillcolor='#E9FAFA'
 
     # ------------------- NODES
-    PROCESS_0_Oddpub[label = 'Oddpub processing of open data and open software',
+    PROCESS_0_Oddpub[label = 'Oddpub processing to identify DOIs 
+    associated with open data or open 
+    software. See the QUEST Center for 
+    Responsible Research - Data sharing 
+    and software Analysis',
         shape=rectangle, style='filled, dashed', fillcolor=white]
         
     DATA_PROJECT_Oddpub_output
-      [label = 'Output from Oddpub processing - Data and Software',
+      [label = 'Output from Oddpub processing',
       fillcolor='#2CCCD3']
       
     # ------------------- LINKS
@@ -222,7 +231,7 @@ graph_biomedical_main <- "digraph {
      } # END cluster_P0_Oddpub
   
   # ---------------------------------------------------------
-  # PROCESS #1 - From the AO, create meta list of clinical trial numbers
+  # PROCESS #1 - From the AO, create meta list of clinical trial IDs
   # associated with DOIs
   # ---------------------------------------------------------
   
@@ -246,13 +255,15 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
 
-    PROCESS_1 [label = 'Create meta-list of clinical trial numbers associated with 
-    DOIs using Crossref & PubMed fields and abstract search', 
+    PROCESS_1 [label = 'Create meta list of all clinical trial IDs 
+    associated with DOIs using Crossref and 
+    PubMed fields and an abstract search', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
   
     Intermediate_Table_1 [label = 'Intermediate Table
-      All Clinical Trial Numbers found for DOIs in Crossref & Pubmed',
+      All Clinical Trial IDs found for DOIs 
+      in Crossref and Pubmed',
       fillcolor='#9DD8A1']
       
     # ------------------- LINKS
@@ -261,8 +272,8 @@ graph_biomedical_main <- "digraph {
     } # END cluster_1
   
   # ---------------------------------------------------------
-  # PROCESS #2 - SQL to combine the contributed clinical trial data
-  # with the meta-list of clinical trial numbers
+  # PROCESS #2 - SQL to combine the institution's clinical trial data
+  # with the meta-list of clinical trial IDs
   # ---------------------------------------------------------
 
   # ------------------- LINKS BETWEEN-CLUSTERS
@@ -282,7 +293,7 @@ graph_biomedical_main <- "digraph {
   # ------------------- CLUSTER
   
   subgraph cluster_2 {
-    label='Clinical Trials processing\n by the BOS workflow'
+    label='Clinical Trial data processing\n by the BOS workflow'
     fontsize=24
     fontname='Helvetica-Bold'
     style='filled, rounded'
@@ -290,12 +301,12 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
 
-    NODE_Imported_trials[label = 'Import output from AACT Clinical Trial processing',
+    NODE_Imported_trials[label = 'Import output from AACT processing',
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
-    PROCESS_2[label = 'Match the contributed clinical trial data to 
-      the meta-list of clinical trial numbers from 
-      PubMed and Crossref, and to the contributed DOIs', 
+    PROCESS_2[label = 'Match the institutional clinical trial data to 
+      the meta-list of clinical trial IDs from 
+      PubMed and Crossref, and to the institutional DOIs', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
   
     # ------------------- LINKS
@@ -326,7 +337,7 @@ graph_biomedical_main <- "digraph {
   
   # ------------------- CLUSTER
   subgraph cluster_4 {
-    label='Publications processing\\n by the BOS workflow' 
+    label='Publication data processing\\n by the BOS workflow' 
     fontsize=24
     fontname='Helvetica-Bold'
     style='filled, rounded'
@@ -334,13 +345,13 @@ graph_biomedical_main <- "digraph {
 
     # ------------------- NODES
 
-    NODE_Imported_dois_to_Process_4[label = 'Import Target publication DOIs',
+    NODE_Imported_dois_to_Process_4[label = 'Import publication DOIs',
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
     NODE_Imported_oddpub[label = 'Import Oddpub output',
       shape=rectangle, style='filled, dashed', fillcolor=white]
       
-    process_4[label = 'Process the Publication and Oddpub data', 
+    process_4[label = 'Process the publication and Oddpub data', 
       shape=rectangle, style='filled, dashed', fillcolor=white]
 
     # ------------------- LINKS
