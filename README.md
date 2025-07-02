@@ -12,7 +12,7 @@ Our objective is to create a digital tool that can automatically curate informat
 
 This repository contains version controlled SQL queries and processing scripts used to create data for these dashboards.
 
-![Alt text](ASSETS/2025_flowcharts_ver4a_NOLABELS_graph.png)
+![Alt text](ASSETS/2025_flowcharts_ver4b_NOLABELS_graph.png)
 
 ## How to generate data and update these dashboards
 The dashboards for this project are created in Google LookerStudio, using data stored in BigQuery and processed with SQL scripts.
