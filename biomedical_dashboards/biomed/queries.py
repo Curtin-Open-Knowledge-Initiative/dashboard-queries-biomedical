@@ -15,8 +15,6 @@ def query_alltrials(**kwargs) -> str:
     :return: The templated query
     """
 
-    query_file = resources.files("biomedical_dashboards.queries").joinpath("dashboard_query1_alltrials.sql.jinja2")
-    print(query_file)
     with resources.open_text("biomedical_dashboards.queries", "dashboard_query1_alltrials.sql.jinja2") as f:
         query_template = f.read()
 

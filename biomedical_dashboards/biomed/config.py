@@ -122,6 +122,18 @@ class Context:
 
         os.makedirs(self.output_dir, exist_ok=True)
 
+    @property
+    def generated_alltrials_name(self):
+        return f"alltrials{self.run_version}"
+
+    @property
+    def generated_trials_name(self):
+        return f"trials{self.run_version}"
+
+    @property
+    def generated_pubs_name(self):
+        return f"pubs{self.run_version}"
+
     @staticmethod
     def from_dict(cfg: dict):
         """Checks that the config is valid then constructs the Config object from the dictionary"""
