@@ -81,7 +81,7 @@ def bq_copy_table(
     :client: The bigquery client. Created if not supplied
     """
     if not client:
-        client = client(project=project)
+        client = Client(project=project)
     src_table_id = f"{project}.{src_dataset}.{src_table_name}"
     dest_table_id = f"{project}.{dest_dataset}.{dest_table_name}"
     if not bq_check_table_exists(project=project, dataset=src_dataset, table_name=src_table_name, client=client):
@@ -89,7 +89,7 @@ def bq_copy_table(
 
     config = bigquery.CopyJobConfig()
     config.write_disposition = "WRITE_TRUNCATE" if overwrite else "WRITE_EMPTY"
-    job = client.copy_table(source=src_table_id, destination=dest_table_id, job_config=config)
+    job = client.copy_table(sources=src_table_id, destination=dest_table_id, job_config=config)
     job.result()
 
 
