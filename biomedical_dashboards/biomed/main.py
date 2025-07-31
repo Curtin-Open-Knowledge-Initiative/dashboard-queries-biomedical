@@ -37,6 +37,8 @@ def workflow(config: Config):
         print("-----------------------------------------------------------------")
         raise RuntimeError(f"The following errors occurred during the workflow: \n\t{msg}")
 
+    print("Biomed workflow completed successfuly!")
+
 
 def main():
     parser = argparse.ArgumentParser(

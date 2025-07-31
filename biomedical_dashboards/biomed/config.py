@@ -32,35 +32,33 @@ class Partner:
 
     @property
     def output_dataset(self):
+        """Dataset that we will output the tables to from our queries"""
         return f"{self.institution_id}_data"
 
     @property
     def latest_dataset(self):
+        """Dataset that we will output the latest tables to at the end of the workflow"""
         return f"{self.institution_id}_data_latest"
 
     @property
     def static_dataset(self):
+        """Dataset containing data from partners that we will operate on"""
         return f"{self.institution_id}_from_partners"
 
     @property
     def alltrials_query_fname(self):
+        """File name of the alltrials query file"""
         return f"{self.institution_id}_alltrials.sql"
 
     @property
     def trials_query_fname(self):
+        """File name of the trials query file"""
         return f"{self.institution_id}_trials.sql"
 
     @property
     def pubs_query_fname(self):
+        """File name of the pubs query file"""
         return f"{self.institution_id}_pubs.sql"
-
-    @property
-    def trials_latest_fname(self):
-        return f"{self.institution_id}_trials_latest.sql"
-
-    @property
-    def pubs_latest_fname(self):
-        return f"{self.institution_id}_pubs_latest.sql"
 
     @staticmethod
     def from_dict(partner: dict):
@@ -121,6 +119,21 @@ class Context:
         self.workflow_hash = Repo(search_parent_directories=True).head.object.hexsha
 
         os.makedirs(self.output_dir, exist_ok=True)
+
+    @property
+    def generated_alltrials_name(self):
+        """Name of the alltrials table resulting from our query"""
+        return f"alltrials{self.run_version}"
+
+    @property
+    def generated_trials_name(self):
+        """Name of the trials table resulting from our query"""
+        return f"trials{self.run_version}"
+
+    @property
+    def generated_pubs_name(self):
+        """Name of the pubs table resulting from our query"""
+        return f"pubs{self.run_version}"
 
     @staticmethod
     def from_dict(cfg: dict):

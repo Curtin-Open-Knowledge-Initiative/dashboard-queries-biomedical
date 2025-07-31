@@ -9,12 +9,10 @@ from biomedical_dashboards.biomed.gcp import (
     bq_check_table_exists,
     bq_create_dataset,
     bq_run_query,
-    bq_get_view_content,
-    bq_delete_table,
-    bq_create_view,
+    bq_copy_table,
 )
 from biomedical_dashboards.biomed.logs import bioprint
-from biomedical_dashboards.biomed.queries import query_alltrials, query_trials, query_pubs, query_latest_view
+from biomedical_dashboards.biomed.queries import query_alltrials, query_trials, query_pubs
 
 
 def partner_workflow(partner: Partner, context: Context) -> None:
@@ -23,13 +21,13 @@ def partner_workflow(partner: Partner, context: Context) -> None:
     - Creates output datasets if they don't exist
     - Generates the queries and writes them to files
     - Runs the queries
-    - Creates views of the latest data
+    - Makes a copy of the created table, placing it in the "latest" dataset
 
     If context.dryrun setting is enabled, will only create and output the queries.
     """
     # Check/make datasets
     if not context.dryrun:
-        check_tables_exist(partner=partner, context=context)
+        check_static_tables_exist(partner=partner, context=context)
         bioprint(partner, "All expected static tables exist")
         try:
             bq_create_dataset(project=context.project, dataset=partner.output_dataset, exists_ok=False)
@@ -50,15 +48,15 @@ def partner_workflow(partner: Partner, context: Context) -> None:
 
     # Query creation
     generate_queries(partner=partner, context=context)
-    generate_views(partner=partner, context=context)
 
     # Query run
     if not context.dryrun:
         run_queries(partner=partner, context=context)
-        create_views(partner=partner, context=context)
+        check_generated_tables_exist(partner=partner, context=context)
+        update_latest_tables(partner=partner, context=context)
 
 
-def check_tables_exist(partner: Partner, context: Context):
+def check_static_tables_exist(partner: Partner, context: Context):
     """Checks that the static tables exist"""
 
     def _wrapped_check(project, dataset, table_name) -> Tuple[bool, str]:
@@ -104,19 +102,27 @@ def generate_queries(partner: Partner, context: Context) -> None:
     bioprint(partner, f"Query written to file: {path}")
 
 
-def generate_views(partner: Partner, context: Context) -> None:
-    """Generates all of the latest views for the partner and saves them to file"""
-    # Create views
-    trials = query_latest_view(**partner.to_dict(), **context.to_dict(), table_name="trials")
-    pubs = query_latest_view(**partner.to_dict(), **context.to_dict(), table_name="pubs")
+def check_generated_tables_exist(partner: Partner, context: Context):
+    """Checks that the generated tables exist"""
 
-    # Save views to file
-    path = os.path.join(context.output_dir, partner.trials_latest_fname)
-    save_query(trials, path)
-    bioprint(partner, f"Query written to file: {path}")
-    path = os.path.join(context.output_dir, partner.pubs_latest_fname)
-    save_query(pubs, path)
-    bioprint(partner, f"Query written to file: {path}")
+    def _wrapped_check(project, dataset, table_name) -> Tuple[bool, str]:
+        """Wrapped function that also returns the table name"""
+        return (bq_check_table_exists(project, dataset, table_name), table_name)
+
+    table_names = [context.generated_alltrials_name, context.generated_trials_name, context.generated_pubs_name]
+    futures = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for t in table_names:
+            futures.append(executor.submit(_wrapped_check, context.project, partner.output_dataset, t))
+
+    errors = []
+    for f in as_completed(futures):
+        result = f.result()
+        if result[0] == False:
+            errors.append(f"{context.project}.{partner.static_dataset}.{result[1]}")
+    if errors:
+        msg = "\n\t".join(errors)
+        raise RuntimeError(f"Expected table(s) missing:\n\t{msg}")
 
 
 def run_queries(partner: Partner, context: Context) -> None:
@@ -133,35 +139,37 @@ def run_queries(partner: Partner, context: Context) -> None:
         bq_run_query(context.project, query)
 
 
-def create_views(partner: Partner, context: Context) -> None:
-    """Creates the views if they do not already exist. Will update the views if they change."""
-    for view_name, view_fname in [("trials", partner.trials_latest_fname), ("pubs", partner.pubs_latest_fname)]:
-        path = os.path.join(context.output_dir, view_fname)
-        with open(path) as f:
-            view_content = f.read()
-        view_dataset = f"{partner.institution_id}_data_latest"
-
-        # If view exists and is the same, don't update
-        # If view exists but is different delete it and update it
-        # If view doesn't exist, create it
-        if bq_check_table_exists(project=context.project, dataset=view_dataset, table_name=view_name):
-            existing_view_content = bq_get_view_content(
-                project=context.project, dataset=view_dataset, view_name=view_name
-            )
-            if existing_view_content == view_content:
-                bioprint(
-                    partner,
-                    f"View content identical, not updating: {context.project}.{view_dataset}_data_latest.{view_name}",
-                )
-                continue
-            else:
-                bioprint(
-                    partner,
-                    f"View exists, but content is different. Updating: {context.project}.{view_dataset}_data_latest.{view_name}",
-                )
-                bq_delete_table(project=context.project, dataset=view_dataset, table_name=view_name)
-        bioprint(partner, f"Creating view: {context.project}.{view_dataset}.{view_name}")
-        bq_create_view(project=context.project, dataset=view_dataset, view_name=view_name, view_content=view_content)
+def update_latest_tables(partner: Partner, context: Context) -> None:
+    """Copies the tables created from this run to the 'latest' dataset"""
+    latest_dataset = f"{partner.institution_id}_data_latest"
+    try:
+        bq_create_dataset(project=context.project, dataset=latest_dataset, exists_ok=True)
+        bioprint(partner, f"Created dataset: {context.project}.{partner.output_dataset}")
+    except google.cloud.exceptions.Conflict:
+        bioprint(
+            partner,
+            f"Dataset already exists, no need to create: {context.project}.{partner.output_dataset}",
+        )
+    bq_copy_table(
+        project=context.project,
+        src_dataset=partner.output_dataset,
+        src_table_name=context.generated_trials_name,
+        dest_dataset=latest_dataset,
+        dest_table_name="trials",
+        overwrite=True,
+    )
+    bioprint(
+        partner, f"Copied table {partner.output_dataset}.{context.generated_trials_name} to {latest_dataset}.trials"
+    )
+    bq_copy_table(
+        project=context.project,
+        src_dataset=partner.output_dataset,
+        src_table_name=context.generated_pubs_name,
+        dest_dataset=latest_dataset,
+        dest_table_name="pubs",
+        overwrite=True,
+    )
+    bioprint(partner, f"Copied table {partner.output_dataset}.{context.generated_pubs_name} to {latest_dataset}.pubs")
 
 
 def save_query(query: str, path: str) -> None:

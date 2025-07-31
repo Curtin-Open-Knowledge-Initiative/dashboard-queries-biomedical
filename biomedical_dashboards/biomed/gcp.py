@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+from google.cloud import bigquery
 from google.cloud.bigquery.client import Client
 from google.cloud.bigquery.table import RowIterator, Table
 from google.cloud.bigquery.dataset import Dataset
@@ -60,7 +61,41 @@ def bq_check_table_exists(project: str, dataset: str, table_name: str, client: C
     return True
 
 
-def bq_delete_table(project: str, dataset: str, table_name: str, not_found_ok=False, client: Optional[Client] = None):
+def bq_copy_table(
+    project: str,
+    src_dataset: str,
+    src_table_name: str,
+    dest_dataset: str,
+    dest_table_name: str,
+    overwrite: bool = False,
+    client: Optional[Client] = None,
+):
+    """Copies a bigquery table to another destination within the same project
+
+    :param project: The project to work within
+    :param src_dataset: The dataset of the source table
+    :param src_table_name: The table name of the source table
+    :param dest_dataset: The dataset to copy the source table to
+    :param dest_table_name: The table name to copy the source table to
+    :param overwrite: If true, will overwrite any existing table
+    :client: The bigquery client. Created if not supplied
+    """
+    if not client:
+        client = Client(project=project)
+    src_table_id = f"{project}.{src_dataset}.{src_table_name}"
+    dest_table_id = f"{project}.{dest_dataset}.{dest_table_name}"
+    if not bq_check_table_exists(project=project, dataset=src_dataset, table_name=src_table_name, client=client):
+        raise RuntimeError(f"Table not found: {src_table_id}")
+
+    config = bigquery.CopyJobConfig()
+    config.write_disposition = "WRITE_TRUNCATE" if overwrite else "WRITE_EMPTY"
+    job = client.copy_table(sources=src_table_id, destination=dest_table_id, job_config=config)
+    job.result()
+
+
+def bq_delete_table(
+    project: str, dataset: str, table_name: str, not_found_ok=False, client: Optional[Client] = None
+) -> None:
     """Deletes a table in bigquery
 
     :param project: The project that the table is stored in.

@@ -77,7 +77,7 @@ fi
 
 # Create service account if it doesn't exist
 if [[ -z $(gcloud iam service-accounts list --filter="email:${SA_FULL_NAME}" --format="value(email)") ]]; then
-    gcloud iam service-accounts create biomed --project=${BIOMED_PROJECT} \
+    gcloud iam service-accounts create biomed --project="${BIOMED_PROJECT}" \
         --description="Service account for Biomed workflows" \
         --display-name="biomed" || exit 1
     echo "Service account ${SA_FULL_NAME} created"
@@ -90,54 +90,54 @@ fi
 if [[ -f "${KEYFILE}" && "$OVERWRITE" == "false" ]]; then
     echo "A key (${KEYFILE}) already exists for ${SA_FULL_NAME}. Skipping key creation. To create a new key, delete the old one manually or run with --overwrite."
 else
-    gcloud iam service-accounts keys create $KEYFILE --iam-account=${SA_FULL_NAME} || exit 1
+    gcloud iam service-accounts keys create "${KEYFILE}" --iam-account="${SA_FULL_NAME}" || exit 1
     echo "Key file created: $KEYFILE"
 fi
 
 
 # Create the Biomed Workflow Role. A custom role is created so that we don't provide more permissions than necessary.
-permissions="bigquery.datasets.create,bigquery.jobs.create,bigquery.tables.create,bigquery.tables.createSnapshot,bigquery.tables.delete,bigquery.tables.deleteSnapshot,bigquery.tables.get,bigquery.tables.getData,bigquery.tables.list,bigquery.tables.update,bigquery.tables.updateData"
-output=$(gcloud iam roles list --project=${BIOMED_PROJECT} --filter="name:BiomedWorkflow" 2>&1)
+permissions="bigquery.datasets.create,bigquery.datasets.get,bigquery.jobs.create,bigquery.tables.create,bigquery.tables.createSnapshot,bigquery.tables.delete,bigquery.tables.deleteSnapshot,bigquery.tables.get,bigquery.tables.getData,bigquery.tables.list,bigquery.tables.update,bigquery.tables.updateData"
+output=$(gcloud iam roles list --project="${BIOMED_PROJECT}" --filter="name:BiomedWorkflow" 2>&1)
 if [[ $output == *"Listed 0 items"* ]]; then
     echo "BiomedWorkflow role doesn't exist for project '${BIOMED_PROJECT}'. Creating role."
-    gcloud iam roles create BiomedWorkflow --project=$BIOMED_PROJECT \
+    gcloud iam roles create BiomedWorkflow --project="${BIOMED_PROJECT}" \
         --title="Biomed Workflow Role" \
         --description="Gives necessary permissions to run the Biomed workflow" \
-        --permissions=$permissions || exit 1
+        --permissions="${permissions}" || exit 1
 else
     echo "BiomedWorkflow for project '${BIOMED_PROJECT}' already exists. running update."
-    gcloud iam roles update BiomedWorkflow --project=$BIOMED_PROJECT \
+    gcloud iam roles update BiomedWorkflow --project="${BIOMED_PROJECT}" \
         --title="Biomed Workflow Role" \
         --description="Gives necessary permissions to run the Biomed workflow" \
-        --permissions=$permissions || exit 1
+        --permissions="${permissions}" || exit 1
 fi
 
 # Add Role to our service account
-gcloud projects add-iam-policy-binding $BIOMED_PROJECT \
-    --member=serviceAccount:$SA_FULL_NAME \
-    --role=projects/$BIOMED_PROJECT/roles/BiomedWorkflow || exit 1
+gcloud projects add-iam-policy-binding "${BIOMED_PROJECT}" \
+    --member=serviceAccount:"${SA_FULL_NAME}" \
+    --role=projects/"${BIOMED_PROJECT}"/roles/BiomedWorkflow || exit 1
 
 if [[ "$SKIP_AO" == "false" ]]; then
     # Create the Biomed Workflow Role to access the academic observatory data
     permissions="bigquery.jobs.create,bigquery.tables.get,bigquery.tables.getData,bigquery.tables.list"
     output=$(gcloud iam roles list --project=academic-observatory --filter="name:BiomedWorkflow" 2>&1)
-    if [[ $output == *"Listed 0 items"* ]]; then
+    if [[ "${output}" == *"Listed 0 items"* ]]; then
         echo "BiomedWorkflow role doesn't exist for project 'academic-observatory' Creating role."
         gcloud iam roles create BiomedWorkflow --project=academic-observatory \
             --title="Biomed Workflow Role" \
             --description="Gives necessary permissions to run the Biomed workflow" \
-            --permissions=$permission || exit 1
+            --permissions="${permissions}" || exit 1
     else
         echo "BiomedWorkflow role for project 'academic-observatory' already exists. running update."
         gcloud iam roles update BiomedWorkflow --project=academic-observatory \
             --title="Biomed Workflow Role" \
             --description="Gives necessary permissions to run the Biomed workflow" \
-            --permissions=$permissions || exit 1
+            --permissions="${permissions}" || exit 1
     fi
 
     # Add academic-observatory biomed Role to our service account
     gcloud projects add-iam-policy-binding academic-observatory \
-        --member=serviceAccount:$SA_FULL_NAME \
+        --member=serviceAccount:"${SA_FULL_NAME}" \
         --role=projects/academic-observatory/roles/BiomedWorkflow || exit 1
 else
     echo "Not configuring Academic Observatory as --skip-ao flag used"

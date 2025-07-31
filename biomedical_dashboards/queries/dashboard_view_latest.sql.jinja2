@@ -1,6 +1,0 @@
-SELECT *
-FROM `{{ project }}.{{ institution_id }}_data.{{ table_name }}*`
-WHERE _TABLE_SUFFIX = ( -- Get the latest shard
-  SELECT MAX(_TABLE_SUFFIX)
-  FROM `{{ project }}.{{ institution_id }}_data.{{ table_name }}*`
-);
