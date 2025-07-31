@@ -142,7 +142,14 @@ def run_queries(partner: Partner, context: Context) -> None:
 def update_latest_tables(partner: Partner, context: Context) -> None:
     """Copies the tables created from this run to the 'latest' dataset"""
     latest_dataset = f"{partner.institution_id}_data_latest"
-    bq_create_dataset(project=context.project, dataset=latest_dataset, exists_ok=True)
+    try:
+        bq_create_dataset(project=context.project, dataset=latest_dataset, exists_ok=True)
+        bioprint(partner, f"Created dataset: {context.project}.{partner.output_dataset}")
+    except google.cloud.exceptions.Conflict:
+        bioprint(
+            partner,
+            f"Dataset already exists, no need to create: {context.project}.{partner.output_dataset}",
+        )
     bq_copy_table(
         project=context.project,
         src_dataset=partner.output_dataset,
