@@ -8,3 +8,6 @@ venv_biomed
 config_P02_ver2d.yaml
 .DS_Store
 .gitignore
+config_p_test_ver2e.yaml
+config_p02_ver2e.yaml
+.gitignore
