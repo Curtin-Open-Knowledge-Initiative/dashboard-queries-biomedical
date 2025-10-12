@@ -19,7 +19,7 @@ This repository contains version controlled SQL queries and processing scripts u
 
 ## Overview of  SQL queries that generate data for the BOS dashboard
 
-The dashboards for this project are created in Google LookerStudio, using data stored in BigQuery and processed with SQL scripts. Automation code written in Python is used to create and run customised SQL based on a configuration file. Additional scripts in 'R' are used to create flowcharts documenting project processes.
+The dashboards for this project are created in Google LookerStudio, using data stored in BigQuery and processed with SQL scripts. Automation code written in Python is used to create and run customized SQL based on a configuration file. Additional scripts in 'R' are used to create flowcharts documenting project processes.
 
 An overview of the data and processing steps in the automated BOS workflow can be found below:
 
@@ -29,6 +29,8 @@ There are 3 SQL scripts that the BOS Workflow needs to run in sequence due to in
 
 1. **Script #1 - Clinical Trial pre-processing** 
 This SQL script takes a data extract from the [Academic Observatory]([https://curtinic.atlassian.net/browse/COK-249](https://github.com/The-Academic-Observatory)) of Crossref and PubMed data and creates a combined list of Clinical Trials from these. The reason for creating this data extract is that the data is reused downstream in multiple parts of the workflow, so it makes sense to create the data extract once.
+
+*Note: See information on the overloaded field containing both Clinical Trial Registries and Databanks [here](https://www.nlm.nih.gov/bsd/medline_databank_source.html)*
 
 2. **Script #2 - Clinical Trial data processing** 
 This Trial Data query SQL script and should be run second due to dependencies between the files.
@@ -41,9 +43,11 @@ This is the main dashboard SQL query for The Neuro's publications and should be 
 ### Step 1 - Backup existing dashboard
 If making a new dashboard version, export the dashboard as a PDF and upload to the archive folder.
 
-### Step 2 - Prepare input data in BigQuery
+### Step 2 - Setup your BigQuery project
 
 Throughout this document the BigQuery project for the BOS workflow will be called: `BIOMED_PROJECT` - replace this with the actual project-ID for your BigQuery project. The naming convention for institutions is that they have a prefix, e.g. `P01_NAME` - replace this with the actual institution name prefix.
+
+### Step 3 - Prepare input data in BigQuery
 
 Each partner institution will have the following datasets in the `BIOMED_PROJECT` project with partitioned tables, i.e., .
 
@@ -58,21 +62,14 @@ Each partner institution will have the following datasets in the `BIOMED_PROJECT
     - `trialsYYYYMMDD` - Output with institution clinical trial data, by Trial-ID
     - `alltrialsYYYYMMDD` - Output on al clinical trials, by Trial-ID
 
-- `P01_NAME_data_latest` - Most recent output from the BOS workflow. This is the data that the BOS dashbaord draws from:
+- `P01_NAME_data_latest` - Most recent output from the BOS workflow. This is the data that the BOS dashboard draws from:
     - `pubs` - most recent of pubsYYYYMMDD
     - `trials` - most recent of trialsYYYYMMDD 
-    - `utility_table` - 1x1 table used for community visualisations
+    - `utility_table` - 1x1 table used for community visualizations
     - `utility_years` - table containing year range of the data
 
-    utility_pubs_with_years
-utility_table
-utility_trials_reporting
-utility_years
-
-Running the BOX workflow assumes that the 3 tables of input data have already been uploaded to the `P01_NAME_from_institution` BigQuery dataset, as specified in the BOS data onboarding schema (not detailed here), and with the date incrimented so that it is the most recent date in the data stack.
-
-### Step 3 - Setup your computing environment
-**Computing**: To run the BOS workflow, a workstation (e.g. laptop computer or virtual machine) is required that either runs [Docker](https://www.docker.com/), or can run a virtual environment. 
+### Step 4 - Setup your computing environment
+**Computing**: To run the BOS workflow, a workstation (e.g. laptop computer or virtual machine) is required that either runs [Docker](https://www.docker.com/), or the BOS workflow can run a virtual environment. 
 
 **IDE**: The BOS workflow is run from within an integrated development environment (IDE) such as Visual Studio Code (i.e., [vscode](https://code.visualstudio.com/)) or [Pycharm](https://www.jetbrains.com/pycharm/). Ensure that a suitable IDE is installed.
 
@@ -80,36 +77,32 @@ Running the BOX workflow assumes that the 3 tables of input data have already be
 
 `which python3.11`
 
+**pip**: you need to have pip to install the BOS workflow. You can see if you have pip installed using the following command
 
-**Google Cloud Command Line Interface** The BOS workflow requires that the Google Cloud Command Line Interface (i.e., `gcloud cli`) is installed. The gcloud cli is a set of tools that allows users to interact with and manage Google Cloud resources directly from the command line. You can see instructions for installation [here](https://cloud.google.com/sdk/docs/install).
+`python3 -m pip --version`
 
-**Docker**: If you plan to run the BOS workflow within a [Docker container](https://www.docker.com/) then you need to have Docker installed and running on your machine. A Docker container is a "are standardized, executable packages that bundle an application's code along with all its necessary dependencies, such as libraries, system tools, and runtime environments, etc."
+### Step 5 - Clone the BOS workflow GitHub repository
+The BOS workflow GitHub repository (https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical) should then be cloned and opened in your IDE. This only needs to be done once, unless the repository has been updated.
 
-### Step 4 - Clone the BOS workflow GitHub repository
-The BOS workflow GitHub repository (https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical) should then be cloned and opened in your IDE. This only needs to be done once.
+### Step 6 - Make sure that Docker is setup and running
 
-# Running the BOS workflow
+BOS is a python-based workflow that depends on various environment settings, and sometimes there were issues with it running correctly on different machines. The BOS workflow therefore includes a [Docker container](https://www.docker.com/) that runs through the installation and runs from start to finish. A Docker container is a "standardized, executable packages that bundle an application's code along with all its necessary dependencies, such as libraries, system tools, and runtime environments, etc." Its use is optional but these instructions assume that the BOS workflow will be run using the Docker container.
 
-The BOS workflow does the following for each configured partner institution:
+**Docker**: To run the BOS workflow within a Docker container you need to have Docker installed on your machine, and it needs to be running while you run the workflow.
 
-- Checks for the existence of the expected static data files
-- Creates the required output datasets if they do not exist
-- Generates queries and writes them to file
-- Runs the queries
-- Overwrites the _latest_ tables with copies of the newly created tables
+# Setting up the Google Cloud Platform (GCP) environment
 
-### Step 5 - Open a terminal window within your IDE**
+### Step 7 - Make sure the Google Cloud CLI is installed on your computer
 
-The BOS workflow is run from a terminal window from within your IDE. Open a terminal window, and make sure that you are in the directory where the repo is, ie:
- ` ~ dashboard-queries-biomedical`
+**Google Cloud Command Line Interface**: The BOS workflow requires that the Google Cloud Command Line Interface (i.e., `gcloud cli`) is installed on your computer. The gcloud cli is a set of tools that allows users to interact with and manage Google Cloud resources directly from the command line. You can see instructions for installation [here](https://cloud.google.com/sdk/docs/install).
 
-### Step 6 - GCP User Setup
+### Step 8 - GCP setup - User Roles
 
-Running the workflow requires an authenticated Google Cloud service account with the appropriate permissions.
+Running the workflow requires an authenticated Google Cloud Platform service account with the appropriate permissions.
 
 Your user account will require the following roles in the `BIOMED_PROJECT` Project:
 
-- Bigquery Admin
+- BigQuery Admin
 - Create Service Accounts
 - Project IAM Admin
 - Role Administrator
@@ -120,205 +113,199 @@ And also the following roles in the `Academic-Observatory` Project:
 - Project IAM Admin
 - Role Administrator
 
-If it is not desirable to grant this level of access to the user for the Academic-Observatory, a privileged user can instead run the following:
+If it is not desirable to grant this level of access to the user for the Academic-Observatory, a privileged user (i.e. a user with the appropriate permissions) can instead run the following command:
 
-`bash
+```bash
 gcloud projects add-iam-policy-binding academic-observatory \
     --member=serviceAccount:$sa_full_name \
     --role=projects/academic-observatory/roles/BiomedWorkflow \
-`
+```
 
 Where `$sa_full_name` is the name of the service account that the user creates in the gcp_setup.sh step.
 This grants the service account the necessary access to the `Academic Observatory` Project in order to run the BOS workflow.
 
-### Step 6 - GCP Service Account Setup - Authentication
+### Step 9 - GCP setup - Authenticating the Google Cloud CLI
 
-The GCP setup requires that the `gcloud cli` is installed (see earlier note). Once gcloud is installed, authenticate by entering the following command at the terminal.
-
-`gcloud auth login`
-
-After you have authenticated in the browser you can return to the terminal window where there should be written some messages such as:
+To have the Google Cloud CLI (i.e. Command line interface) access the BOS resources you need to authorize it with your Google profile that has has the appropriate access. To do so, run the following command rom a terminal window within your IDE to authorize gcloud with your credentials:
 
 ```bash
+gcloud auth login
+```
+
+This command will redirect you to a window in your browser (e.g. Chrome, Safari). After you have authenticated in the browser with the appropriate account you can return to the terminal window where there should be written a messages such as:
+
+`
 You are now logged in as [XXXXXXX@ XXXXXXX].
 Your current project is [XXXXXXX].  You can change this setting by running:
   $ gcloud config set project PROJECT_ID
-```
-
-Make sure that your current project is [BIOMED_PROJECT]. If not then use the command (replace BIOMED_PROJECT with the actual name of the BOS Project)
-
-```bash
-gcloud config set project BIOMED_PROJECT
-```
-
-### Step 7 - Running the GCP Service Account Setup command
-
-For ease of setup, there is a setup file `gcp_setup.sh` that will do all of the hard work. 
-
-Run the following setup command from your terminal window, providing your working project (AUTH_PROJECT - the project you use to authenticate with) and the project that will be written to (BIOMED_PROJECT).
-
-`bash
-bash gcp_setup.sh [AUTH_PROJECT] [BIOMED_PROJECT]
 `
 
-There is no reason these two projects can't be the same if you wish.
+*Tips*
+
+Make sure that your current project is [BIOMED_PROJECT]. If not then use the following command (replace BIOMED_PROJECT with the actual name of the BOS Project)
+
+`
+gcloud config set project BIOMED_PROJECT
+`
+
+*Tips*
+
+To see what GCP account you are currently authenticated with use the following Google Cloud SDK command from the terminal window within your IDE :
+
+`
+gcloud auth list
+`
+
+### Step 10 - Setup your access key
+
+> [!WARNING] 
+> This only has to be done once for the project, as every time this command is run it
+> makes a new access key and there is a limit as to how many can be created. The access key will be 
+> downloaded into a file call .keyfile.json
+
+To setup your access key, there is a setup file `gcp_setup.sh` that will do all of the hard work. Run the following setup command from the terminal window within your IDE and making sure that you are in the top level of the repository, ie: ` ~ dashboard-queries-biomedical`. Provide your working project (AUTH_PROJECT is the project you used to authenticate with) and the project that data will be written to (BIOMED_PROJECT). There is no reason these two projects can't be the same if you wish.
+
+```bash
+bash gcp_setup.sh [AUTH_PROJECT] [BIOMED_PROJECT]
+```
+
+This command will create an access key with the provided authorizations and save it to a file called `.keyfile.json`. You can use this `.keyfile.json` as is, or for extra security make a symbolic link to the file (see below).
+
+*Tips*
 
 If you do not have the necessary privileges for the Academic Observatory (as described in the previous step), add the `--skip-ao` flag.
 
 The setup script has a few more useful run options. You can view them by running:
 
-`bash
+```bash
 bash gcp_setup.sh --help
-`
+```
 
+### Step 11 - Create a symbolic link to your Keyfile (optional)
 
-GOT TO CONFIG
+Once you have downloaded a Keyfile you can use it to access Google Cloud Platform services. A good way to enhance security is that instead of using the actual key file, is that instead you create a symbolic link to the Keyfile. This way, the Keyfile is protected in case the symbolic link is shared, such as when the repository is backed up to GitHUb.
 
+To do this:
 
+1. Move the `.keyfile.json` file to a different location on your system that is not inside the repository containing the BOS workflow.
+2. from the terminal window within your IDE, first check that you are in the top-level directory of the repository where the `.keyfile.json` is located.
+3. Now run the following command which will copy the **location** of your keyfile into the `.keyfile.json` file within the repository, but not the **contents* of the keyfile. When using this command, replace `"/path/to/your/keyfile.json"` with the path and filename of where your downloaded keyfile is located.
 
+```bash
+ln -s /path/to/your/keyfile.json .keyfile.json
+```
 
+### Step 12 - Build the Docker container
 
----
-----
-----
----
-----
--------
-----
--------
-----
--------
-----
--------
-----
-----
-### Step 23 - Run SQL for PubMed data
-This SQL script takes a data extract from the [Academic Observatory]([https://curtinic.atlassian.net/browse/COK-249](https://github.com/The-Academic-Observatory)) of Crossref and PubMed data and creates a combined list of Clinical Trials from these. The reason for creating this data extract is that the data is reused downstream in the workflow, so it makes sense to create it once and re-use it. This SQL script is listed as being required to be run first, but if the data already exists on disc then it does not need to be re-run. If the script does need to be run to make changes or for some other reason, then do the following steps:
+The default way of running the BOS workflow is within a Docker container.
 
-1. In BigQuery, make a copy of the most recent SQL script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query1_alltrials_2024_05_17`
+To build the container, make sure Docker is running on your machine, open a terminal window within your IDE, and make sure that you are in the top-level directory of the repository. Run the following command:
 
-2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query1_alltrials_2024_05_17`
-    - **var_SQL_year_cutoff**: earliest year that data is extracted from the Academic Observatory, eg 2000, or use 1 for all data
-    - **var_AcademicObservatory_doi**: name of the DOI table version used, eg `doi20240512`
-      
-3. In the script, make sure that you are happy with the version of the BigQuery input dataset, as these may have been updated since the last time that the script was run:
-    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `doi20240512`
-   
-5. Check that the output table has a similar naming convention to the script name, eg:
-    - `neuro_ver1p_query1_alltrials_2024_05_17`
-      
-5. Make any other changes to the SQL script and save the changes.
+```bash
+docker build -t biomed:latest .
+```
 
-6. Run the SQL script.
+Afer this command has run you should now have a `biomed:latest` image. 
 
-*Note: See information on the overloaded field containing both Clinical Trial Registries and Databanks [here](https://www.codecademy.com/pages/contribute-docs)*
+### Step 13 - Install the BOS workflow
 
-### Step 2B - Run SQL for Trial data
-This Trial Data query SQL script and should be run second due to dependencies between the files.
+Now install the biomedical workflow. You need to repeat this step if the repository has changed.
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query2_trials_2024_05_17`
-   
-2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query2_trials_2024_05_17`
-    - **var_data_trials**: `PROJ_trials_YYYYMM` Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
-    - **var_data_dois**: `ORG_dois_YYYYMM` Table name containing DOIs from the institution institution, eg `theneuro_dois_20230217`
+Make sure that you are in the top-level directory of the repository and run the following command:
 
-3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
-    - **Charite Processing by the Project** - `PROJ_trials_YYYYMM` Table of output from the Charite processing, eg `theneuro_trials_20231111`
-    - **Publication DOIs** - `ORG_dois_YYYYMM` Table containing DOIs from the institution institution, eg `theneuro_dois_20230217`
-    - **Clinical Trial data extract** - This table was created in Step 1, eg `neuro_ver1p_query1_alltrials_2024_05_17`
+```bash
+pip install .
+```
 
-5. Check that the output table has a similar naming convention to the script name, eg:
-    - `OUTPUT_ver1p_query2_trials_2024_05_17`
+*Tip*
+If you get the error `bash: pip: command not found` but you have the correct version of Python installed, this is likely due to an issue with other installed software. Instead you can be explicit about the version of pip to use by using the following alternative command:
 
-5. Make any other changes you want to make to the script and save the changes.
+```bash
+python3 -m  pip install .
+```
 
-6. Run the script.
+# Running the BOS workflow
 
+Running the BOS workflow assumes that the 3 tables of input data have already been uploaded to the `P01_NAME_from_institution` BigQuery dataset, as specified in the BOS data onboarding schema (not detailed here), and with the date incremented so that it is the most recent date in the data stack.
 
-### Step 2C - Run SQL for Publication data
-This is the main dashboard SQL query for The Neuro's publications and should be run third due to dependencies between the files.
+### Step 14 - Setting the configuration file for this run
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query3_pubs_2024_05_17`
-   
-2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg  `neuro_ver1p_query3_pubs_2024_05_17`
-    - **var_data_dois**: `ORG_dois_YYYYMM` Table name containing DOIs from the institution institution, eg `theneuro_dois_20230217`
-    - **var_data_trials**: `PROJ_trials_YYYYMM` Table name of clinical trials output from the Charite processing, eg `theneuro_trials_20231111`
-    - **var_data_oddpub**: `PROJ_oddpub_YYYYMM` Table name of output from the Oddpub processing, eg `theneuro_oddpub_20231017`
+The workflow requires a config file to be setup for each run. The config file is a plain text file written in the  YAML Markup language. The config file describes all of the workflow run parameters for this particular run, such as the name of the partner and which date-sharded tables to use, etc. See the [example config file](/example_config.yaml) for more information about each field in the config file. Also see an example below:
 
-3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
-    - **Publication DOIs** - `ORG_dois_YYYYMM` Table containing DOIs from the institution institution, `theneuro_dois_20230217`
-    - **Institution Clinical Trials** - `ORG_trials_YYYYMM` Table containing list of clinical trials from the partner institution, eg `theneuro_trials_20231111`
-    - **Oddpub Processing by the Project** - `PROJ_oddpub_YYYYMM` Table of output from the Oddpub processing, eg `theneuro_oddpub_20231017`
-    - **Clinical Trial data extract** - This table was created in Step 1, eg `neuro_ver1p_query1_alltrials_2024_05_17`
-    - **Academic Observatory** - the version of the Academic Observatory DOI table, eg `academic-observatory.observatory.doi20240512`
+### Step 15 - Run the workflow!
 
-4. Check that the output table has a similar naming convention to the script name, eg:
-    - `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query3_pubs_2024_05_17`
+The BOS workflow does the following for each configured partner institution:
 
-6. Make any other changes you want to make to the script and save the changes.
-   
-7. Run the script.
+- Checks for the existence of the expected static data files
+- Creates the required output datasets if they do not exist
+- Generates queries and writes them to file
+- Runs the queries
+- Overwrites the _latest_ tables with copies of the newly created tables
 
+From a terminal window within your IDE, make sure that you are in the top level of the repository. To run the Docker image, we need to mount the required files (config file and keyfile) to the container and run the `biomed` command that actually runs the BOS workflow. This is an example of how the command should be entered;
 
-### Step 2D - Run SQL for ORCID data
-The Researcher ORCID Data query SQL script and should be run fourth due to dependencies between the files.
+```bash
+docker run \
+    -v ./config.yaml:/app/config.yaml \
+    -v ./.keyfile.json:/app/.keyfile.json \
+    --entrypoint biomed \
+    biomed:latest /app/config.yaml
+```
 
-1. In BigQuery, make a copy of the most recent script and save it as a ‘Project’ query. Increment the naming to reflect the current sprint and creation date, eg `neuro_ver1p_query4_orcid_2024_05_17`
-   
-2. Set variables at the top of the SQL script. These variables are not used to select data locations, but are 'text tags' that will be added as fields in the output file:
-    - **var_SQL_script_name**: name of the SQL script, eg `neuro_ver1p_query4_orcid_2024_05_17`
-    - **var_ORCID_Dataset_name**: name of the table containing list of researcher ORCIDs from the partner institution, eg `theneuro_orcids_20230906`
-    - **var_output_table**: name of the output table, eg `OUTPUT_ver1p_query4_orcid_2024_05_17`
+Here is another example of running the workflow with a config file called `config_P01_NAME.yaml`
 
-3. In the script, make sure that you are happy with the versions of the BigQuery input datasets, as these may have been updated since the last time that the script was run:
-      - The contributed Researcher ORCID data
-      - **Researcher ORCIDs** - `ORG_orcid_YYYYMM` Table containing list of researcher ORCIDs from the partner institution, eg `theneuro_orcids_20230906`
+```bash
+docker run \
+    -v ./config_P01_NAME.yaml:/app/config_P01_NAME.yaml \
+    -v ./.keyfile.json:/app/.keyfile.json \
+    --entrypoint biomed \
+    biomed:latest /app/config_P01_NAME.yaml
+```
 
-4. Check that the output table has a similar naming convention to the script name, eg:
-    - `university-of-ottawa.neuro_dashboard_data_archive.OUTPUT_ver1p_query4_orcid_2024_05_17`
-      
-5. Make any other changes you want to make to the script and save the changes.
+*Notes about running the workflow*
 
-6. Run the script.
+- `Dryrun`: Can be run in dryrun mode, which will simply generate the queries without running them. Useful for development/troubleshooting.
+- Concurrency: Most of the runtime is waiting for queries to finish, so partner workflows run concurrently. This means performance is not greatly inhibited by scaling.
+- Config checking: The config file is read and checked before running the workflow, so obvious errors are picked up and pointed out before doing anything serious.
+- Static table checking: Checks for the existence of each partner's static tables. If they don't exist, the queries will not run and waste resources.
 
-### Step 3 - Update the BigQuery views with the new data
-Edit the following views to point at the tables created in Steps 2-4”. Do this by opening the view, going to the ‘Details’ tab, and clicking ‘Edit Query’. In the tab that opens, edit the query and select ‘Save View’. Back in the view, click ’Refresh’ at the top right:
+# After running the BOS workflow
 
-- `university-of-ottawa.neuro_dashboard_data.dashboard_data_trials`
-- `university-of-ottawa.neuro_dashboard_data.dashboard_data_pubs`
-- `university-of-ottawa.neuro_dashboard_data.dashboard_data_orcid`
+### Step 16 - Output files
+The workflow wil create the following files:
 
-*Note: the *PubMed* data extract from Step 1 is not used in the dashboard
+- `P01_NAME_data` - Date-sharded output from the BOS workflow - this will be sharded by the date found in the Config .yaml file in the field "run_version"
 
-### Step 4 - Update the data connections in Looker Studio
-In LookerStudio refresh the data connections to look at the new files:
+    - `pubsYYYYMMDD` - Output with institution publication data, by DOI
+    - `trialsYYYYMMDD` - Output with institution clinical trial data, by Trial-ID
+    - `alltrialsYYYYMMDD` - Output on al clinical trials, by Trial-ID
+
+- `P01_NAME_data_latest` - Most recent output from the BOS workflow. This is the data that the BOS dashboard draws from:
+    - `pubs` - most recent of pubsYYYYMMDD
+    - `trials` - most recent of trialsYYYYMMDD 
+    - `utility_table` - 1x1 table used for community visualizations
+    - `utility_years` - table containing year range of the data
+
+*Note: the Clinical Trial pre-processing extract created by Script 1 is not used in the dashboard
+
+### Step 17 - Update the data connections in Looker Studio
+In LookerStudio the dashboard should always point at the most recent data contained within `P01_NAME_data_latest`
+refresh the data connections to look at the new files:
 
 - Have the dashboard in edit mode and go to “Resource” > “Manage added data sources”
 - For each table, refresh the link by going “Edit” then “Edit Connection”
 - Check the correct view is still selected (it should not have changed) and click “Reconnect”
 - For “Apply connection changes” click “Yes”, then “Done”
 
-### Step 5 - QC ...
+### Step 18 - Refresh the data extract in Google Sheets
+Refresh the data extract for the Publications output that is made available the linked Google Sheet:
+`- `“Data” > “Data Connectors” > “Refresh Options” > “Refresh All”`
+
+### Step 19 - QC ...
 Check all dashboard pages that everything looks OK. 
 
-### Step 6 - Refresh the data extract in Google Sheets
-Refresh the data extract for the Publications output that is made available the linked Google Sheet, “Data”, “Data Connectors”, “Refresh Options”, “Refresh All”. Copy/paste the main publication SQL into the dashboard page too.
-
-### Step 7 - Back-up
-Back-up the scripts to Github
-
 ---
-### Funding
+# Funding
 The Biomedical institutional open science dashboard program was supported by a Wellcome Trust Open Research Fund (223828/Z/21/Z). The results of the Delphi in step one were [published](https://doi.org/10.1371/journal.pbio.3001949) in PloS Biology. 
 
 Please contact, Dr. Kelly Cobey (kcobey@ottawaheart.ca), the Primary Investigator, with additional questions. 
-
----
-### Internal project resources
-_The following sites require authentication to access_
-
-[Jira ticket](https://curtinic.atlassian.net/browse/COK-249) and [GoogleDrive folder](https://drive.google.com/drive/folders/1I5uPFBWe0pQQT2myRHaCeAgU_xwAAVpg?usp=sharing)
-
