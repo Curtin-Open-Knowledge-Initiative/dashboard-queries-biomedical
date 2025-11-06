@@ -68,35 +68,83 @@ Each partner institution will have the following datasets in the `BIOMED_PROJECT
     - `utility_table` - 1x1 table used for community visualizations
     - `utility_years` - table containing year range of the data
 
-### Step 4 - Setup your computing environment
-**Computing**: To run the BOS workflow, a workstation (e.g. laptop computer or virtual machine) is required that either runs [Docker](https://www.docker.com/), or the BOS workflow can run a virtual environment. 
+### Step 4 – Choose how you will run the workflow
 
-**IDE**: The BOS workflow is run from within an integrated development environment (IDE) such as Visual Studio Code (i.e., [vscode](https://code.visualstudio.com/)) or [Pycharm](https://www.jetbrains.com/pycharm/). Ensure that a suitable IDE is installed.
+**Option 4.a – From a terminal window**:
 
-**Python**: The BOS workflow is written in the [Python](https://www.python.org/) programming language. Make sure you have the correct Python version installed on your local machine. The BOS workflow is written in Python3, specifically Python 3.11. So this version of Python needs to be installed to run. If necessary then install the correct Python version. You can check that you have the correct version of python installed by typing the following command into a terminal window:
+The BOS workflow commands can be run from a terminal window.
 
-`which python3.11`
+**Option 4.b – From within an IDE**:
 
-**pip**: you need to have pip to install the BOS workflow. You can see if you have pip installed using the following command
-
-`python3 -m pip --version`
+The BOS workflow can also be run from within an integrated development environment (IDE) such as Visual Studio Code (i.e., [vscode](https://code.visualstudio.com/)) or [Pycharm](https://www.jetbrains.com/pycharm/). If you want to run the workflow from within an IDE, then ensure that a suitable IDE is installed.
 
 ### Step 5 - Clone the BOS workflow GitHub repository
 The BOS workflow GitHub repository (https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical) should then be cloned and opened in your IDE. This only needs to be done once, unless the repository has been updated.
 
-### Step 6 - Make sure that Docker is setup and running
+### Step 6 - Setup your computing environment - Option 1 - Docker
 
-BOS is a python-based workflow that depends on various environment settings, and sometimes there were issues with it running correctly on different machines. The BOS workflow therefore includes a [Docker container](https://www.docker.com/) that runs through the installation and runs from start to finish. A Docker container is a "standardized, executable packages that bundle an application's code along with all its necessary dependencies, such as libraries, system tools, and runtime environments, etc." Its use is optional but these instructions assume that the BOS workflow will be run using the Docker container.
+The BOS workflow can be run either with Docker or within a virtual environment. The BOS python-based workflow depends on various environment settings, and sometimes there were issues with it running correctly on different machines.
 
-**Docker**: To run the BOS workflow within a Docker container you need to have Docker installed on your machine, and it needs to be running while you run the workflow.
+ The BOS workflow therefore includes a [Docker container](https://www.docker.com/) that runs through the installation and runs from start to finish. Running the BOS workflow with [Docker](https://www.docker.com/) is the easiest option as the various dependencies are managed for you.
+
+A Docker container is a "standardized, executable packages that bundle an application's code along with all its necessary dependencies, such as libraries, system tools, and runtime environments, etc."
+
+To run the BOS workflow within a Docker container you need to have Docker installed on your machine, and the Docker container needs to be running while you run the workflow.
+
+**Build the Docker container**
+
+To build the container, make sure Docker is running on your machine. Open a terminal window (or if you are running within an IDE then open the terminal window within the IDE), and make sure that you are in the top-level directory of the repository. Run the following command:
+
+```bash
+docker build -t biomed:latest .
+```
+
+After this command has run you should now have a `biomed:latest` image within Docker.
+
+### Step 7 - Setup your computing environment - Option 2 - Virtual environment
+
+If you do not wish to use Docker you will need to check the following are installed and set up:
+
+**Python**: The BOS workflow is written in the [Python](https://www.python.org/) programming language, specifically Python 3.11. To check that you have Python 3.11 installed on your machine you can type the following command into a terminal window. The command will return the Python version, assuming it's installed.
+
+`python3 --version`
+
+**pip**: You need to have pip to install the BOS workflow. You can see if you have pip installed using the following command
+
+`python3 -m pip --version`
+
+**Create a virtual environment** It is recommended that you create a new virtual environment for the BOS workflow with the following command that will create a new virtual environment called `venv_biomed` in the current directory. You can choose to place it anywhere else by changing the `venv_biomed` to a different path on your system.
+
+`python3.11 -m venv venv_biomed && source venv_biomed/bin/activate`
+
+**Install the workflow with pip**  You should then install the BOS workflow with `pip` from the repository's root directory (i.e., where `pyproject.toml` is located):
+
+`pip install .`
+
+**Install the BOS workflow**
+
+Now install the biomedical workflow. You need to repeat this step if the repository has changed else you don't need to do it every time you run the workflow.
+
+Make sure that you are in the top-level directory of the repository and run the following command:
+
+```bash
+pip install .
+```
+
+*Tip*
+If you get the error `bash: pip: command not found` but you have the correct version of Python installed, this is likely due to an issue with other installed software. Instead you can be explicit about the version of pip to use by using the following alternative command:
+
+```bash
+python3 -m  pip install .
+```
 
 # Setting up the Google Cloud Platform (GCP) environment
 
-### Step 7 - Make sure the Google Cloud CLI is installed on your computer
+### Step 8 - Make sure the Google Cloud CLI is installed on your computer
 
 **Google Cloud Command Line Interface**: The BOS workflow requires that the Google Cloud Command Line Interface (i.e., `gcloud cli`) is installed on your computer. The gcloud cli is a set of tools that allows users to interact with and manage Google Cloud resources directly from the command line. You can see instructions for installation [here](https://cloud.google.com/sdk/docs/install).
 
-### Step 8 - GCP setup - User Roles
+### Step 9 - GCP setup - User Roles
 
 Running the workflow requires an authenticated Google Cloud Platform service account with the appropriate permissions.
 
@@ -124,7 +172,7 @@ gcloud projects add-iam-policy-binding academic-observatory \
 Where `$sa_full_name` is the name of the service account that the user creates in the gcp_setup.sh step.
 This grants the service account the necessary access to the `Academic Observatory` Project in order to run the BOS workflow.
 
-### Step 9 - GCP setup - Authenticating the Google Cloud CLI
+### Step 10 - GCP setup - Authenticating the Google Cloud CLI
 
 To have the Google Cloud CLI (i.e. Command line interface) access the BOS resources you need to authorize it with your Google profile that has has the appropriate access. To do so, run the following command rom a terminal window within your IDE to authorize gcloud with your credentials:
 
@@ -140,7 +188,7 @@ Your current project is [XXXXXXX].  You can change this setting by running:
   $ gcloud config set project PROJECT_ID
 `
 
-*Tips*
+*Tip*
 
 Make sure that your current project is [BIOMED_PROJECT]. If not then use the following command (replace BIOMED_PROJECT with the actual name of the BOS Project)
 
@@ -148,7 +196,7 @@ Make sure that your current project is [BIOMED_PROJECT]. If not then use the fol
 gcloud config set project BIOMED_PROJECT
 `
 
-*Tips*
+*Tip*
 
 To see what GCP account you are currently authenticated with use the following Google Cloud SDK command from the terminal window within your IDE :
 
@@ -156,7 +204,7 @@ To see what GCP account you are currently authenticated with use the following G
 gcloud auth list
 `
 
-### Step 10 - Setup your access key
+### Step 11 - Setup your access key
 
 > [!WARNING] 
 > This only has to be done once for the project, as every time this command is run it
@@ -171,7 +219,7 @@ bash gcp_setup.sh [AUTH_PROJECT] [BIOMED_PROJECT]
 
 This command will create an access key with the provided authorizations and save it to a file called `.keyfile.json`. You can use this `.keyfile.json` as is, or for extra security make a symbolic link to the file (see below).
 
-*Tips*
+*Tip*
 
 If you do not have the necessary privileges for the Academic Observatory (as described in the previous step), add the `--skip-ao` flag.
 
@@ -181,58 +229,29 @@ The setup script has a few more useful run options. You can view them by running
 bash gcp_setup.sh --help
 ```
 
-### Step 11 - Create a symbolic link to your Keyfile (optional)
+### Step 12 - Create a symbolic link to your Keyfile (optional)
 
-Once you have downloaded a Keyfile you can use it to access Google Cloud Platform services. A good way to enhance security is that instead of using the actual key file, is that instead you create a symbolic link to the Keyfile. This way, the Keyfile is protected in case the symbolic link is shared, such as when the repository is backed up to GitHUb.
+Once you have downloaded a Keyfile you can use it to access Google Cloud Platform services. A good way to enhance security is that instead of using the actual key file, you instead  create a symbolic **link** to the Keyfile. This way, the Keyfile is protected in case the symbolic link is shared, such as when the repository is backed up to GitHUb.
 
 To do this:
 
 1. Move the `.keyfile.json` file to a different location on your system that is not inside the repository containing the BOS workflow.
-2. from the terminal window within your IDE, first check that you are in the top-level directory of the repository where the `.keyfile.json` is located.
+2. From the terminal window within your IDE, first check that you are in the top-level directory of the repository where the `.keyfile.json` is located.
 3. Now run the following command which will copy the **location** of your keyfile into the `.keyfile.json` file within the repository, but not the **contents* of the keyfile. When using this command, replace `"/path/to/your/keyfile.json"` with the path and filename of where your downloaded keyfile is located.
 
 ```bash
 ln -s /path/to/your/keyfile.json .keyfile.json
 ```
 
-### Step 12 - Build the Docker container
-
-The default way of running the BOS workflow is within a Docker container.
-
-To build the container, make sure Docker is running on your machine, open a terminal window within your IDE, and make sure that you are in the top-level directory of the repository. Run the following command:
-
-```bash
-docker build -t biomed:latest .
-```
-
-Afer this command has run you should now have a `biomed:latest` image. 
-
-### Step 13 - Install the BOS workflow
-
-Now install the biomedical workflow. You need to repeat this step if the repository has changed.
-
-Make sure that you are in the top-level directory of the repository and run the following command:
-
-```bash
-pip install .
-```
-
-*Tip*
-If you get the error `bash: pip: command not found` but you have the correct version of Python installed, this is likely due to an issue with other installed software. Instead you can be explicit about the version of pip to use by using the following alternative command:
-
-```bash
-python3 -m  pip install .
-```
-
 # Running the BOS workflow
 
 Running the BOS workflow assumes that the 3 tables of input data have already been uploaded to the `P01_NAME_from_institution` BigQuery dataset, as specified in the BOS data onboarding schema (not detailed here), and with the date incremented so that it is the most recent date in the data stack.
 
-### Step 14 - Setting the configuration file for this run
+### Step 13 - Setting the configuration file for this run
 
 The workflow requires a config file to be setup for each run. The config file is a plain text file written in the  YAML Markup language. The config file describes all of the workflow run parameters for this particular run, such as the name of the partner and which date-sharded tables to use, etc. See the [example config file](/example_config.yaml) for more information about each field in the config file. Also see an example below:
 
-### Step 15 - Run the workflow!
+### Step 14 - Run the workflow!
 
 The BOS workflow does the following for each configured partner institution:
 
@@ -271,7 +290,7 @@ docker run \
 
 # After running the BOS workflow
 
-### Step 16 - Output files
+### Step 15 - Output files
 The workflow wil create the following files:
 
 - `P01_NAME_data` - Date-sharded output from the BOS workflow - this will be sharded by the date found in the Config .yaml file in the field "run_version"
@@ -288,7 +307,7 @@ The workflow wil create the following files:
 
 *Note: the Clinical Trial pre-processing extract created by Script 1 is not used in the dashboard
 
-### Step 17 - Update the data connections in Looker Studio
+### Step 16 - Update the data connections in Looker Studio
 In LookerStudio the dashboard should always point at the most recent data contained within `P01_NAME_data_latest`
 refresh the data connections to look at the new files:
 
@@ -297,11 +316,11 @@ refresh the data connections to look at the new files:
 - Check the correct view is still selected (it should not have changed) and click “Reconnect”
 - For “Apply connection changes” click “Yes”, then “Done”
 
-### Step 18 - Refresh the data extract in Google Sheets
+### Step 17 - Refresh the data extract in Google Sheets
 Refresh the data extract for the Publications output that is made available the linked Google Sheet:
 `- `“Data” > “Data Connectors” > “Refresh Options” > “Refresh All”`
 
-### Step 19 - QC ...
+### Step 18 - QC ...
 Check all dashboard pages that everything looks OK. 
 
 ---
