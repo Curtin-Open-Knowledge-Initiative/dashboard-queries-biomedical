@@ -23,7 +23,7 @@ The dashboards for this project are created in Google LookerStudio, using data s
 
 An overview of the data and processing steps in the automated BOS workflow can be found below:
 
-![Alt text](ASSETS/2025_flowcharts_ver4b_NOLABELS_graph.pngDELETE)
+![Alt text](ASSETS/2025_flowcharts_ver4b_NOLABELS_graph.png)
 
 There are 3 SQL scripts that the BOS Workflow needs to run in sequence due to interdependencies between the datasets:
 
