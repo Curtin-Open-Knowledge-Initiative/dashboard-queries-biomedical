@@ -19,11 +19,11 @@ This repository contains version controlled SQL queries and processing scripts u
 
 ## Overview of  SQL queries that generate data for the BOS dashboard
 
-The dashboards for this project are created in Google LookerStudio, using data stored in BigQuery and processed with SQL scripts. Automation code written in Python is used to create and run customized SQL based on a configuration file. Additional scripts in 'R' are used to create flowcharts documenting project processes.
+The dashboards for this project are created in Google DataStudio, using data stored in BigQuery and processed with SQL scripts. Automation code written in Python is used to create and run customized SQL based on a configuration file. Additional scripts in 'R' are used to create flowcharts documenting project processes.
 
 An overview of the data and processing steps in the automated BOS workflow can be found below:
 
-![Alt text](ASSETS/2025_flowcharts_ver4b_NOLABELS_graph.png)
+![Alt text](ASSETS/2025_flowcharts_ver4c_annotated.png)
 
 There are 3 SQL scripts that the BOS Workflow needs to run in sequence due to interdependencies between the datasets:
 
@@ -190,7 +190,13 @@ Your current project is [XXXXXXX].  You can change this setting by running:
 
 *Tip*
 
-Make sure that your current project is [BIOMED_PROJECT]. If not then use the following command (replace BIOMED_PROJECT with the actual name of the BOS Project)
+Make sure that your current project is [BIOMED_PROJECT]. You can see your current project using the following command:
+
+`
+gcloud config get-value project
+`
+
+If you are not in the desired project, then use the following command to change projects (replace BIOMED_PROJECT with the actual name of the BOS Project)
 
 `
 gcloud config set project BIOMED_PROJECT
@@ -307,8 +313,8 @@ The workflow wil create the following files:
 
 *Note: the Clinical Trial pre-processing extract created by Script 1 is not used in the dashboard
 
-### Step 16 - Update the data connections in Looker Studio
-In LookerStudio the dashboard should always point at the most recent data contained within `P01_NAME_data_latest`
+### Step 16 - Update the data connections in DataStudio
+In DataStudio the dashboard should always point at the most recent data contained within `P01_NAME_data_latest`
 refresh the data connections to look at the new files:
 
 - Have the dashboard in edit mode and go to “Resource” > “Manage added data sources”
