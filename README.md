@@ -190,7 +190,13 @@ Your current project is [XXXXXXX].  You can change this setting by running:
 
 *Tip*
 
-Make sure that your current project is [BIOMED_PROJECT]. If not then use the following command (replace BIOMED_PROJECT with the actual name of the BOS Project)
+Make sure that your current project is [BIOMED_PROJECT]. You can see your current project using the following command:
+
+`
+gcloud config get-value project
+`
+
+If you are not in the desired project, then use the following command to change projects (replace BIOMED_PROJECT with the actual name of the BOS Project)
 
 `
 gcloud config set project BIOMED_PROJECT
