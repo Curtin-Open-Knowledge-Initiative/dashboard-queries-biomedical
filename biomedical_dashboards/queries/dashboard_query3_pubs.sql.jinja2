@@ -8,7 +8,7 @@ DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
 DECLARE var_data_oddpub STRING DEFAULT '{{ oddpub_table_name }}';
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
-
+DECLARE var_pubyear_cutoff_end INT64 DEFAULT {{ year_cutoff_end }}; # e.g. 2025
 
 -----------------------------------------------------------------------
 -- 0. Setup table 
@@ -48,6 +48,8 @@ enriched_doi_table AS (
     # re-processing of data and just extract and pre-process this once.
     LEFT JOIN `{{ project }}.{{ institution_id }}_data.alltrials{{ run_version }}` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
+      ########WHERE published_year <= {{ year_cutoff_end }}
+
 ), # END OF #1 enriched_doi_table
 
 -----------------------------------------------------------------------
@@ -327,11 +329,12 @@ SELECT
   ----- 5.2 UTILITY - add variables for the script version and data files
   var_SQL_workflow_version,
   var_data_dois,
+  var_pubyear_cutoff_end,
   var_data_oddpub,
   var_institution_id
 
   FROM main_select
-
+    #WHERE published_year <= {{ year_cutoff_end }}
 
 ) # End create table
 

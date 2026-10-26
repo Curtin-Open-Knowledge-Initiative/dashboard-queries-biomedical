@@ -101,7 +101,6 @@ def generate_queries(partner: Partner, context: Context) -> None:
     save_query(pubs, path)
     bioprint(partner, f"Query written to file: {path}")
 
-
 def check_generated_tables_exist(partner: Partner, context: Context):
     """Checks that the generated tables exist"""
 
