@@ -12,7 +12,8 @@ class Partner:
     :param trials_aact_table_name: The name of the partner input trials aact table.
     :param dois_table_name: The name of the partner input doi table.
     :param oddpub_table_name: The name of the partner input oddpub table.
-    :param year_cutoff: The cutoff publication year for this partner.
+    :param year_cutoff_start: Pubs with published_year < this are excluded from output.
+    :param year_cutoff_end: Pubs with published_year > this are excluded from output.
     """
 
     def __init__(
@@ -22,13 +23,15 @@ class Partner:
         dois_table_name: str,
         trials_aact_table_name: str,
         oddpub_table_name: str,
-        year_cutoff: Union[int, str],
+        year_cutoff_start: Union[int, str],
+        year_cutoff_end: Union[int, str],
     ):
         self.institution_id = institution_id
         self.dois_table_name = dois_table_name
         self.trials_aact_table_name = trials_aact_table_name
         self.oddpub_table_name = oddpub_table_name
-        self.year_cutoff = year_cutoff
+        self.year_cutoff_start = year_cutoff_start
+        self.year_cutoff_end = year_cutoff_end
 
     @property
     def output_dataset(self):
@@ -83,7 +86,8 @@ class Partner:
             dois_table_name=partner["dois_table_name"],
             trials_aact_table_name=partner["trials_aact_table_name"],
             oddpub_table_name=partner["oddpub_table_name"],
-            year_cutoff=partner.get("year_cutoff", 1),  # Default to 1 if not provided (all years)
+            year_cutoff_start=partner.get("year_cutoff_start", 1),  # Default to 1 if not provided (all years),
+            year_cutoff_end=partner.get("year_cutoff_end", 3000),  # Default to 3000 if not provided (all years)
         )
 
     def to_dict(self) -> dict:
@@ -92,7 +96,9 @@ class Partner:
             dois_table_name=self.dois_table_name,
             trials_aact_table_name=self.trials_aact_table_name,
             oddpub_table_name=self.oddpub_table_name,
-            year_cutoff=self.year_cutoff,
+            year_cutoff_start=self.year_cutoff_start,
+            year_cutoff_end=self.year_cutoff_end,
+
         )
 
 

@@ -10,8 +10,11 @@ partners:
     dois_table_name: dois_20230217 # The static dois partner table name
     oddpub_table_name: oddpub_20230217 # The static oddpub partner table name
     trials_aact_table_name: trials_aact_20250221 # The static trials_aact table name
-    year_cutoff: 2020 # Cutoff year for publications. Optional - can be excluded (defaults to 1)
+    year_cutoff_start: 2000 # Pubs with published_year < this are excluded from output. Optional - defaults to 1
+    year_cutoff_end: 2026 # Pubs with published_year > this are excluded from output    
   - institution_id: my-other-partner # Define any number of other partners.
     dois_table_name: dois_20230101
     oddpub_table_name: oddpub_20230101
     trials_aact_table_name: trials_aact_20250101
+    year_cutoff_start: 2000 # Pubs with published_year < this are excluded from output. Optional - defaults to 1
+    year_cutoff_end: 2026 # Pubs with published_year > this are excluded from output    
