@@ -3,7 +3,6 @@
 -- RUN THIS THIRD
 -- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
 DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
 DECLARE var_data_oddpub STRING DEFAULT '{{ oddpub_table_name }}';
@@ -13,15 +12,14 @@ DECLARE var_pubyear_cutoff_end INT64 DEFAULT {{ year_cutoff_end }}; # e.g. 2025
 -----------------------------------------------------------------------
 -- 0. Setup table 
 -----------------------------------------------------------------------
-###---###---###---###---###---### CHECK OUTPUT BELOW FOR CORRECT VERSION
-CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.pubs{{ run_version }}`
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.allpubs{{ run_version }}`
  AS (
 
 -----------------------------------------------------------------------
 ---  1. ENRICH ACADEMIC OBSERVATORY WITH UNNPAYWALL AND CONTRIBUTED 
 ---     TABLES OTHER THAN PUBS
 -----------------------------------------------------------------------
-WITH
+  WITH
 enriched_doi_table AS (
   SELECT
     academic_observatory,
@@ -39,7 +37,6 @@ enriched_doi_table AS (
       ) as first_green_oa_date # END OF CREATION OF enriched_doi_table
   
   ------ TABLES.
-  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
   FROM `academic-observatory.observatory.doi{{ doi_version }}` as academic_observatory
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
@@ -48,7 +45,6 @@ enriched_doi_table AS (
     # re-processing of data and just extract and pre-process this once.
     LEFT JOIN `{{ project }}.{{ institution_id }}_data.alltrials{{ run_version }}` as clintrial_extract
       ON LOWER(academic_observatory.doi) = LOWER(clintrial_extract.doi)
-      ########WHERE published_year <= {{ year_cutoff_end }}
 
 ), # END OF #1 enriched_doi_table
 
@@ -60,9 +56,8 @@ contributed_dois AS (
   SELECT
   DISTINCT(doi)
   FROM
-  ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
   # of the imported DOIs from the partner institution
-    `{{ project }}.{{ institution_id }}_from_partners.{{ dois_table_name }}`
+    `{{ project }}.{{ institution_id }}_from_partners.dois_20260818`
 ), # END OF #2 contributed_dois
 
 -----------------------------------------------------------------------
@@ -156,9 +151,7 @@ main_select AS (
    ELSE 99
   END as embargo_GRAPHORDER,
 
-  ------ NOTE: Sections 3.5 removed as project developed.
-
-  ------ 3.6 DOI TABLE: LICENSE
+  ------ 3.5 DOI TABLE: LICENSE
   unpaywall.best_oa_location.license as license,
 
   CASE
@@ -224,7 +217,7 @@ main_select AS (
     ELSE "No licence info" 
   END as license_GROUP,
 
-  ------ 3.7 DOI TABLE: PUBLISHER ORCID
+  ------ 3.6 DOI TABLE: PUBLISHER ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -236,7 +229,7 @@ main_select AS (
     ELSE "Does not have publisher ORCID"
   END AS has_publisher_orcid_PRETTY,
   
-  ------ 3.8 DOI TABLE: AUTHOR ORCID
+  ------ 3.7 DOI TABLE: AUTHOR ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.authors) as authors where authors.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -248,7 +241,7 @@ main_select AS (
     ELSE "Not in any ORCID record"
   END AS in_orcid_record_PRETTY,
 
-  ------ 3.9 DOI TABLE: CROSSREF FUNDER RECORD
+  ------ 3.8 DOI TABLE: CROSSREF FUNDER RECORD
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.funders) as funders where funders.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -260,7 +253,7 @@ main_select AS (
     ELSE "No funder acknowledgement"
   END AS has_cr_funder_record_PRETTY,
 
-  ------ 3.10 CONTRIBUTED TABLE: PREPRINT
+  ------ 3.9 CONTRIBUTED TABLE: PREPRINT
   enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint as has_preprint,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint THEN "Has a preprint"
@@ -268,13 +261,13 @@ main_select AS (
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
-  ------ 3.11a CONTRIBUTED TABLE: ODDPub processing
+  ------ 3.10a CONTRIBUTED TABLE: ODDPub processing
   CASE
     WHEN contributed_oddpub.doi IS NULL THEN FALSE
     ELSE TRUE
   END AS has_oddpub_processing,
 
-  ------ 3.11b CONTRIBUTED TABLE: OPEN DATA
+  ------ 3.10b CONTRIBUTED TABLE: OPEN DATA
 
   COALESCE(contributed_oddpub.is_open_data,FALSE) as has_open_data_oddpub, -- pulled from enriched data BOOL
   
@@ -283,7 +276,7 @@ main_select AS (
     ELSE "No reference to Open data found"
   END AS has_open_data_oddpub_PRETTY,
 
-  ------ 3.12 CONTRIBUTED TABLE: OPEN CODE
+  ------ 3.11 CONTRIBUTED TABLE: OPEN CODE
   COALESCE(contributed_oddpub.is_open_code,FALSE) as has_open_code_oddpub, -- pulled from enriched data BOOL
  
   CASE
@@ -291,16 +284,22 @@ main_select AS (
     ELSE "No reference to Open code found"
   END AS has_open_code_oddpub_PRETTY,
 
-  ------ 3.13 URLs for FULL TEXT
+  ------ 3.12 URLs for FULL TEXT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
   
-  ------ 3.14 ABSTRACTS from any sources
+  ------ 3.13 ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   clintrial_extract.abstract_pubmed,
   
-  ------ NOTE: Sections 3.15 to 3.20 removed as project developed.
+    ------ 3.14 Flag if DOI is within year range
+  CASE 
+    WHEN enriched_doi_table.academic_observatory.doi IS NULL then "Unknown"
+    WHEN enriched_doi_table.academic_observatory.crossref.published_year <= {{ year_cutoff_end }} then "Yes"
+    ELSE "No"
+    END as doi_in_yearrange_PRETTY,
+
   -----------------------------------------------------------------------
-  -- 3.21: Join the enriched and tidied DOI table to the target DOIs 
+  -- 3.15: Join the enriched and tidied DOI table to the target DOIs 
   -------- from the institution's publication dataset
   -----------------------------------------------------------------------
  FROM
@@ -309,7 +308,7 @@ main_select AS (
      ON LOWER(contributed_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
 
    # the contributed Oddpub data  processed by the BOS project team
-   LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.{{ oddpub_table_name }}` as contributed_oddpub
+   LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.oddpub_20260818` as contributed_oddpub
      ON LOWER(contributed_dois.doi) = LOWER(contributed_oddpub.doi)
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
@@ -324,9 +323,7 @@ main_select AS (
 SELECT
   main_select.*,
 
-  --- 5.1 This section has been removed as it is no longer needed
-
-  ----- 5.2 UTILITY - add variables for the script version and data files
+  ----- 5.1 UTILITY - add variables for the script version and data files
   var_SQL_workflow_version,
   var_data_dois,
   var_pubyear_cutoff_end,
@@ -334,7 +331,17 @@ SELECT
   var_institution_id
 
   FROM main_select
-    #WHERE published_year <= {{ year_cutoff_end }}
 
-) # End create table
+); # End create table
 
+-----------------------------------------------------------------------
+---  6. ALSO CREATE A TABLE FOR QC THAT FILTERS out DOIs with pub_years > flag
+-----------------------------------------------------------------------
+CREATE OR REPLACE TABLE `{{ project }}.{{ institution_id }}_data.pubs{{ run_version }}`
+ AS (
+   SELECT
+    *
+    FROM `{{ project }}.{{ institution_id }}_data.allpubs{{ run_version }}`
+    WHERE COALESCE(published_year, 0) <= {{ year_cutoff_end }}
+
+); # End create table with out-of-range pub years filtered out
