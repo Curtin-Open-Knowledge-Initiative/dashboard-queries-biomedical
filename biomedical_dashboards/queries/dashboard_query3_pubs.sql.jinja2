@@ -73,12 +73,20 @@ main_select AS (
     ELSE "Yes"
     END as doi_in_academicobservatory_PRETTY,
 
-  enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
-  CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.container_title, " ") as container_title_concat,
   ARRAY_to_string(enriched_doi_table.academic_observatory.crossref.title, " ") as title_concat,
 
-  ------ 3.2 DOI TABLE: CROSSREF TYPE
+  enriched_doi_table.academic_observatory.crossref.published_year, -- from doi table
+  CAST(enriched_doi_table.academic_observatory.crossref.published_year as int) as published_year_PRETTY,
+
+  ------ 3.2 Flag if DOI is within year range
+  CASE 
+    WHEN enriched_doi_table.academic_observatory.doi IS NULL then "Unknown"
+    WHEN enriched_doi_table.academic_observatory.crossref.published_year <= {{ year_cutoff_end }} then "Yes"
+    ELSE "No"
+    END as doi_in_yearrange_PRETTY,
+
+  ------ 3.3 DOI TABLE: CROSSREF TYPE
   enriched_doi_table.academic_observatory.crossref.type as crossref_type,
   CASE
     WHEN enriched_doi_table.academic_observatory.crossref.type = "journal-article" THEN "Journal articles"
@@ -90,7 +98,7 @@ main_select AS (
     ELSE null
   END as crossref_type_PRETTY,
 
-  ------ 3.3 DOI TABLE: OPEN ACCESS
+  ------ 3.4 DOI TABLE: OPEN ACCESS
   enriched_doi_table.academic_observatory.coki.oa.coki,
 
   CASE
@@ -124,7 +132,7 @@ main_select AS (
     ELSE 0
   END as oa_coki_OA_closed,
 
-  ------ 3.4 DOI TABLE: MADE AVAILABLE DATE / EMBARGO
+  ------ 3.5 DOI TABLE: MADE AVAILABLE DATE / EMBARGO
   first_green_oa_date,
   cr_published_date,
   DATE_DIFF(first_green_oa_date, cr_published_date, MONTH) as embargo,
@@ -151,7 +159,7 @@ main_select AS (
    ELSE 99
   END as embargo_GRAPHORDER,
 
-  ------ 3.5 DOI TABLE: LICENSE
+  ------ 3.6 DOI TABLE: LICENSE
   unpaywall.best_oa_location.license as license,
 
   CASE
@@ -217,7 +225,7 @@ main_select AS (
     ELSE "No licence info" 
   END as license_GROUP,
 
-  ------ 3.6 DOI TABLE: PUBLISHER ORCID
+  ------ 3.7 DOI TABLE: PUBLISHER ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.crossref.author) as auth WHERE auth.ORCID is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -229,7 +237,7 @@ main_select AS (
     ELSE "Does not have publisher ORCID"
   END AS has_publisher_orcid_PRETTY,
   
-  ------ 3.7 DOI TABLE: AUTHOR ORCID
+  ------ 3.8 DOI TABLE: AUTHOR ORCID
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.authors) as authors where authors.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -241,7 +249,7 @@ main_select AS (
     ELSE "Not in any ORCID record"
   END AS in_orcid_record_PRETTY,
 
-  ------ 3.8 DOI TABLE: CROSSREF FUNDER RECORD
+  ------ 3.9 DOI TABLE: CROSSREF FUNDER RECORD
   CASE
     WHEN (SELECT COUNT(1) from UNNEST(enriched_doi_table.academic_observatory.affiliations.funders) as funders where funders.identifier is not null) > 0 THEN TRUE
     ELSE FALSE
@@ -253,7 +261,7 @@ main_select AS (
     ELSE "No funder acknowledgement"
   END AS has_cr_funder_record_PRETTY,
 
-  ------ 3.9 CONTRIBUTED TABLE: PREPRINT
+  ------ 3.10 CONTRIBUTED TABLE: PREPRINT
   enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint as has_preprint,
   CASE
     WHEN enriched_doi_table.academic_observatory.coki.oa.coki.other_platform_categories.preprint THEN "Has a preprint"
@@ -261,13 +269,13 @@ main_select AS (
     ELSE "No preprint identified"
   END AS has_preprint_PRETTY,
 
-  ------ 3.10a CONTRIBUTED TABLE: ODDPub processing
+  ------ 3.11 CONTRIBUTED TABLE: ODDPub processing
   CASE
     WHEN contributed_oddpub.doi IS NULL THEN FALSE
     ELSE TRUE
   END AS has_oddpub_processing,
 
-  ------ 3.10b CONTRIBUTED TABLE: OPEN DATA
+  ------ 3.12 CONTRIBUTED TABLE: OPEN DATA
 
   COALESCE(contributed_oddpub.is_open_data,FALSE) as has_open_data_oddpub, -- pulled from enriched data BOOL
   
@@ -276,7 +284,7 @@ main_select AS (
     ELSE "No reference to Open data found"
   END AS has_open_data_oddpub_PRETTY,
 
-  ------ 3.11 CONTRIBUTED TABLE: OPEN CODE
+  ------ 3.13 CONTRIBUTED TABLE: OPEN CODE
   COALESCE(contributed_oddpub.is_open_code,FALSE) as has_open_code_oddpub, -- pulled from enriched data BOOL
  
   CASE
@@ -284,22 +292,15 @@ main_select AS (
     ELSE "No reference to Open code found"
   END AS has_open_code_oddpub_PRETTY,
 
-  ------ 3.12 URLs for FULL TEXT
+  ------ 3.14 URLs for FULL TEXT
   (SELECT STRING_AGG(URL, " ") FROM UNNEST(enriched_doi_table.academic_observatory.crossref.link)) AS crossref_fulltext_URL_CONCAT,
   
-  ------ 3.13 ABSTRACTS from any sources
+  ------ 3.15 ABSTRACTS from any sources
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   clintrial_extract.abstract_pubmed,
-  
-    ------ 3.14 Flag if DOI is within year range
-  CASE 
-    WHEN enriched_doi_table.academic_observatory.doi IS NULL then "Unknown"
-    WHEN enriched_doi_table.academic_observatory.crossref.published_year <= {{ year_cutoff_end }} then "Yes"
-    ELSE "No"
-    END as doi_in_yearrange_PRETTY,
 
   -----------------------------------------------------------------------
-  -- 3.15: Join the enriched and tidied DOI table to the target DOIs 
+  -- 3.16: Join the enriched and tidied DOI table to the target DOIs 
   -------- from the institution's publication dataset
   -----------------------------------------------------------------------
  FROM
