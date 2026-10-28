@@ -6,8 +6,8 @@
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
-DECLARE var_data_trials STRING DEFAULT '{{ partner_trials_aact_table }}';
-DECLARE var_data_dois STRING DEFAULT '{{ partner_dois_table }}';
+DECLARE var_partner_trials_aact_table STRING DEFAULT '{{ partner_trials_aact_table }}';
+DECLARE var_partner_dois_table STRING DEFAULT '{{ partner_dois_table }}';
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
 
 -----------------------------------------------------------------------
@@ -201,8 +201,8 @@ SELECT
 
   ----- UTILITY - add a variable for the script and input data versions
   var_SQL_workflow_version,
-  var_data_trials,
-  var_data_dois,
+  var_partner_trials_aact_table,
+  var_partner_dois_table,
   var_institution_id,
 
   #FROM d_5b_trials_data_joined_to_anysource as p10

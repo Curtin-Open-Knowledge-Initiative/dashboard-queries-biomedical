@@ -4,8 +4,8 @@
 -- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
-DECLARE var_data_dois STRING DEFAULT '{{ partner_dois_table }}';
-DECLARE var_data_oddpub STRING DEFAULT '{{ partner_oddpub_table }}';
+DECLARE var_partner_dois_table STRING DEFAULT '{{ partner_dois_table }}';
+DECLARE var_partner_oddpub_table STRING DEFAULT '{{ partner_oddpub_table }}';
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
 DECLARE var_pubyear_cutoff_end INT64 DEFAULT {{ year_cutoff_end }}; # e.g. 2025
 
@@ -325,9 +325,9 @@ SELECT
 
   ----- 5.1 UTILITY - add variables for the script version and data files
   var_SQL_workflow_version,
-  var_data_dois,
+  var_partner_dois_table,
   var_pubyear_cutoff_end,
-  var_data_oddpub,
+  var_partner_oddpub_table,
   var_institution_id
 
   FROM main_select
