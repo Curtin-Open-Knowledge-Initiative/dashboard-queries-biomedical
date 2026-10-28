@@ -4,8 +4,8 @@
 -- See https://github.com/Curtin-Open-Knowledge-Initiative/dashboard-queries-biomedical
 -----------------------------------------------------------------------
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
-DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
-DECLARE var_data_oddpub STRING DEFAULT '{{ oddpub_table_name }}';
+DECLARE var_data_dois STRING DEFAULT '{{ partner_dois_table }}';
+DECLARE var_data_oddpub STRING DEFAULT '{{ partner_oddpub_table }}';
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
 DECLARE var_pubyear_cutoff_end INT64 DEFAULT {{ year_cutoff_end }}; # e.g. 2025
 
@@ -37,7 +37,7 @@ enriched_doi_table AS (
       ) as first_green_oa_date # END OF CREATION OF enriched_doi_table
   
   ------ TABLES.
-  FROM `academic-observatory.observatory.doi{{ doi_version }}` as academic_observatory
+  FROM `academic-observatory.observatory.doi{{ acob_doi_table }}` as academic_observatory
     # Unpaywall is only included here as the required fields are not yet in the Academic Observatory
     LEFT JOIN `academic-observatory.unpaywall.unpaywall` as unpaywall
       ON LOWER(academic_observatory.doi) = LOWER(unpaywall.doi)

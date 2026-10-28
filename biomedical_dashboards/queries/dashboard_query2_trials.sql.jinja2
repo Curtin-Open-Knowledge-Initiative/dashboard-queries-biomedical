@@ -6,8 +6,8 @@
 
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
-DECLARE var_data_trials STRING DEFAULT '{{ trials_aact_table_name }}';
-DECLARE var_data_dois STRING DEFAULT '{{ dois_table_name }}';
+DECLARE var_data_trials STRING DEFAULT '{{ partner_trials_aact_table }}';
+DECLARE var_data_dois STRING DEFAULT '{{ partner_dois_table }}';
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}';
 
 -----------------------------------------------------------------------
@@ -106,7 +106,7 @@ with d_3_contributed_trials_data AS (
 
 ##---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
 # of the imported trials from the partner institution and processed by the BOS project team
-FROM `{{ project }}.{{ institution_id }}_from_partners.{{ trials_aact_table_name }}`
+FROM `{{ project }}.{{ institution_id }}_from_partners.{{ partner_trials_aact_table }}`
 ), # End of d_3_contributed_trials_data
 
 -----------------------------------------------------------------------
@@ -153,7 +153,7 @@ d_6a_pubs_data_intersect_anysource AS (
   FROM
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
     # of the imported dois from the partner institution
-    `{{ project }}.{{ institution_id }}_from_partners.{{ dois_table_name }}` as p6
+    `{{ project }}.{{ institution_id }}_from_partners.{{ partner_dois_table }}` as p6
     INNER JOIN d_4_anysource_extract_flat as p7
       ON LOWER(p6.doi) = LOWER(p7.ANYSOURCE_doi)
 ), # END OF d_6a_pubs_data_intersect_anysource

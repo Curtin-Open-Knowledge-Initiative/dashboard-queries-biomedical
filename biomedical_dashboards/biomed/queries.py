@@ -8,7 +8,7 @@ def query_alltrials(**kwargs) -> str:
 
     The template expects the following as kwargs:
     :param run_version: The version as a string (YYYYMM) for sharding
-    :param doi_version: The doi table version as a string (YYYYMM) for sharding
+    :param acob_doi_table: The doi table version as a string (YYYYMM) for sharding
     :param institution_id: The internal identifier of the institution
     :param workflow_hash: A string identifier for the version of the script used to make the query
     :param year_cutoff: An optional int/str that works as a cutoff for publication year
@@ -27,11 +27,11 @@ def query_trials(**kwargs) -> str:
 
     The template expects the following as kwargs:
     :param run_version: The version as a string (YYYYMM) for sharding
-    :param doi_version: The doi table version as a string (YYYYMM) for sharding
+    :param acob_doi_table: The doi table version as a string (YYYYMM) for sharding
     :param institution_id: The internal identifier of the institution
     :workflow_hash: A string identifier for the version of the script used to make the query
-    :param trials_aact_table_name: The name of the static partner trials_aact table
-    :param dois_table_name: The name of the static partner dois table
+    :param partner_trials_aact_table: The name of the static partner trials_aact table
+    :param partner_dois_table: The name of the static partner dois table
     :return: The templated query
     """
     with resources.open_text("biomedical_dashboards.queries", "dashboard_query2_trials.sql.jinja2") as f:
@@ -46,11 +46,11 @@ def query_pubs(**kwargs) -> str:
 
     The template expects the following as kwargs:
     :param run_version: The version as a string (YYYYMM) for sharding
-    :param doi_version: The doi table version as a string (YYYYMM) for sharding
+    :param acob_doi_table: The doi table version as a string (YYYYMM) for sharding
     :param institution_id: The internal identifier of the institution
     :param workflow_hash: A string identifier for the version of the script used to make the query
-    :param dois_table_name: The name of the static partner dois table
-    :param oddpub_table_name: The name of the static partner oddpub table
+    :param partner_dois_table: The name of the static partner dois table
+    :param partner_oddpub_table: The name of the static partner oddpub table
     :return: The templated query
     """
     with resources.open_text("biomedical_dashboards.queries", "dashboard_query3_pubs.sql.jinja2") as f:

@@ -64,9 +64,9 @@ def check_static_tables_exist(partner: Partner, context: Context):
         return (bq_check_table_exists(project, dataset, table_name), table_name)
 
     table_names = [
-        partner.trials_aact_table_name,
-        partner.dois_table_name,
-        partner.oddpub_table_name,
+        partner.partner_trials_aact_table,
+        partner.partner_dois_table,
+        partner.partner_oddpub_table,
     ]
     futures = []
     with ThreadPoolExecutor(max_workers=4) as executor:
