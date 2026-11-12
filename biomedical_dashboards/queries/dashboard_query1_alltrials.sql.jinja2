@@ -9,7 +9,7 @@
 ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSIONS
 
 DECLARE var_SQL_workflow_version STRING DEFAULT '{{ workflow_hash }}';
-DECLARE var_AcademicObservatory_doi STRING DEFAULT '{{ doi_version }}';
+DECLARE var_AcademicObservatory_doi STRING DEFAULT '{{ acob_doi_table }}';
 DECLARE var_pubyear_cutoff_start INT64 DEFAULT {{ year_cutoff_start }}; # e.g. 2000
 DECLARE var_institution_id STRING DEFAULT '{{ institution_id }}'; 
 
@@ -108,7 +108,7 @@ WITH main_select AS (
  FROM
     ------ Crossref from Academic Observatory.
     ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-    `academic-observatory.observatory.doi{{ doi_version }}` AS academic_observatory
+    `academic-observatory.observatory.doi{{ acob_doi_table }}` AS academic_observatory
     WHERE academic_observatory.crossref.published_year > var_pubyear_cutoff_start
 
  ), # END main_select
@@ -129,7 +129,7 @@ pubmed_2a_clintrials AS (
 
   FROM 
    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-   `academic-observatory.observatory.doi{{ doi_version }}` AS academic_observatory,
+   `academic-observatory.observatory.doi{{ acob_doi_table }}` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2a
 
    WHERE academic_observatory.crossref.published_year > var_pubyear_cutoff_start 
@@ -154,7 +154,7 @@ pubmed_2b_databanks AS (
       
   FROM 
    ###---###---###---###---###---### CHECK INPUTS BELOW FOR CORRECT VERSION
-   `academic-observatory.observatory.doi{{ doi_version }}` AS academic_observatory,
+   `academic-observatory.observatory.doi{{ acob_doi_table }}` AS academic_observatory,
    UNNEST(pubmed.MedlineCitation.Article.DataBankList) AS p2b
 
    WHERE academic_observatory.crossref.published_year > var_pubyear_cutoff_start AND
