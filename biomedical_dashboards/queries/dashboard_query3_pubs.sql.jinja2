@@ -57,7 +57,7 @@ contributed_dois AS (
   DISTINCT(doi)
   FROM
   # of the imported DOIs from the partner institution
-    `{{ project }}.{{ institution_id }}_from_partners.dois_20260818`
+    `{{ project }}.{{ institution_id }}_from_partners.{{ partner_dois_table }}`
 ), # END OF #2 contributed_dois
 
 -----------------------------------------------------------------------
@@ -299,6 +299,14 @@ main_select AS (
   enriched_doi_table.academic_observatory.crossref.abstract AS abstract_crossref,
   clintrial_extract.abstract_pubmed,
 
+------ 3.00 Unpaywall - Version to determine Preprints manually
+
+  (SELECT STRING_AGG(version, ",") FROM UNNEST(unpaywall.oa_locations))
+   AS unpaywall_oa_locations_versions_CONCAT,
+
+  IF ( (SELECT STRING_AGG(version, ",") FROM UNNEST(unpaywall.oa_locations))
+  LIKE "%submittedVersion%", TRUE, FALSE) AS unpaywall_has_preprint_manual
+
   -----------------------------------------------------------------------
   -- 3.16: Join the enriched and tidied DOI table to the target DOIs 
   -------- from the institution's publication dataset
@@ -309,7 +317,7 @@ main_select AS (
      ON LOWER(contributed_dois.doi) = LOWER(enriched_doi_table.academic_observatory.doi)
 
    # the contributed Oddpub data  processed by the BOS project team
-   LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.oddpub_20260818` as contributed_oddpub
+   LEFT JOIN `{{ project }}.{{ institution_id }}_from_partners.{{ partner_oddpub_table }}` as contributed_oddpub
      ON LOWER(contributed_dois.doi) = LOWER(contributed_oddpub.doi)
 
  ORDER BY published_year DESC, enriched_doi_table.academic_observatory.doi ASC
@@ -326,10 +334,11 @@ SELECT
 
   ----- 5.1 UTILITY - add variables for the script version and data files
   var_SQL_workflow_version,
+  var_institution_id,
   var_partner_dois_table,
-  var_pubyear_cutoff_end,
   var_partner_oddpub_table,
-  var_institution_id
+  var_pubyear_cutoff_end,
+  CONCAT('doi',{{ acob_doi_table }}) AS var_acob_doi_table
 
   FROM main_select
 
